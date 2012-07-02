@@ -178,6 +178,7 @@ class MotorControl():
     "Return all attributes of the instance except for 'updated'"
     d = self.__dict__.copy()
     del d['Driver']
+    logger.debug(d)
     return d
 
   def debug(self,name,value):
