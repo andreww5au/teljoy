@@ -658,6 +658,7 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
              CurrentInfo.DEC_GuideAcc,
              db.escape_string(CurrentInfo.LastError) )
   querystr = qstr1 + qstr2 + qstr3 + qstr4
+  logger.debug(querystr)
   try:
     curs.execute(querystr)
   except dblib.Error as error:
