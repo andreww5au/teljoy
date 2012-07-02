@@ -31,7 +31,7 @@ def KickStart():
   """Initialise the hardware motor controller, and Start the motion
      control thread to keep the motor queue full.
   """
-  usbcon.Start()
+  motors.Driver.kickstart()
 
 
 
