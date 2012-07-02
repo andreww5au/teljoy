@@ -174,6 +174,12 @@ class MotorControl():
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
+  def __getstate__(self):   #Pickle module can't save the Driver object
+    "Return all attributes of the instance except for 'updated'"
+    d = self.__dict__.copy()
+    del d['Driver']
+    return d
+
   def debug(self,name,value):
     """Trap all attribute writes, and raise an error if the attribute
        wasn't defined in the __init__ method. Debugging code to catch all
