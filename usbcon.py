@@ -15,11 +15,11 @@ class Driver(controller.Driver):
 
   def initialise(self):
     # Print out controller version details:
-    logger.info("* Initialising %s" % self.host.mcu_version)
-    logger.info("    MCU Firmware Version: %s" % self.host.mcu_version)
-    logger.info("FPGA Firmware Version: %s" % self.host.fpga_version)
-    logger.info("Clock Frequency: %s" % self.host.clock_frequency)
-    logger.info("Queue Capacity: %s" % self.host.mc_frames_capacity)
+    logger.info("* Initialising %s" % (self.host.mcu_version,))
+    logger.info("    MCU Firmware Version: %s" % (self.host.mcu_version,))
+    logger.info("FPGA Firmware Version: %s" % (self.host.fpga_version,))
+    logger.info("Clock Frequency: %s" % (self.host.clock_frequency,))
+    logger.info("Queue Capacity: %s" % (self.host.mc_frames_capacity,))
 
     # First, reset the queue. If the controller was previously running this
     # will set the expected frame number back to zero:
