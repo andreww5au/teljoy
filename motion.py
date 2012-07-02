@@ -28,11 +28,14 @@ WESTMSK  = 0x10
 intthread = None
 
 def KickStart():
-  """Initialise the hardware motor controller, and Start the motion
-     control thread to keep the motor queue full.
+  """Start the motion control thread to keep the motor queue full.
   """
-  motors.Driver.kickstart()
+  global intthread
 
+  #Start the queue handler thread to keep the queue full
+  intthread = threading.Thread(target=motors.Driver.run, name='USB-controller-thread')
+  intthread.daemon = True
+  intthread.start()
 
 
 class LimitStatus():

@@ -656,7 +656,7 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
   qstr4 = "RA_GuideAcc='%g', DEC_GuideAcc='%g', LastError=%s " % (
              CurrentInfo.RA_GuideAcc,
              CurrentInfo.DEC_GuideAcc,
-             db.escape(CurrentInfo.LastError) )
+             db.escape_string(CurrentInfo.LastError) )
   querystr = qstr1 + qstr2 + qstr3 + qstr4
   try:
     curs.execute(querystr)
