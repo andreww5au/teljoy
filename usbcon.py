@@ -188,9 +188,11 @@ class Driver(controller.Driver):
   def inputs_changed(self, inputs):
     logger.info("* Inputs Changed (%s)" % hex(inputs))
 
-  def kickstart(self):
+  def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
        also be replaced with any object implementing the methods required by libusb1:
+
+       This function doesn't exit.
     """
     controller.run(driver=self)
 
