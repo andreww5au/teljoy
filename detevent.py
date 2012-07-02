@@ -719,5 +719,5 @@ poslog = prefs.LogDirName + '/teljoy.pos'
 ProspLastTime = time.time()
 DBLastTime = 0
 TJboxAction = 'none'
-LastError = None                  #Meant to contain the last reported error string - #TODO - implement in the logger handler.
+LastError = ""                  #Meant to contain the last reported error string - #TODO - implement in the logger handler.
 
