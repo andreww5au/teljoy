@@ -1,8 +1,9 @@
 #! /usr/local/bin/python2.7
 
 import controller
+from globals import *
 
-DIVIDER = 50   #Scale down step values for testing with non-microstepped driver boards
+DIVIDER = 15   #Scale down step values for testing with non-microstepped driver boards
 
 class Driver(controller.Driver):
   # To use the controller, a driver class with callbacks must be
@@ -14,11 +15,11 @@ class Driver(controller.Driver):
 
   def initialise(self):
     # Print out controller version details:
-    print "* Initialising", self.host.mcu_version
-    print "    MCU Firmware Version:", self.host.mcu_version
-    print "    FPGA Firmware Version:", self.host.fpga_version
-    print "    Clock Frequency:", self.host.clock_frequency
-    print "    Queue Capacity:", self.host.mc_frames_capacity
+    logger.info("* Initialising %s" % self.host.mcu_version)
+    logger.info("    MCU Firmware Version: %s" % self.host.mcu_version)
+    logger.info("FPGA Firmware Version: %s" % self.host.fpga_version)
+    logger.info("Clock Frequency: %s" % self.host.clock_frequency)
+    logger.info("Queue Capacity: %s" % self.host.mc_frames_capacity)
 
     # First, reset the queue. If the controller was previously running this
     # will set the expected frame number back to zero:
@@ -117,7 +118,7 @@ class Driver(controller.Driver):
     d.addErrback(self._initialise_error_occurred)
 
   def _initialise_configuration_written(self, configuration):
-    print "* Successfully Configured"
+    logger.info("* Successfully Configured")
 
     # Schedule the first call of a timer that will toggle the output every second:
 #    self.host.add_timer(1.0, self._turn_output_on)
@@ -126,10 +127,8 @@ class Driver(controller.Driver):
     self.host.add_timer(1.0, self._check_counters)
 
   def _initialise_error_occurred(self, failure):
-    print "* Configuration Failed:"
-
-    failure.printTraceback()
-
+    logger.error("* Configuration Failed:")
+    logger.error(failure.getTraceback())
     self.host.stop()
 
 #  def _turn_output_on(self):
@@ -150,12 +149,12 @@ class Driver(controller.Driver):
     d.addCallback(self._complete_check_counters)
 
   def _complete_check_counters(self, counters):
-    print "* Frame %s, (%s, %s) total steps, (%s, %s) guider steps." % ( \
-      counters.at_start_of_frame_number, \
-      counters.a_total_steps, \
-      counters.b_total_steps, \
-      counters.a_guider_steps, \
-      counters.b_guider_steps)
+    logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps." %
+                   (counters.at_start_of_frame_number,
+                    counters.a_total_steps,
+                    counters.b_total_steps,
+                    counters.a_guider_steps,
+                    counters.b_guider_steps))
 
     self.host.add_timer(1.0, self._check_counters)
 
@@ -180,15 +179,14 @@ class Driver(controller.Driver):
 #        print "* Enqueued Frame (%s)" % frame_number
 
   def state_changed(self, details):
-    print "* Run State Change:"
-    print `details`
+    logger.info("* Run State Change:")
+    logger.info(`details`)
 
     if details.state == controller.TC_STATE_EXCEPTION:
       self.host.stop()
 
   def inputs_changed(self, inputs):
-    print "* Inputs Changed (%s)" % hex(inputs)
-
+    logger.info("* Inputs Changed (%s)" % hex(inputs))
 
   def kickstart(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
