@@ -653,17 +653,17 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
              int(CurrentInfo.ShutterOpen),
              int(CurrentInfo.DomeTracking),
              int(CurrentInfo.Frozen) )
-  qstr4 = "RA_GuideAcc='%g', DEC_GuideAcc='%g', LastError=%s " % (
+  qstr4 = "RA_GuideAcc='%g', DEC_GuideAcc='%g', LastError='%s' " % (
              CurrentInfo.RA_GuideAcc,
              CurrentInfo.DEC_GuideAcc,
              db.escape_string(CurrentInfo.LastError) )
   querystr = qstr1 + qstr2 + qstr3 + qstr4
-  logger.debug(querystr)
   try:
     curs.execute(querystr)
   except dblib.Error as error:
     logger.error("sqlint.UpdateSQLCurrent: teljoy.ncurrent query error: '%s'" % error)
-    return None
+    logger.error("Query=<%s>" % (querystr,))
+  return None
 
 
 def ExistsTJbox(db=None):
