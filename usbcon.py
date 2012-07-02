@@ -2,13 +2,15 @@
 
 import controller
 
+DIVIDER = 50   #Scale down step values for testing with non-microstepped driver boards
+
 class Driver(controller.Driver):
   # To use the controller, a driver class with callbacks must be
   # defined to handle the asynchronous events:
-  def __init__(self):
+  def __init__(self, getframe=None):
     # (Keep some values to generate test steps)
-    self.velocity = 0
-    self.acceleration = 1
+    self._getframe = getframe
+    self.frame_number = 0
 
   def initialise(self):
     # Print out controller version details:
@@ -159,7 +161,7 @@ class Driver(controller.Driver):
 
   def enqueue_frame_available(self, details):
     """This method is called when the queue changes (for example, when 
-       a frame is dequeued, or when a previous call to enqueu_frame on the
+       a frame is dequeued, or when a previous call to enqueue_frame on the
        controller completes). It should check the state of the queue,
        and if required, enqueue at most one frame; once the frame is 
        enqueued, the controller will immediately call this method
@@ -167,18 +169,15 @@ class Driver(controller.Driver):
     """
     if details.frames_in_queue < 12:
       # Ramp the velocity up and down:
-      self.velocity += self.acceleration
-
-      if self.velocity >= 50: self.acceleration = -1
-      if self.velocity <= -50: self.acceleration = 1
-
-      frame_number = self.host.enqueue_frame(self.velocity, self.velocity)
+      va,vb = self._getframe()
+      va,vb = va/DIVIDER, vb/DIVIDER
+      self.frame_number = self.host.enqueue_frame(va, vb)
   
       # Every "frame" of step data has a unique number, starting with
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
-      if frame_number % 20 == 0:
-        print "* Enqueued Frame (%s)" % frame_number
+#      if frame_number % 20 == 0:
+#        print "* Enqueued Frame (%s)" % frame_number
 
   def state_changed(self, details):
     print "* Run State Change:"
@@ -190,10 +189,11 @@ class Driver(controller.Driver):
   def inputs_changed(self, inputs):
     print "* Inputs Changed (%s)" % hex(inputs)
 
-if __name__ == "__main__":
-  driver = Driver()
 
-  # Enter the polling loop. The default poller (returned by select.poll) can
-  # also be replaced with any object implementing the methods required by libusb1:
-  controller.run(driver = driver)
+def Start():
+  """Enter the polling loop. The default poller (returned by select.poll) can
+     also be replaced with any object implementing the methods required by libusb1:
+  """
+  controller.run(driver=Driver)
+
 

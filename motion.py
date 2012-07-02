@@ -11,7 +11,7 @@ import threading
 import time
 
 from globals import *
-import dummycon
+import usbcon
 
 MOTOR_ACCEL = 2.0*25000            #2.0 (revolutions/sec/sec) * 25000 (steps/revolution)
 PULSE = 0.05                       #50 milliseconds per 'tick'
@@ -31,18 +31,8 @@ def KickStart():
   """Initialise the hardware motor controller, and Start the motion
      control thread to keep the motor queue full.
   """
-  global intthread
+  usbcon.Start()
 
-  dummycon.send(0,0)   #Send some dummy packets to start off with
-  dummycon.send(0,0)
-  dummycon.send(0,0)
-  
-  #Start the queue handler thread to keep the queue full
-  intthread = threading.Thread(target=motors.Timeint, name='Timeint-thread')
-  intthread.daemon = True
-  intthread.start()
-  dummycon.init()   #Start the 'dummy controller' that pulls velocity pairs from the queue. 
-    
 
 
 class LimitStatus():
@@ -173,6 +163,13 @@ class MotorControl():
     self.CutFrac = 0            # emergency ramp down on limit. Increases from 0 (no cut) to 10 (100% cut) over ten 50ms ticks
     self.ticks = 0              #Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
     self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
+    self.RA_hold = 0            #These are used to delay a velocity value by 50ms (so we can insert a zero velocity
+    self.DEC_hold = 0           #   value in the queue between positive and negative values if the direction changes)
+    self.frac_RA = 0.0          #These store the accumulated fractional ticks in RA and DEC, left over
+    self.frac_DEC = 0.0         #    after the integer part of the velocity is sent for each tick
+    self.old_sign_RA = False    #These are direction flags (False=negative) for the last velocity values sent,
+    self.old_sign_DEC = False   #    used to see if each motor has changed direction since the last tick
+    self.Driver = usbcon.Driver(getframe=self.getframe)
     logger.debug('motion.MotorControl.__init__: finished global vars')
     if CLASSDEBUG:
       self.__setattr__ = self.debug
@@ -331,7 +328,7 @@ class MotorControl():
       self.RA_guide = math.copysign(prefs.GuideRate/20, self.RA_GOffset)
       self.RA_GOffset -= self.RA_guide
     else:        #Use up remaining short guide motion
-      self.send_RA += self.RA_GOffset
+      self.RA_guide = self.RA_GOffset
       self.RA_GOffset = 0
 
     if abs(self.DEC_GOffset) > prefs.GuideRate/20:
@@ -620,134 +617,109 @@ class MotorControl():
       self.Paddle_stop_DEC = True
 
 
-  def Timeint(self):
-    """Loop forever when called, keeping controller queue full.
-       Call this function in a seperate thread, and only call it for one
-       instance of this class (unless you are controlling more than one telescope).
+  def getframe(self):
+    """
     """
     global watchdog        #Watchdog counter used by external code to make sure the motor queue is active
 
-    RA_hold = 0            #These are used to delay a velocity value by 50ms (so we can insert a zero velocity
-    DEC_hold = 0           #   value in the queue between positive and negative values if the direction changes)
     send_RA = 0.0          #Final floating point value for RA steps to send to the motor this tick
     send_DEC = 0.0         #Final floating point value for DEC steps to send to the motor this tick
     int_RA = 0             #integer part of send_RA, the distance to send for this 50ms tick
     int_DEC = 0            #integer part of send_Dec, the distance to send for this 50ms tick
-    frac_RA = 0.0          #These store the accumulated fractional ticks in RA and DEC, left over
-    frac_DEC = 0.0         #    after the integer part of the velocity is sent for each tick
-    old_sign_RA = False    #These are direction flags (False=negative) for the last velocity values sent,
-    old_sign_DEC = False   #    used to see if each motor has changed direction since the last tick
-    
-    while True:   #Replace with check of error status flag
-      time.sleep(0.02)  #Check queue status every 20ms
-      if dummycon.QueueLow():   #if the motion data left in the queue is below a threshold, send more:
-        watchdog = 0   #Reset watchdog each time we get a signal from pc23 queue
+    self.ticks += 50
 
-        #This loop sends six velocity pairs if the motion control queue is nearly empty
-        for num_SD in range(6):
-          self.ticks += 50
+    #MIX VELOCITIES for next pulse - sidereal rate, motion profile velocities, non-sidereal and refraction tracking
+    #Start with sidereal rate, or zero if frozen
+    if self.Frozen:
+      send_RA = 0.0                    #No sidereal motion, but:
+      send_DEC = 0.0
+      self.RA_padlog -= prefs.RAsid    #Log fictitious backwards paddle motion instead of sidereal tracking (changes current sky coordinates)
+    else:
+      send_RA = prefs.RAsid            #Start with sidereal rate in RA
+      send_DEC = 0.0
 
-#IFDEF NZ
-#          #When a limit trips in or out, ramp the speed in each axis up and down over
-#          #ten 50ms 'tick' values.
-#          if limits.HWLimit and (not limits.LimOverride) and (CutFrac<10):
-#            CutFrac += 1
-#          if ((not HWLimit) or LimOverride) and (CutFrac>0):
-#            CutFrac -= 1
-#No hardware limits readable from Perth at the moment, so CutFrac is always zero.
+    #Add in telescope jump or paddle motion velocities
+    if self.Teljump:      #If currently moving in a profiled (ramp-up/plateau/ramp-down) jump
+      self.CalcJump()      #Use jump profile attributes to calculate RA_jump and DEC_jump for this tick
+      send_RA += self.RA_jump + self.RA_remain
+      send_DEC += self.DEC_jump + self.DEC_remain
+    else:                  #We aren't in a profiled jump
+      self.CalcPaddle()            #Use paddle move profile attributes to calculate RA_jump and DEC_jump for this tick, if any
+      send_RA += self.RA_jump
+      send_DEC += self.DEC_jump
+      self.RA_padlog += self.RA_jump     #Log jump motion as paddle movement
+      self.DEC_padlog += self.DEC_jump
 
-          #MIX VELOCITIES for next pulse - sidereal rate, motion profile velocities, non-sidereal and refraction tracking
-          #Start with sidereal rate, or zero if frozen
-          if self.Frozen:
-            send_RA = 0.0                    #No sidereal motion, but:
-            send_DEC = 0.0
-            self.RA_padlog -= prefs.RAsid    #Log fictitious backwards paddle motion instead of sidereal tracking (changes current sky coordinates)
-          else:
-            send_RA = prefs.RAsid            #Start with sidereal rate in RA
-            send_DEC = 0.0
+      #If we're not in a profiled jump, add refraction motion, autoguider motion and non-sidereal tracking, for this tick
+      if not self.Frozen:
+        send_RA += self.RA_refraction         #Add in refraction correction velocity
+        send_DEC += self.DEC_refraction
+        self.RA_reflog += self.RA_refraction     #Log refraction correction motion
+        self.DEC_reflog += self.DEC_refraction
+        send_RA += self.RA_guide             #Add in autoguider correction velocity
+        send_DEC += self.DEC_guide
+        self.RA_Guidelog += self.RA_guide    #Log autoguider correction motion
+        self.DEC_Guidelog += self.DEC_guide
+        if prefs.NonSidOn:
+          send_RA += self.RA_track            #Add in non-sidereal motion for moving targets
+          send_DEC += self.DEC_track
+          self.RA_padlog += self.RA_track     #Log non-sidereal motion as paddle movement
+          self.DEC_padlog += self.DEC_track
 
-          #Add in telescope jump or paddle motion velocities
-          if self.Teljump:      #If currently moving in a profiled (ramp-up/plateau/ramp-down) jump
-            self.CalcJump()      #Use jump profile attributes to calculate RA_jump and DEC_jump for this tick
-            send_RA += self.RA_jump + self.RA_remain
-            send_DEC += self.DEC_jump + self.DEC_remain
-          else:                  #We aren't in a profiled jump
-            self.CalcPaddle()            #Use paddle move profile attributes to calculate RA_jump and DEC_jump for this tick, if any
-            send_RA += self.RA_jump
-            send_DEC += self.DEC_jump
-            self.RA_padlog += self.RA_jump     #Log jump motion as paddle movement
-            self.DEC_padlog += self.DEC_jump
+    #Add the 'held' values for each axis, from a previous tick where a zero was sent when the axis direction changed
+    #This was a hardware requirement for PC23, probably not for USB controller.
+    if self.RA_hold <> 0:
+      send_RA += self.RA_hold
+      self.RA_hold = 0
+    if self.DEC_hold <> 0:
+      send_DEC += self.DEC_hold
+      self.DEC_hold = 0
 
-            #If we're not in a profiled jump, add refraction motion, autoguider motion and non-sidereal tracking, for this tick
-            if not self.Frozen:
-              send_RA += self.RA_refraction         #Add in refraction correction velocity
-              send_DEC += self.DEC_refraction
-              self.RA_reflog += self.RA_refraction     #Log refraction correction motion
-              self.DEC_reflog += self.DEC_refraction
-              send_RA += self.RA_guide             #Add in autoguider correction velocity
-              send_DEC += self.DEC_guide
-              self.RA_Guidelog += self.RA_guide    #Log autoguider correction motion
-              self.DEC_Guidelog += self.DEC_guide
-              if prefs.NonSidOn:
-                send_RA += self.RA_track            #Add in non-sidereal motion for moving targets
-                send_DEC += self.DEC_track
-                self.RA_padlog += self.RA_track     #Log non-sidereal motion as paddle movement
-                self.DEC_padlog += self.DEC_track
+    #Subtract the cut portion of motion from the paddle log for emergency stop after hitting a limit
+    #If no limits, cutfrac=0, if limit decel. finished cutfrac=10
+    #Only applicable to NZ telescope, and will not apply for new USB controller which handles
+    #emergency stops internally.
+    send_RA = send_RA * (1-self.CutFrac/10.0)         #Multiply send values by 1 if no limit, or 0.9, 0.8, .07 ... 0.0
+    send_DEC = send_DEC * (1-self.CutFrac/10.0)       #    successively if we hit a limit
+    self.RA_padlog -= send_RA*(self.CutFrac/10.0)     #Log the cut fraction of motor travel as fictitious paddle motion in the
+    self.DEC_padlog -= send_DEC*(self.CutFrac/10.0)   #    other direction, so position accuracy is preserved.
 
-          #Add the 'held' values for each axis, from a previous tick where a zero was sent when the axis direction changed
-          #This was a hardware requirement for PC23, probably not for USB controller.
-          if RA_hold <> 0:
-            send_RA += RA_hold
-            RA_hold = 0
-          if DEC_hold <> 0:
-            send_DEC += DEC_hold
-            DEC_hold = 0
+    if prefs.EastOfPier:
+      send_DEC = -send_DEC      #Invert DEC direction if tel. east of pier
 
-          #Subtract the cut portion of motion from the paddle log for emergency stop after hitting a limit
-          #If no limits, cutfrac=0, if limit decel. finished cutfrac=10
-          #Only applicable to NZ telescope, and will not apply for new USB controller which handles
-          #emergency stops internally.
-          send_RA = send_RA * (1-self.CutFrac/10.0)         #Multiply send values by 1 if no limit, or 0.9, 0.8, .07 ... 0.0
-          send_DEC = send_DEC * (1-self.CutFrac/10.0)       #    successively if we hit a limit
-          self.RA_padlog -= send_RA*(self.CutFrac/10.0)     #Log the cut fraction of motor travel as fictitious paddle motion in the
-          self.DEC_padlog -= send_DEC*(self.CutFrac/10.0)   #    other direction, so position accuracy is preserved.
+    #Break final RA velocity for this tick into integer & fraction
+    fracpart, int_RA = math.modf(send_RA)
+    self.frac_RA += fracpart    #Accumulate the fractional part
+    #if the absolute value of the accumulated frac_RA is greater than 1.0, update int_RA
+    if abs(self.frac_RA) > 1.0:
+      int_RA += math.trunc(self.frac_RA)
+      self.frac_RA -= math.trunc(self.frac_RA)
 
-          if prefs.EastOfPier:
-            send_DEC = -send_DEC      #Invert DEC direction if tel. east of pier
+    #Break final DEC velocity for this tick into integer & fraction
+    fracpart, int_DEC = math.modf(send_DEC)
+    self.frac_DEC += fracpart      #accumulate residuals
+    #if the accumulated frac_DEC is greater than 1 update int_DEC
+    if abs(self.frac_DEC) > 1.0:
+      int_DEC += math.trunc(self.frac_DEC)
+      self.frac_DEC -= math.trunc(self.frac_DEC)
 
-          #Break final RA velocity for this tick into integer & fraction
-          fracpart, int_RA = math.modf(send_RA)
-          frac_RA += fracpart    #Accumulate the fractional part
-          #if the absolute value of the accumulated frac_RA is greater than 1.0, update int_RA
-          if abs(frac_RA) > 1.0:
-            int_RA += math.trunc(frac_RA)
-            frac_RA -= math.trunc(frac_RA)
+    #**CHECKS**
+    #if the sign of either send_RA or send_DEC has changed since the last
+    # pulse add int_** to frac_** and reset int_** to 0.0
+    sign_RA = (int_RA >= 0)
+    if sign_RA <> self.old_sign_RA:     #Set an initial value for old_sign_RA
+      self.old_sign_RA = sign_RA
+      self.RA_hold = int_RA             #include this velocity in the next pulse
+      int_RA = 0
 
-          #Break final DEC velocity for this tick into integer & fraction
-          fracpart, int_DEC = math.modf(send_DEC)
-          frac_DEC += fracpart      #accumulate residuals
-          #if the accumulated frac_DEC is greater than 1 update int_DEC
-          if abs(frac_DEC) > 1.0:
-            int_DEC += math.trunc(frac_DEC)
-            frac_DEC -= math.trunc(frac_DEC)
+    sign_DEC = (int_DEC >= 0)
+    if sign_DEC <> self.old_sign_DEC:   #as for old_sign_RA
+      self.old_sign_DEC = sign_DEC
+      self.DEC_hold = int_DEC
+      int_DEC = 0
 
-          #**CHECKS**
-          #if the sign of either send_RA or send_DEC has changed since the last
-          # pulse add int_** to frac_** and reset int_** to 0.0 
-          sign_RA = (int_RA >= 0)
-          if sign_RA <> old_sign_RA:     #Set an initial value for old_sign_RA
-            old_sign_RA = sign_RA
-            RA_hold = int_RA             #include this velocity in the next pulse
-            int_RA = 0
-
-          sign_DEC = (int_DEC >= 0)
-          if sign_DEC <> old_sign_DEC:   #as for old_sign_RA
-            old_sign_DEC = sign_DEC
-            DEC_hold = int_DEC
-            int_DEC = 0
-
-          #Now send word_RA and word_DEC to the controller queue!
-          dummycon.send(int_RA, int_DEC)
+    #Now send word_RA and word_DEC to the controller queue!
+    return(int_RA, int_DEC)
 
 
 
@@ -757,7 +729,6 @@ class MotorControl():
 watchdog = -10
 ticks = 0
 
-status = dummycon.status
 limits = LimitStatus()
 motors = MotorControl()
 
