@@ -3,7 +3,7 @@
 import controller
 from globals import *
 
-DIVIDER = 15   #Scale down step values for testing with non-microstepped driver boards
+DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
 
 class Driver(controller.Driver):
   # To use the controller, a driver class with callbacks must be
@@ -48,23 +48,23 @@ class Driver(controller.Driver):
       controller.MC_PIN_FLAG_MCB_O_FUNCTION_LOW
 
     # Set the deceleration (in steps per frame per frame) to use when shutting down:
-    configuration.mc_a_shutdown_acceleration = 1
-    configuration.mc_b_shutdown_acceleration = 1
+    configuration.mc_a_shutdown_acceleration = 5
+    configuration.mc_b_shutdown_acceleration = 5
 
     # Set the acceleration limit (in steps per frame per frame) on each axis:
-    configuration.mc_a_acceleration_limit = 10
-    configuration.mc_b_acceleration_limit = 10
+    configuration.mc_a_acceleration_limit = 5
+    configuration.mc_b_acceleration_limit = 5
 
     # Set the velocity limit (in steps per frame) on each axis:
     configuration.mc_a_velocity_limit = 100
     configuration.mc_b_velocity_limit = 100
 
-    # Set the length of a frame, in cycles of the controller clock freqency. In
-    # this example a frame is 50ms, or 1/10th of a second:
+    # Set the length of a frame, in cycles of the controller clock frequency. In
+    # this example a frame is 50ms, or 1/20th of a second:
     configuration.mc_frame_period = self.host.clock_frequency / 20
 
     # Set the pulse width, in cycles of the controller clock frequency. In this
-    # example the pulse width is 1ms:
+    # example the pulse width is 100us:
     configuration.mc_pulse_width = self.host.clock_frequency / 10000
 
     # Invert all the GPIO inputs, so they are active when pulled low:
