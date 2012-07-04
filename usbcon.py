@@ -157,7 +157,7 @@ class Driver(controller.Driver):
                     counters.a_guider_steps,
                     counters.b_guider_steps))
 
-    self.host.add_timer(1.0, self._check_counters)
+    self.host.add_timer(60.0, self._check_counters)
 
   def enqueue_frame_available(self, details):
     """This method is called when the queue changes (for example, when 
