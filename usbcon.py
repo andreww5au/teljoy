@@ -5,6 +5,13 @@ from globals import *
 
 DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
 
+def binstring(v):
+  """Convert a longint into a human readable binary string.
+  """
+  bs = bin(v)[2:].rjust(64,'0')
+  return "%s %s %s %s | %s %s %s %s" % ( bs[0:8], bs[8:16], bs[16:24], bs[24:32],
+                                         bs[32:40], bs[40:48], bs[48:56], bs[56:64])
+
 class Driver(controller.Driver):
   # To use the controller, a driver class with callbacks must be
   # defined to handle the asynchronous events:
@@ -187,7 +194,7 @@ class Driver(controller.Driver):
       self.host.stop()
 
   def inputs_changed(self, inputs):
-    logger.info("* Inputs Changed (%s)" % hex(inputs))
+    logger.info("* %s" % binstring(inputs))
 
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
