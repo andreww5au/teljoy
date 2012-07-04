@@ -38,6 +38,19 @@ from detevent import Jump
 from digio import press, release, cslew, cset
 from utils import *
 
+
+def n():
+  release('S', paddle='C')
+  press('N', paddle='C')
+
+def s():
+  release('N', paddle='C')
+  press('S', paddle='C')
+
+def r():
+  release('N', paddle='C')
+  release('S', paddle='C')
+
 if __name__ == '__main__':
   motion.KickStart()
   detevent.init()

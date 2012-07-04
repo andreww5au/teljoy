@@ -64,8 +64,8 @@ class Driver(controller.Driver):
     configuration.mc_frame_period = self.host.clock_frequency / 20
 
     # Set the pulse width, in cycles of the controller clock frequency. In this
-    # example the pulse width is 100us:
-    configuration.mc_pulse_width = self.host.clock_frequency / 10000
+    # example the pulse width is 500us:
+    configuration.mc_pulse_width = self.host.clock_frequency / 2000
 
     # Invert all the GPIO inputs, so they are active when pulled low:
     for pin in configuration.pins[0:48]:
@@ -175,7 +175,7 @@ class Driver(controller.Driver):
       # Every "frame" of step data has a unique number, starting with
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
-      if self.frame_number % 60 == 0:
+      if self.frame_number % 360 == 0:
         print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
 
   def state_changed(self, details):
