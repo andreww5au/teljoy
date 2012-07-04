@@ -102,16 +102,17 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_denominator = 10
     configuration.mc_guider_b_limit = 20
 
+    # Set eight pins to an output:
+    for pin in controller.pins[8:16]:
+      pin.direction = controller.CONTROLLER_PIN_INPUT
+      pin.report_input = True
+
     # Send the configuration to the controller:
     d = self.host.configure(configuration)
-  
-    # Set one pin to an output:
-    configuration.pins[controller.PIN_GPIO_8].direction = \
-      controller.CONTROLLER_PIN_OUTPUT
 
     # Set one input pin so that any changes are reported by
     # calling inputs_changed on this driver class:
-    configuration.pins[controller.PIN_GPIO_9].report_input = True
+#    configuration.pins[controller.PIN_GPIO_9].report_input = True
 
     # The deferred is completed once the configuration is written:
     d.addCallback(self._initialise_configuration_written)
