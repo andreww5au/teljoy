@@ -103,7 +103,7 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_limit = 20
 
     # Set eight pins to an output:
-    for pin in controller.pins[8:16]:
+    for pin in configuration.pins[8:16]:
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
