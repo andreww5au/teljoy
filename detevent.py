@@ -88,8 +88,8 @@ class PaddleStatus:
        This method is called at regular intervals by the DetermineEvent loop.
     """
     #Read the Hand-paddle inputs}
-    cb = digio.ReadCoarse()
-    fb = digio.ReadFine()
+    cb = digio.ReadCoarse(motion.motors.Driver.inputs)
+    fb = digio.ReadFine(motion.motors.Driver.inputs)
 
     #check the Fine paddle speed switches and set appropriate mode and velocity
     if ((fb & digio.FGuideMsk)==digio.FGuideMsk):

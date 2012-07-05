@@ -28,87 +28,26 @@
     to be at 0x1b0 = 432.
 """
 
-Adr82     = 432                   #Default address of 8255 card}
-A1        = 432                   #Port 1A read/write buffer}
-B1        = 433                   #Port 1B read/write buffer}
-C1        = 434                   #Port 1C read/write buffer}
-Ctrl1     = 435                   #Port 1 control register}
-A2        = 436                   #Port 2A read/write buffer}
-B2        = 437                   #Port 2B read/write buffer}
-C2        = 438                   #Port 2C read/write buffer}
-Ctrl2     = 439                   #Port 2 control register}
-ReadAll   = 0x9b                   #Set control register, ports read
-                                   # only}
-WriteAll  = 0x80                   #Set control register, ports writeable}
 
-ST5_Left   = 0x08
-ST5_Right  = 0x04
-ST5_Up     = 0x01
-ST5_Down   = 0x02
+CNorth    = 0x40                        #Mask for north on coarse paddles (Green on test cable)
+CSouth    = 0x80                        #Mask for south (red on test cable)
+CEast     = 0x20                        #Mask for east (blue on test cable
+CWest     = 0x10                        #Mask for west (yellow on test cable)
 
-CNorth    = 0x01                        #Mask for north on coarse paddles (1)}
-CSouth    = 0x02                        #Mask for south (2)}
-CEast     = 0x04                        #Mask for east (4)}
-CWest     = 0x08                        #Mask for west (8)}
+FNorth    = 0x40                        #Mask for north on fine paddle (1)}
+FSouth    = 0x80                        #Mask for south (2)}
+FEast     = 0x20                        #Mask for east (4)}
+FWest     = 0x10                        #Mask for west (8)}
 
-FNorth    = 0x01                        #Mask for north on fine paddle (1)}
-FSouth    = 0x02                        #Mask for south (2)}
-FEast     = 0x04                        #Mask for east (4)}
-FWest     = 0x08                        #Mask for west (8)}
-
-CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
-CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
-
-CSlewMsk  = 0x10
-FGuideMsk = 0x10
-
-
-port = {432:0,433:0,434:0,435:0,436:0,437:0,438:0,439:0, 534:0, 535:0, 541:0}   #Dummy port IO
-
+#Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
 #IFDEF NZ
 #LeftMsk =  1   #Masks for left and right dome output bits
 #RightMsk = 2
+#CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
+#CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
 
-def ReadPort(N, Ch):
-  """Will not do anything, no port IO from Python
-  """
-  if N == 1:
-    port[Ctrl1] = ReadAll
-    if Ch == 1:
-      B = port[A1]
-    elif Ch == 2:
-      B = port[B1]
-    elif Ch == 3:
-      B = port[C1]
-  elif N == 2:
-    port[Ctrl2] = ReadAll
-    if Ch == 1:
-      B = port[A2]
-    elif Ch == 2:
-      B = port[B2]
-    elif Ch == 3:
-      B = port[C2]
-  return B
-
-def WritePort(B, N, Ch):
-  """Will not do anything, no port IO from Python
-  """
-  if N == 1:
-    port[Ctrl1] = WriteAll
-    if Ch == 1:
-      port[A1] = B
-    elif Ch == 2:
-      port[B1] = B
-    elif Ch == 3:
-      port[C1] = B
-  elif N == 2:
-    port[Ctrl2] = WriteAll
-    if Ch == 1:
-      port[A2] = B
-    elif Ch == 2:
-      port[B2] = B
-    elif Ch == 3:
-      port[C2] = B
+CSlewMsk  = 0x08
+FGuideMsk = 0x08
 
 
 #$IFDEF NZ}
@@ -197,12 +136,12 @@ FB = 0           #Default to Fine-set speed (ignore fine-guide)
 LastDirn = ''
 LastPaddle = ''
 
-def ReadCoarse():
-#  return ReadPort(1,1)
-  return CB
+def ReadCoarse(inputs):
+  return (inputs >> 16) & 0xFF
+#  return CB
 
-def ReadFine():
-#  return ReadPort(1,2)
+def ReadFine(inputs):
+#  return (inputs >> 24) & 0xFF
   return FB
 
 def ReadLimit():

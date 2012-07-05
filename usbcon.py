@@ -19,6 +19,7 @@ class Driver(controller.Driver):
     # (Keep some values to generate test steps)
     self._getframe = getframe
     self.frame_number = 0
+    self.inputs = 0L
 
   def initialise(self):
     # Print out controller version details:
@@ -194,7 +195,7 @@ class Driver(controller.Driver):
       self.host.stop()
 
   def inputs_changed(self, inputs):
-    logger.info("* %s" % binstring(inputs))
+    logger.debug("* %s" % binstring(inputs))
     if inputs & (1 << 23):
       print "RED pressed"
     if inputs & (1 << 22):
@@ -205,7 +206,7 @@ class Driver(controller.Driver):
       print "YELLOW pressed"
     if inputs & (1 << 19):
       print "WHITE pressed"
-
+    self.inputs = inputs
 
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
