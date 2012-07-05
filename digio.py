@@ -62,6 +62,7 @@ CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
 CSlewMsk  = 0x10
 FGuideMsk = 0x10
 
+
 port = {432:0,433:0,434:0,435:0,436:0,437:0,438:0,439:0, 534:0, 535:0, 541:0}   #Dummy port IO
 
 #IFDEF NZ

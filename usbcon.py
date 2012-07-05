@@ -195,6 +195,17 @@ class Driver(controller.Driver):
 
   def inputs_changed(self, inputs):
     logger.info("* %s" % binstring(inputs))
+    if inputs & (1 << 23):
+      print "RED pressed"
+    if inputs & (1 << 22):
+      print "GREEN pressed"
+    if inputs & (1 << 21):
+      print "BLUE pressed"
+    if inputs & (1 << 20):
+      print "YELLOW pressed"
+    if inputs & (1 << 19):
+      print "WHITE pressed"
+
 
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
