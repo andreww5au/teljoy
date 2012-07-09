@@ -14,7 +14,7 @@ from globals import *
 import usbcon
 
 #MOTOR_ACCEL = 2.0*25000            #2.0 (revolutions/sec/sec) * 25000 (steps/revolution)
-MOTOR_ACCEL = 12000        #For test motors, this is 12000/20 = 600 steps/sec/sec, with a max vel of 2000 steps/sec
+MOTOR_ACCEL = 6000        #For test motors, this is 6000/20 = 300 steps/sec/sec, with a max vel of 2000 steps/sec
 PULSE = 0.05                       #50 milliseconds per 'tick'
 
 #Bit masks for limit switches on the New Zealand telescope. No limit switches
