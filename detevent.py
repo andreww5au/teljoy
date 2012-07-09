@@ -139,7 +139,7 @@ class PaddleStatus:
         self.RAdir = 'fineWest'
         Paddle_max_vel = -FinePaddleRate
         motion.motors.start_motor('RA', Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='fineWEST'):
+    elif self.ButtonPressedRA and (self.RAdir=='fineWest'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
       motion.motors.stop_motor('RA')
@@ -171,10 +171,10 @@ class PaddleStatus:
       logger.info('N')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
-        self.DECdir = 'CoarseNorth'
+        self.DECdir = 'coarseNorth'
         Paddle_max_vel = CoarsePaddleRate
         motion.motors.start_motor('DEC', Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='CoarseNorth'):
+    elif self.ButtonPressedDEC and (self.DECdir=='coarseNorth'):
       #Mask does not match but the motor is running}
       self.ButtonPressedDEC = False
       motion.motors.stop_motor('DEC')
@@ -183,10 +183,10 @@ class PaddleStatus:
       logger.info('S')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
-        self.DECdir = 'CoarseSouth'
+        self.DECdir = 'coarseSouth'
         Paddle_max_vel = -CoarsePaddleRate
         motion.motors.start_motor('DEC', Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='CoarseSouth'):
+    elif self.ButtonPressedDEC and (self.DECdir=='coarseSouth'):
       #Mask does not match but the motor is running}
       self.ButtonPressedDEC = False
       motion.motors.stop_motor('DEC')
@@ -195,10 +195,10 @@ class PaddleStatus:
       logger.info('E')
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
-        self.RAdir = 'CoarseEast'
+        self.RAdir = 'coarseEast'
         Paddle_max_vel = CoarsePaddleRate
         motion.motors.start_motor('RA', Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='CoarseEast'):
+    elif self.ButtonPressedRA and (self.RAdir=='coarseEast'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
       motion.motors.stop_motor('RA')
@@ -207,12 +207,12 @@ class PaddleStatus:
       logger.info('W')
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True
-        self.RAdir = 'CoarseWest'
+        self.RAdir = 'coarseWest'
         Paddle_max_vel = -CoarsePaddleRate
         motion.motors.start_motor('RA', Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='CoarseWest'):
+    elif self.ButtonPressedRA and (self.RAdir=='coarseWest'):
       #Mask does not match but the motor is running}
-      self.ButtonpressedRA = False
+      self.ButtonPressedRA = False
       motion.motors.stop_motor('RA')
 
 
