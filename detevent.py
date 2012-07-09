@@ -159,6 +159,7 @@ class PaddleStatus:
 #$ELSE}
     if ((cb & digio.CSlewMsk)==digio.CSlewMsk):
       self.CoarseMode = 'CSlew'
+      logger.info('SLEW')
       CoarsePaddleRate = prefs.SlewRate
     else:
       self.CoarseMode = 'CSet'
@@ -167,6 +168,7 @@ class PaddleStatus:
 
     #**Check the Coarse paddle by comparing cb to a set of masks}
     if ((cb & digio.CNorth)==digio.CNorth):
+      logger.info('N')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'CoarseNorth'
@@ -178,6 +180,7 @@ class PaddleStatus:
       motion.motors.stop_motor('DEC')
 
     if ((cb & digio.CSouth)==digio.CSouth):
+      logger.info('S')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'CoarseSouth'
@@ -189,6 +192,7 @@ class PaddleStatus:
       motion.motors.stop_motor('DEC')
 
     if ((cb & digio.CEast)==digio.CEast):
+      logger.info('E')
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
         self.RAdir = 'CoarseEast'
@@ -200,6 +204,7 @@ class PaddleStatus:
       motion.motors.stop_motor('RA')
 
     if ((cb & digio.CWest)==digio.CWest):
+      logger.info('W')
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True
         self.RAdir = 'CoarseWest'
