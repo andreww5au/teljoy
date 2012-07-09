@@ -137,6 +137,8 @@ LastDirn = ''
 LastPaddle = ''
 
 def ReadCoarse(inputs):
+  if inputs <> 0L:
+    print hex((inputs >> 16) & 0xFF)
   return (inputs >> 16) & 0xFF
 #  return CB
 
