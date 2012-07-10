@@ -23,7 +23,7 @@ def offset(ora, odec):
   """
   DelRA = 20*ora/math.cos(Current.DecC/3600*math.pi/180)  #conv to motor steps
   DelDEC = 20*odec
-  motion.motors.setprof(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
+  motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
   if (not detevent.Current.posviolate):
     detevent.Current.Ra +=ora/math.cos(detevent.Current.DecC/3600*math.pi/180)
     detevent.Current.Dec += odec

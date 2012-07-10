@@ -109,7 +109,7 @@ class LimitStatus():
       self.LimitOffTime = 2147483647    #sys.maxint
       self.OldLim = True
     if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
-         (not motors.moving) and (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
+         (not motors.Moving) and (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
       motors.Frozen = False
       self.OldLim = False
       self.HWLimit = False
@@ -149,7 +149,7 @@ class Axis():
 
   def CalcPaddle(self):
     """The paddle code in the 'Determine Event' loop communicates with the motor control object by
-       calling start_motor and stop_motor. These functions in turn set the motor control attributes:
+       calling StartPaddle and StopPaddle. These functions in turn set the motor control attributes:
           self.up, self.down                     #ramp up/down time in ticks
           Paddle_start, Paddle_stop              #Booleans
           self.max_vel                           #plateau velocity in steps/tick
@@ -181,7 +181,7 @@ class Axis():
           self.Paddling = False
 
   def CalcJump(self):
-    """A telescope slew is initiated by a call to setprof, with parameters delRA, delDEC, and Rate.
+    """A telescope slew is initiated by a call to MotorControl.Jump, with parameters delRA, delDEC, and Rate.
        That function sets up the actual motion by changing the motor control attributes:
           self.up, self.down       #ramp up/down time in ticks
           self.plateau             #time in ticks to stay at max velocity
@@ -318,7 +318,7 @@ class Axis():
        we don't know in advance when it will stop. Returns None.
 
        Inputs are:
-        Rate is the peak velocity in steps/second (same units as setprof)
+        Rate is the peak velocity in steps/second (same units as self.StartJump)
 
        Outputs are the following attributes:
         self.up, self.down                     #ramp up/down time in ticks
@@ -331,7 +331,7 @@ class Axis():
     with self.lock:
       #Test to see if the telescope is moving in this axis
       if self.Paddling or self.Jumping:
-        logger.debug('motion.Axis.start_motor called when this axis is already in motion.')
+        logger.debug('motion.Axis.StartPaddle called when this axis is already in motion.')
         return False
 
       #number of pulses in ramp_up
@@ -481,16 +481,16 @@ class MotorControl():
        Inputs are delRA and delDEC, the (signed) offsets in steps, and
        'Rate', the peak velocity in steps/second. Returns None.
 
-       Calls RA.setprof() and DEC.setprof to start the slews in each axis
+       Calls RA.StartJump() and DEC.StartJump to start the slews in each axis
     """
     #Determine motor speeds and displacements.
-    #If Teljump or paddle flags are true, loop until they go false.
+    #If slewing (paddle or Jump) exit and return True as an error
     if (self.Jumping or self.Paddling):
       logger.debug('motion.MotorControl.Jump called while telescope is already moving')
       return False
 
-    self.RA.setprof(delRA,Rate)
-    self.DEC.setprof(delDEC,Rate)
+    self.RA.StartJump(delRA, Rate)
+    self.DEC.StartJump(delDEC, Rate)
     return True
 
   def getframe(self):

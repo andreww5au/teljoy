@@ -306,7 +306,7 @@ def CheckDirtyPos():
   if motion.motors.PosDirty and (DirtyTime==0):
     DirtyTime = time.time()                 #just finished move}
 
-  if (DirtyTime<>0) and (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and not motion.motors.moving:
+  if (DirtyTime<>0) and (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and not motion.motors.Moving:
     UpdatePosFile()
     DirtyTime = 0
     motion.motors.PosDirty = False

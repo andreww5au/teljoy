@@ -1,4 +1,6 @@
-#! /usr/local/bin/python2.7
+#! /usr/bin/python
+
+import time
 
 import controller
 from globals import *
@@ -21,13 +23,19 @@ class Driver(controller.Driver):
     self.frame_number = 0
     self.inputs = 0L
 
-  def initialise(self):
+  def get_expected_controller_version(self):
+    return (0, 3)
+
+def initialise(self, state_details):
     # Print out controller version details:
     logger.info("* Initialising %s" % (self.host.mcu_version,))
     logger.info("    MCU Firmware Version: %s" % (self.host.mcu_version,))
     logger.info("FPGA Firmware Version: %s" % (self.host.fpga_version,))
     logger.info("Clock Frequency: %s" % (self.host.clock_frequency,))
     logger.info("Queue Capacity: %s" % (self.host.mc_frames_capacity,))
+
+    logger.info("* Initial Run State:")
+    logger.info(`state_details`)
 
     # First, reset the queue. If the controller was previously running this
     # will set the expected frame number back to zero:
@@ -38,7 +46,7 @@ class Driver(controller.Driver):
 
   def _initialise_queue_reset(self, _):
     # Create a configuration for the controller:
-    configuration = controller.ControllerConfiguration()
+    configuration = controller.ControllerConfiguration(self.host)
 
     # The motor controller will start once 8 frames are enqueued:
     configuration.mc_prefill_frames = 8
@@ -66,6 +74,8 @@ class Driver(controller.Driver):
     # Set the velocity limit (in steps per frame) on each axis:
     configuration.mc_a_velocity_limit = 100
     configuration.mc_b_velocity_limit = 100
+
+    configuration.mc_pulse_minimum_off_time = 1
 
     # Set the length of a frame, in cycles of the controller clock frequency. In
     # this example a frame is 50ms, or 1/20th of a second:
@@ -126,6 +136,8 @@ class Driver(controller.Driver):
     d.addCallback(self._initialise_configuration_written)
     d.addErrback(self._initialise_error_occurred)
 
+    return d
+
   def _initialise_configuration_written(self, configuration):
     logger.info("* Successfully Configured")
 
@@ -134,6 +146,10 @@ class Driver(controller.Driver):
 
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
+
+  def initialisation_error(self, failure):
+      logger.error("* Initialisation Error: %s" % failure.getErrorMessage())
+      logger.error(failure.getTraceback()
 
   def _initialise_error_occurred(self, failure):
     logger.error("* Configuration Failed:")
@@ -154,16 +170,17 @@ class Driver(controller.Driver):
 
   def _check_counters(self):
     d = self.host.get_counters()
-  
     d.addCallback(self._complete_check_counters)
 
-  def _complete_check_counters(self, counters):
-    logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps." %
-                   (counters.at_start_of_frame_number,
-                    counters.a_total_steps,
-                    counters.b_total_steps,
-                    counters.a_guider_steps,
-                    counters.b_guider_steps))
+def _complete_check_counters(self, counters):
+    logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
+                  (counters.reference_frame_number,
+                   counters.a_total_steps,
+                   counters.b_total_steps,
+                   counters.a_guider_steps,
+                   counters.b_guider_steps,
+                   counters.a_measured_steps,
+                   counters.b_measured_steps))
 
     self.host.add_timer(60.0, self._check_counters)
 
@@ -195,7 +212,7 @@ class Driver(controller.Driver):
       self.host.stop()
 
   def inputs_changed(self, inputs):
-    logger.debug("* %s" % binstring(inputs))
+    logger.info("* %s" % binstring(inputs))
     if inputs & (1 << 23):
       print "RED pressed"
     if inputs & (1 << 22):

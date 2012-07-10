@@ -39,7 +39,7 @@ if __name__ == '__main__':
         flags.append('NonSid')
       if motors.Frozen:
         flags.append('Frozen')
-      if motors.moving:
+      if motors.Moving:
         flags.append('Moving')
       if (dstatus.DomeInUse or dstatus.ShutterInUse):
         flags.append('Dome Active')
