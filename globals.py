@@ -171,9 +171,10 @@ class Errors:
     """Checks the watchdog counter and sets the TimeoutError attribute if the
        queue handler isn't running. Called by detevent.DetermineEvent.
     """
-    self.watchdog += 1        #increment watchdog timer
-    if self.watchdog>100:
-      self.TimoutError = True
+    pass
+#    self.watchdog += 1        #increment watchdog timer
+#    if self.watchdog>100:
+#      self.TimoutError = True
 
   def __repr__(self):
     errs = []
