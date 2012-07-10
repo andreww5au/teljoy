@@ -26,7 +26,7 @@ class Driver(controller.Driver):
   def get_expected_controller_version(self):
     return (0, 3)
 
-def initialise(self, state_details):
+  def initialise(self, state_details):
     # Print out controller version details:
     logger.info("* Initialising %s" % (self.host.mcu_version,))
     logger.info("    MCU Firmware Version: %s" % (self.host.mcu_version,))
@@ -149,7 +149,7 @@ def initialise(self, state_details):
 
   def initialisation_error(self, failure):
       logger.error("* Initialisation Error: %s" % failure.getErrorMessage())
-      logger.error(failure.getTraceback()
+      logger.error(failure.getTraceback())
 
   def _initialise_error_occurred(self, failure):
     logger.error("* Configuration Failed:")
@@ -172,7 +172,7 @@ def initialise(self, state_details):
     d = self.host.get_counters()
     d.addCallback(self._complete_check_counters)
 
-def _complete_check_counters(self, counters):
+  def _complete_check_counters(self, counters):
     logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
                   (counters.reference_frame_number,
                    counters.a_total_steps,
