@@ -139,9 +139,7 @@ class Axis():
   self.refraction = 0.0      #Non sidereal trackrate used to correct for atmospheric refraction and telescope flexure - steps/50m
   self.padlog = 0.0          #Accumulated motion from hand paddle movement
   self.reflog = 0            #Accumulated motion from refraction tracking
-  self.GOffset = 0           #These store the total offset for a guide-correction movement. Decremented to
-  self.guide = 0             #These store the current guide correction velocity, in steps/50ms
-  self.Guidelog = 0          #Accumulated motion from autoguider (using self.guide and self.guide offsets described above)
+  self.guidelog = 0          #Accumulated motion from autoguider
   self.hold = 0              #These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
   self.frac = 0.0            #These store the accumulated fractional ticks, left over from previous frames
   self.old_sign = False      #These are direction flags (False=negative) for the last velocity values sent
@@ -216,37 +214,6 @@ class Axis():
             self.remain = 0            #Disable 'fudge velocity' used to store remainder of steps from profile during jump
             self.scl = 0               #Clear deceleration counter
             self.Jumping = False       #Flag end of jump in this axis
-
-  def CalcGuide(self):
-    """Telescope guide motion is initiated by code that calculates the difference in each axis
-       between the current actual position and the desired telescope coordinates. The total offset,
-       in steps, for each axis is stored in the AXIS_GOffset attributes. Returns None.
-
-       This function, called once per tick as the motion control values are calculated, uses those
-       parameters to calculate the current AXIS_guide velocity for each tick. The contents of
-       AXIS_GOffset are decremented by the amount sent each 'tick' until they reach zero.
-
-       This 'Guide' motion is for small corrections initiated in software. It's distinct from, and
-       complementary to, the external guide camera, which attempts to correct for drift by
-       physically toggling N,S,E and W digital inputs - that's handled inside the USB
-       controller.
-
-       Note that prefs.GuideRate must be small enough that no acceleration/deceleration profile
-       is required.
-
-       Inputs are the attributes:
-        AXIS.GOffset           #Total distance to correct, in steps, for each axis
-
-       Outputs are the attributes:
-        AXIS.guide             #Current guide correction rate, in steps/50ms, for this tick
-    """
-    with self.lock:
-      if abs(self.GOffset) > prefs.GuideRate/20:
-        self.guide = math.copysign(prefs.GuideRate/20, self.GOffset)
-        self.GOffset -= self.guide
-      else:        #Use up remaining short guide motion
-        self.guide = self.GOffset
-        self.GOffset = 0
 
   def StartJump(self, delta, Rate):
     """This procedure calculates the profile parameters and starts a telescope jump
@@ -435,11 +402,11 @@ class Axis():
         if not Frozen:
           send += self.refraction         #Add in refraction correction velocity
           self.reflog += self.refraction     #Log refraction correction motion
-          send += self.guide             #Add in autoguider correction velocity
-          self.Guidelog += self.guide    #Log autoguider correction motion
           if Prefs.NonSidOn:
             send += self.track            #Add in non-sidereal motion for moving targets
             self.padlog += self.track     #Log non-sidereal motion as paddle movement
+
+      #TODO - handle autoguider log here, using counter data?
 
       #Add the 'held' values for this axis, from a previous tick where a zero was sent when the axis direction changed
       #This was a hardware requirement for PC23, not for USB controller, but we'll do ti anyway to be safe.
@@ -475,9 +442,9 @@ class MotorControl():
   """
   def __init__(self):
     logger.debug('motion.MotorControl.__init__: Initializing Global variables')
-    self.Teljump = False        #True if a 'Jump' (motion to desired endpoint coordinates) is in progress
+    self.Jumping = False        #True if a 'Jump' (motion to desired endpoint coordinates) is in progress
     self.Paddling = False
-    self.moving = False         #True if the telescope is moving (other than sidereal, non-sidereal offset, flexure and refraction tracking)
+    self.Moving = False         #True if the telescope is moving (other than sidereal, non-sidereal offset, flexure and refraction tracking)
     self.PosDirty = False       #Set to True when a move (jump or paddle) finishes, to indicate move has finished. Reset to False by detevent.
     self.ticks = 0              #Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
     self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
@@ -541,8 +508,10 @@ class MotorControl():
 
     if was_moving and (not Moving):
       self.PosDirty = True                     #Flag that the log file position needs to be updated
-      self.RA.reflog = 0                       #Zero the refraction/flexure tracking log
-      self.DEC.reflog = 0                      #Zero the refraction/flexure tracking log
+      with RA.lock:
+        self.RA.reflog = 0                       #Zero the refraction/flexure tracking log
+      with DEC.lock:
+        self.DEC.reflog = 0                      #Zero the refraction/flexure tracking log
 
     if prefs.EastOfPier:
       int_DEC = -int_DEC      #Invert DEC direction if tel. east of pier

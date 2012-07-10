@@ -105,44 +105,44 @@ class PaddleStatus:
         self.ButtonPressedDEC = True
         self.DECdir = 'fineNorth'
         Paddle_max_vel = FinePaddleRate
-        motion.motors.start_motor('DEC', Paddle_max_vel) 
+        motion.motors.DEC.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedDEC and (self.DECdir=='fineNorth'):
       #Mask does not match but the motor is running}
       self.ButtonPressedDEC = False
-      motion.motors.stop_motor('DEC')
+      motion.motors.DEC.StopPaddle()
 
     if ((fb & digio.FSouth)==digio.FSouth):            #Check with South Mask}
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'fineSouth'
         Paddle_max_vel = -FinePaddleRate
-        motion.motors.start_motor('DEC', Paddle_max_vel)
+        motion.motors.DEC.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedDEC and (self.DECdir=='fineSouth'):
       #Mask does not match but the motor is running}
       self.ButtonPressedDEC = False
-      motion.motors.stop_motor('DEC')
+      motion.motors.DEC.StopPaddle()
 
     if ((fb & digio.FEast)==digio.FEast):              #Check the Eastmask}
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
         self.RAdir = 'fineEast'
         Paddle_max_vel = FinePaddleRate
-        motion.motors.start_motor('RA', Paddle_max_vel)
+        motion.motors.RA.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedRA and (self.RAdir=='fineEast'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
-      motion.motors.stop_motor('RA')
+      motion.motors.RA.StopPaddle()
 
     if ((fb & digio.FWest)==digio.FWest):               #Check the West mask}
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True
         self.RAdir = 'fineWest'
         Paddle_max_vel = -FinePaddleRate
-        motion.motors.start_motor('RA', Paddle_max_vel)
+        motion.motors.RA.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedRA and (self.RAdir=='fineWest'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
-      motion.motors.stop_motor('RA')
+      motion.motors.RA.StopPaddle()
 
     #check the Coarse paddle speed switches and set appropriate mode and velocity
 #$IFDEF NZ}
@@ -173,11 +173,11 @@ class PaddleStatus:
         self.ButtonPressedDEC = True
         self.DECdir = 'coarseNorth'
         Paddle_max_vel = CoarsePaddleRate
-        motion.motors.start_motor('DEC', Paddle_max_vel)
+        motion.motors.DEC.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedDEC and (self.DECdir=='coarseNorth'):
       #Mask does not match but the motor is running}
       self.ButtonPressedDEC = False
-      motion.motors.stop_motor('DEC')
+      motion.motors.DEC.StopPaddle()
 
     if ((cb & digio.CSouth)==digio.CSouth):
       logger.info('S')
@@ -185,11 +185,11 @@ class PaddleStatus:
         self.ButtonPressedDEC = True
         self.DECdir = 'coarseSouth'
         Paddle_max_vel = -CoarsePaddleRate
-        motion.motors.start_motor('DEC', Paddle_max_vel)
+        motion.motors.DEC.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedDEC and (self.DECdir=='coarseSouth'):
       #Mask does not match but the motor is running}
       self.ButtonPressedDEC = False
-      motion.motors.stop_motor('DEC')
+      motion.motors.DEC.StopPaddle()
 
     if ((cb & digio.CEast)==digio.CEast):
       logger.info('E')
@@ -197,11 +197,11 @@ class PaddleStatus:
         self.ButtonPressedRA = True
         self.RAdir = 'coarseEast'
         Paddle_max_vel = CoarsePaddleRate
-        motion.motors.start_motor('RA', Paddle_max_vel)
+        motion.motors.RA.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedRA and (self.RAdir=='coarseEast'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
-      motion.motors.stop_motor('RA')
+      motion.motors.RA.StopPaddle()
 
     if ((cb & digio.CWest)==digio.CWest):
       logger.info('W')
@@ -209,11 +209,11 @@ class PaddleStatus:
         self.ButtonPressedRA = True
         self.RAdir = 'coarseWest'
         Paddle_max_vel = -CoarsePaddleRate
-        motion.motors.start_motor('RA', Paddle_max_vel)
+        motion.motors.RA.StartPaddle(Paddle_max_vel)
     elif self.ButtonPressedRA and (self.RAdir=='coarseWest'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
-      motion.motors.stop_motor('RA')
+      motion.motors.RA.StopPaddle()
 
 
 def UpdatePosFile():
@@ -249,25 +249,27 @@ def UpdateCurrent():
   """
   #TODO - add proper locking here, fiddling with motion.motors attributes not threadsafe
   #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
-  if motion.motors.Frozen or (motion.motors.RA_padlog<>0) or (motion.motors.DEC_padlog<>0):
+  if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
     Current.posviolate = True
 
   #account for paddle and non-sid. motion, and limit encounters}
-  Current.RaA = Current.RaA + motion.motors.RA_padlog/20
-  Current.DecA = Current.DecA + motion.motors.DEC_padlog/20
+  Current.RaA += motion.motors.RA.padlog/20
+  Current.DecA += motion.motors.DEC.padlog/20
 
   #above, plus real-time refraction+flexure+guide in the fully corrected coords}
-  Current.RaC += motion.motors.RA_padlog/20 + motion.motors.RA_reflog/20 + motion.motors.RA_Guidelog/20
-  Current.DecC += motion.motors.DEC_padlog/20 + motion.motors.DEC_reflog/20 + motion.motors.DEC_Guidelog/20
-  paddles.RA_GuideAcc += motion.motors.RA_Guidelog/20
-  paddles.DEC_GuideAcc += motion.motors.DEC_Guidelog/20
+  Current.RaC += motion.motors.RA.padlog/20 + motion.motors.RA.reflog/20 + motion.motors.RA.guidelog/20
+  Current.DecC += motion.motors.DEC.padlog/20 + motion.motors.DEC.reflog/20 + motion.motors.DEC.guidelog/20
+  paddles.RA_GuideAcc += motion.motors.RA.guidelog/20
+  paddles.DEC_GuideAcc += motion.motors.DEC.guidelog/20
 
-  motion.motors.RA_padlog = 0
-  motion.motors.RA_reflog = 0
-  motion.motors.DEC_padlog = 0
-  motion.motors.DEC_reflog = 0
-  motion.motors.RA_guidelog = 0
-  motion.motors.DEC_guidelog = 0
+  with motion.motors.RA.lock:
+    motion.motors.RA.padlog = 0
+    motion.motors.RA.reflog = 0
+    motion.motors.RA.guidelog = 0
+  with motion.motors.DEC.lock:
+    motion.motors.DEC.padlog = 0
+    motion.motors.DEC.reflog = 0
+    motion.motors.DEC.guidelog = 0
 
   if Current.RaA > (24*60*60*15):
     Current.RaA -= (24*60*60*15)
@@ -325,7 +327,7 @@ def CheckDirtyDome():
        (not pdome.status.DomeInUse) and
        (not pdome.status.ShutterInUse) and
        pdome.status.DomeTracking and
-       (not motion.motors.moving) and
+       (not motion.motors.Moving) and
        pdome.status.AutoDome and
        (not motion.motors.PosDirty) ):
     pdome.DomeMove(pdome.DomeCalcAzi(Current))
@@ -347,7 +349,7 @@ def CheckDBUpdate(db=None):
   if (time.time()-DBLastTime) > 1.0:
     foo = sqlint.Info() 
     foo.posviolate = Current.posviolate
-    foo.moving = motion.motors.moving
+    foo.moving = motion.motors.Moving
     foo.EastOfPier = prefs.EastOfPier
     foo.NonSidOn = prefs.NonSidOn
     foo.DomeInUse = pdome.status.DomeInUse
@@ -376,7 +378,7 @@ def DoTJbox(db=None):
   if BObj is None or other is None:
     return
   ProspLastTime = time.time()
-  if (other.LastMod<0) or (other.LastMod>5) or motion.motors.moving:
+  if (other.LastMod<0) or (other.LastMod>5) or motion.motors.Moving:
     other.action = 'none'
     sqlint.ClearTJbox(db=db)
     TJboxAction = 'none'
@@ -426,7 +428,7 @@ def DoTJbox(db=None):
       DECOffset = other.OffsetDEC
       DelRA = 20*RAOffset/math.cos(Current.DecC/3600*math.pi/180)  #conv to motor steps}
       DelDEC = 20*DECOffset
-      motion.motors.setprof(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
+      motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
       if (not Current.posviolate):
         Current.Ra += RAOffset/math.cos(Current.DecC/3600*math.pi/180)
         Current.Dec += DECOffset
@@ -474,7 +476,7 @@ def CheckTJbox(db=None):
     if sqlint.ExistsTJbox(db=db):
       DoTJbox(db=db)
   elif TJboxAction in ['jumpid','jumprd','jumpaa','offset']:
-    if (not motion.motors.moving) and (not pdome.status.DomeInUse):
+    if (not motion.motors.Moving) and (not pdome.status.DomeInUse):
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
   elif TJboxAction == 'dome':
@@ -573,12 +575,16 @@ def RelRef():
       errors.RefError = True
 
     #Set the actual refraction/flexure correction velocities in steps/50ms
-    motion.motors.RA_refraction = RA_ref
-    motion.motors.DEC_refraction = DEC_ref
+    with motion.motors.RA.lock:
+      motion.motors.RA.refraction = RA_ref
+    with motion.motors.DEC.lock:
+      motion.motors.DEC.refraction = DEC_ref
   else:
     #**Stop the refraction correction**
-    motion.motors.RA_refraction = 0.0
-    motion.motors.DEC_refraction = 0.0
+    with motion.motors.RA.lock:
+      motion.motors.RA.refraction = 0.0
+    with motion.motors.DEC.lock:
+      motion.motors.DEC.refraction = 0.0
     errors.RefError = False
 
 
@@ -622,7 +628,7 @@ def Jump(FObj, Rate=None):
 
     DelRA = DelRA*20        #Convert to number of motor steps}
     DelDEC = DelDEC*20
-    motion.motors.setprof(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
+    motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
 
     LastObj = copy.deepcopy(Current)                    #Save the current position
     Current.RaC, Current.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
@@ -631,8 +637,10 @@ def Jump(FObj, Rate=None):
     Current.Epoch = FObj.Epoch
     Current.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
     Current.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
-    motion.motors.RA_track = Current.TraRA              #Set the actual hardware trackrate in the motion controller
-    motion.motors.DEC_track = Current.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
+    with motion.motors.RA.lock:
+      motion.motors.RA.track = Current.TraRA              #Set the actual hardware trackrate in the motion controller
+    with motion.motors.DEC.lock:
+      motion.motors.DEC.track = Current.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
     Current.posviolate = False    #signal a valid original RA and Dec
 
 
