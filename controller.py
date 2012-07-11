@@ -911,7 +911,6 @@ class Controller(object):
 		return frame_number
 
 	def _handle_enqueue_completed(self, bytes_written):
-		print "X Done"
 		self._enqueue_in_progress = False
 
 		self._call_enqueue_available()
