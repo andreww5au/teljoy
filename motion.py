@@ -152,7 +152,6 @@ class Axis:
     """Can't pickle the __setattr__ function when saving state
     """
     d = self.__dict__.copy()
-    del d['__setattr__']
     del d['lock']
     return d
 
