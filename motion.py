@@ -117,15 +117,17 @@ class LimitStatus():
 
 
 
-class Axis:
+class Axis():
   """Represents the motor control flags and variables controlling motion on
      a single axis. Replaces RA_variable and DEC_variable type attributes of the
      MotorControl class.
   """
   def __init__(self):
+    """Set up empty attributes for a new axis record.
+    """
     self.sidereal = 0.0        #Sidereal rate for this axis (prefs.RAsid for RA, 0.0 for DEC)
     self.up = 0                #number of 50ms ticks to ramp motor to max velocity for slew
-    self.down = 0             #number of 50ms ticks to ramp motor down after slew
+    self.down = 0              #number of 50ms ticks to ramp motor down after slew
     self.plateau = 0           #number of 50ms ticks in the plateau of a slew
     self.track = 0.0           #Current Non-Sidereal tracking velocity for moving targets in steps/50ms
     self.add_vel = 0.0         #accelleration for slews in steps/50ms/50ms
