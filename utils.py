@@ -21,7 +21,7 @@ def Reset(ra=None, dec=None, epoch=2000.0, objid=''):
 def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
   """
-  DelRA = 20*ora/math.cos(Current.DecC/3600*math.pi/180)  #conv to motor steps
+  DelRA = 20*ora/math.cos(detevent.Current.DecC/3600*math.pi/180)  #conv to motor steps
   DelDEC = 20*odec
   motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
   if (not detevent.Current.posviolate):

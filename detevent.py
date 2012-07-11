@@ -247,7 +247,6 @@ def UpdateCurrent():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  #TODO - add proper locking here, fiddling with motion.motors attributes not threadsafe
   #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
   if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
     Current.posviolate = True
@@ -605,6 +604,9 @@ def Jump(FObj, Rate=None):
   if Rate is None:
     Rate = prefs.SlewRate
   #TODO - handle locking properly so we don't slew during a slew, or during paddle motion
+  if motion.motors.Moving:
+    logger.error('detevent.Jump called while telescope in motion!')
+    return True
   UpdateCurrent()             #Apply accumulated paddle and guide movement to current position
   FObj.update(FObj)                      #Correct final object
 

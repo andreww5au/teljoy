@@ -283,7 +283,6 @@ class Axis:
         self.plateau = 0
         self.remain = 0
         self.Jumping = False
-        self.GOffset += delta
       elif abs(delta) > 2.0*num_ramp_steps:
         #Jump is large enough to reach max velocity - has a Plateau
         self.up = num_pulses
@@ -377,8 +376,6 @@ class Axis:
        Returns the number of steps to travel in the next 50ms frame.
     """
     with self.lock:
-      send = 0.0          #Final floating point value for RA steps to send to the motor this tick
-      int_send = 0             #integer part of send_RA, the distance to send for this 50ms tick
 
       #MIX VELOCITIES for next pulse - sidereal rate, motion profile velocities, non-sidereal and refraction tracking
       #Start with sidereal rate, or zero if frozen
@@ -505,11 +502,11 @@ class MotorControl():
     self.Jumping = (self.RA.Jumping or self.DEC.Jumping)
     self.Moving = (self.Paddling or self.Jumping)
 
-    if was_moving and (not Moving):
+    if was_moving and (not self.Moving):
       self.PosDirty = True                     #Flag that the log file position needs to be updated
-      with RA.lock:
+      with self.RA.lock:
         self.RA.reflog = 0                       #Zero the refraction/flexure tracking log
-      with DEC.lock:
+      with self.DEC.lock:
         self.DEC.reflog = 0                      #Zero the refraction/flexure tracking log
 
     if prefs.EastOfPier:
