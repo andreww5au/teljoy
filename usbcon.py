@@ -214,17 +214,7 @@ class Driver(controller.Driver):
       self.host.stop()
 
   def inputs_changed(self, inputs):
-    logger.info("* %s" % binstring(inputs))
-    if inputs & (1 << 23):
-      print "RED pressed"
-    if inputs & (1 << 22):
-      print "GREEN pressed"
-    if inputs & (1 << 21):
-      print "BLUE pressed"
-    if inputs & (1 << 20):
-      print "YELLOW pressed"
-    if inputs & (1 << 19):
-      print "WHITE pressed"
+    logger.debug("* %s" % binstring(inputs))
     self.inputs = inputs
 
   def run(self):

@@ -29,15 +29,15 @@
 """
 
 
-CNorth    = 0x40                        #Mask for north on coarse paddles (Green on test cable)
-CSouth    = 0x80                        #Mask for south (red on test cable)
-CEast     = 0x20                        #Mask for east (blue on test cable
-CWest     = 0x10                        #Mask for west (yellow on test cable)
+CNorth    = 0x02                        #Mask for north on coarse paddles (Green on test cable)
+CSouth    = 0x01                        #Mask for south (red on test cable)
+CEast     = 0x04                        #Mask for east (blue on test cable
+CWest     = 0x08                        #Mask for west (yellow on test cable)
 
-FNorth    = 0x40                        #Mask for north on fine paddle (1)}
-FSouth    = 0x80                        #Mask for south (2)}
-FEast     = 0x20                        #Mask for east (4)}
-FWest     = 0x10                        #Mask for west (8)}
+FNorth    = 0x02                        #Mask for north on fine paddle (1)}
+FSouth    = 0x01                        #Mask for south (2)}
+FEast     = 0x04                        #Mask for east (4)}
+FWest     = 0x08                        #Mask for west (8)}
 
 #Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
 #IFDEF NZ
@@ -46,8 +46,8 @@ FWest     = 0x10                        #Mask for west (8)}
 #CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
 #CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
 
-CSlewMsk  = 0x08
-FGuideMsk = 0x08
+CSlewMsk  = 0x10
+FGuideMsk = 0x10
 
 
 #$IFDEF NZ}
@@ -138,8 +138,8 @@ LastPaddle = ''
 
 def ReadCoarse(inputs):
   if inputs <> 0L:
-    print hex((inputs >> 16) & 0xFF)
-  return (inputs >> 16) & 0xFF
+    print hex((inputs >> 8) & 0xFF)
+  return (inputs >> 8) & 0xFF
 #  return CB
 
 def ReadFine(inputs):
