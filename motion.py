@@ -13,6 +13,8 @@ import time
 from globals import *
 import usbcon
 
+DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
+
 #MOTOR_ACCEL = 2.0*25000            #2.0 (revolutions/sec/sec) * 25000 (steps/revolution)
 MOTOR_ACCEL = 6000        #For test motors, this is 6000/20 = 300 steps/sec/sec, with a max vel of 2000 steps/sec
 PULSE = 0.05                       #50 milliseconds per 'tick'
@@ -412,6 +414,8 @@ class Axis():
             self.padlog += self.track     #Log non-sidereal motion as paddle movement
 
       #TODO - handle autoguider log here, using counter data?
+
+      send = send / DIVIDER     #TODO - remove this hack for use on the actual telescope, only needed for test motors.
 
       #Add the 'held' values for this axis, from a previous tick where a zero was sent when the axis direction changed
       #This was a hardware requirement for PC23, not for USB controller, but we'll do ti anyway to be safe.

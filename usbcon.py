@@ -5,8 +5,6 @@ import time
 import controller
 from globals import *
 
-DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
-
 def binstring(v):
   """Convert a longint into a human readable binary string.
   """
@@ -197,7 +195,7 @@ class Driver(controller.Driver):
     if details.frames_in_queue < 12:
       # Ramp the velocity up and down:
       va,vb = self._getframe()
-      va,vb = va/DIVIDER, vb/DIVIDER
+
       self.frame_number = self.host.enqueue_frame(va, vb)
   
       # Every "frame" of step data has a unique number, starting with
