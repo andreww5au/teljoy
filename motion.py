@@ -123,7 +123,7 @@ class Axis:
      MotorControl class.
   """
   def __init__(self):
-    self.sidereal = 0.0        #Sidereal rate for this axis (Prefs.RAsid for RA, 0.0 for DEC)
+    self.sidereal = 0.0        #Sidereal rate for this axis (prefs.RAsid for RA, 0.0 for DEC)
     self.up = 0                #number of 50ms ticks to ramp motor to max velocity for slew
     self.down = 0             #number of 50ms ticks to ramp motor down after slew
     self.plateau = 0           #number of 50ms ticks in the plateau of a slew
@@ -398,7 +398,7 @@ class Axis:
         if not Frozen:
           send += self.refraction         #Add in refraction correction velocity
           self.reflog += self.refraction     #Log refraction correction motion
-          if Prefs.NonSidOn:
+          if prefs.NonSidOn:
             send += self.track            #Add in non-sidereal motion for moving targets
             self.padlog += self.track     #Log non-sidereal motion as paddle movement
 
@@ -445,7 +445,7 @@ class MotorControl():
     self.ticks = 0              #Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
     self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
     self.RA = Axis()
-    self.RA.sidereal = Prefs.RAsid
+    self.RA.sidereal = prefs.RAsid
     self.DEC = Axis()
     self.Driver = usbcon.Driver(getframe=self.getframe)
     logger.debug('motion.MotorControl.__init__: finished global vars')
