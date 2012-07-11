@@ -117,35 +117,36 @@ class LimitStatus():
 
 
 
-class Axis(self):
+class Axis:
   """Represents the motor control flags and variables controlling motion on
      a single axis. Replaces RA_variable and DEC_variable type attributes of the
      MotorControl class.
   """
-  self.sidereal = 0.0        #Sidereal rate for this axis (Prefs.RAsid for RA, 0.0 for DEC)
-  self.up = 0                #number of 50ms ticks to ramp motor to max velocity for slew
-  self.down = 0             #number of 50ms ticks to ramp motor down after slew
-  self.plateau = 0           #number of 50ms ticks in the plateau of a slew
-  self.track = 0.0           #Current Non-Sidereal tracking velocity for moving targets in steps/50ms
-  self.add_vel = 0.0         #accelleration for slews in steps/50ms/50ms
-  self.max_vel = 0.0         #plateau velocity in steps/50ms for current slew
+  def __init__(self):
+    self.sidereal = 0.0        #Sidereal rate for this axis (Prefs.RAsid for RA, 0.0 for DEC)
+    self.up = 0                #number of 50ms ticks to ramp motor to max velocity for slew
+    self.down = 0             #number of 50ms ticks to ramp motor down after slew
+    self.plateau = 0           #number of 50ms ticks in the plateau of a slew
+    self.track = 0.0           #Current Non-Sidereal tracking velocity for moving targets in steps/50ms
+    self.add_vel = 0.0         #accelleration for slews in steps/50ms/50ms
+    self.max_vel = 0.0         #plateau velocity in steps/50ms for current slew
 
-  self.jump = 0.0            #Current slew velocity in steps/50ms, calculated by self.CalcJump or self.CalcPaddle for each tick
-  self.remain = 0.0          #remainder after calculating ramp profile - used in telescope jump
-  self.finish = True         #False if a jump (not paddle motion) is in progress for this axis
-  self.Paddle_start = False  #True if hand-paddle motion for this axis is ramping up or or reached plateau velocity (button pressed)
-  self.Paddle_stop = False   #True if hand-paddle motion for this axis is ramping down (button just released)
-  self.scl = 0               #How many ticks we have been decelerating for on the ramp down from a slew in this axis
-  self.refraction = 0.0      #Non sidereal trackrate used to correct for atmospheric refraction and telescope flexure - steps/50m
-  self.padlog = 0.0          #Accumulated motion from hand paddle movement
-  self.reflog = 0            #Accumulated motion from refraction tracking
-  self.guidelog = 0          #Accumulated motion from autoguider
-  self.hold = 0              #These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
-  self.frac = 0.0            #These store the accumulated fractional ticks, left over from previous frames
-  self.old_sign = False      #These are direction flags (False=negative) for the last velocity values sent
-  self.Jumping = False       #True if a pre-calculated slew is in progress for this axis.
-  self.Paddling = False      #True if hand-paddle motion is in progress for this axis
-  self.lock = threading.RLock()
+    self.jump = 0.0            #Current slew velocity in steps/50ms, calculated by self.CalcJump or self.CalcPaddle for each tick
+    self.remain = 0.0          #remainder after calculating ramp profile - used in telescope jump
+    self.finish = True         #False if a jump (not paddle motion) is in progress for this axis
+    self.Paddle_start = False  #True if hand-paddle motion for this axis is ramping up or or reached plateau velocity (button pressed)
+    self.Paddle_stop = False   #True if hand-paddle motion for this axis is ramping down (button just released)
+    self.scl = 0               #How many ticks we have been decelerating for on the ramp down from a slew in this axis
+    self.refraction = 0.0      #Non sidereal trackrate used to correct for atmospheric refraction and telescope flexure - steps/50m
+    self.padlog = 0.0          #Accumulated motion from hand paddle movement
+    self.reflog = 0            #Accumulated motion from refraction tracking
+    self.guidelog = 0          #Accumulated motion from autoguider
+    self.hold = 0              #These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
+    self.frac = 0.0            #These store the accumulated fractional ticks, left over from previous frames
+    self.old_sign = False      #These are direction flags (False=negative) for the last velocity values sent
+    self.Jumping = False       #True if a pre-calculated slew is in progress for this axis.
+    self.Paddling = False      #True if hand-paddle motion is in progress for this axis
+    self.lock = threading.RLock()
 
   def CalcPaddle(self):
     """The paddle code in the 'Determine Event' loop communicates with the motor control object by
