@@ -323,7 +323,7 @@ class ControllerConfiguration(object):
 			self.mc_a_velocity_limit
 
 		b_full_frame_cycles = (self.mc_pulse_width + self.mc_pulse_minimum_off_time) * \
-			self.mc_a_velocity_limit
+			self.mc_b_velocity_limit
 
 		if a_full_frame_cycles > self.mc_frame_period or \
 		  b_full_frame_cycles > self.mc_frame_period:

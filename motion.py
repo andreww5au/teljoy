@@ -148,6 +148,14 @@ class Axis:
     self.Paddling = False      #True if hand-paddle motion is in progress for this axis
     self.lock = threading.RLock()
 
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = self.__dict__.copy()
+    del d['__setattr__']
+    del d['lock']
+    return d
+
   def CalcPaddle(self):
     """The paddle code in the 'Determine Event' loop communicates with the motor control object by
        calling StartPaddle and StopPaddle. These functions in turn set the motor control attributes:

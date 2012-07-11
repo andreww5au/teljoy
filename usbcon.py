@@ -44,6 +44,8 @@ class Driver(controller.Driver):
     d.addCallback(self._initialise_queue_reset)
     d.addErrback(self._initialise_error_occurred)
 
+    return d
+
   def _initialise_queue_reset(self, _):
     # Create a configuration for the controller:
     configuration = controller.ControllerConfiguration(self.host)
@@ -75,7 +77,7 @@ class Driver(controller.Driver):
     configuration.mc_a_velocity_limit = 100
     configuration.mc_b_velocity_limit = 100
 
-    configuration.mc_pulse_minimum_off_time = 1
+    configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
 
     # Set the length of a frame, in cycles of the controller clock frequency. In
     # this example a frame is 50ms, or 1/20th of a second:
@@ -83,7 +85,7 @@ class Driver(controller.Driver):
 
     # Set the pulse width, in cycles of the controller clock frequency. In this
     # example the pulse width is 500us:
-    configuration.mc_pulse_width = self.host.clock_frequency / 2000
+    configuration.mc_pulse_width = self.host.clock_frequency / 10000
 
     # Invert all the GPIO inputs, so they are active when pulled low:
     for pin in configuration.pins[0:48]:
