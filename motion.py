@@ -117,7 +117,7 @@ class LimitStatus():
 
 
 
-class Axis():
+class Axis(self):
   """Represents the motor control flags and variables controlling motion on
      a single axis. Replaces RA_variable and DEC_variable type attributes of the
      MotorControl class.
@@ -326,7 +326,7 @@ class Axis():
         self.Paddle_stop                       #True when button just released, indicates ramp down in progress
         self.max_vel                           #plateau velocity in steps/tick
         self.add_vel                           #ramp accel/decel in steps/tick/tick
-        self.moving                            #True if the telescope is slewing (jump or paddle) in this axis
+        self.Paddling                          #True if the telescope is performing hand-paddle motion in this axis
     """
     with self.lock:
       #Test to see if the telescope is moving in this axis
@@ -362,20 +362,18 @@ class Axis():
        the hand-paddle button is released. Returns None.
 
        Outputs are the following attributes:
-        self.up, self.down                     #ramp up/down time in ticks
         self.Paddle_start                      #True when button pressed - indicates ramp up or plateau
         self.Paddle_stop                       #True when button just released, indicates ramp down in progress
-        self.max_vel                           #plateau velocity in steps/tick
-        self.add_vel                           #ramp accel/decel in steps/tick/tick
-        self.moving                            #True if the telescope is slewing (jump or paddle)
-        (Used to set) PosDirty                 #Set True when move finished to trigger position logfile update
     """
     with self.lock:
       self.Paddle_start = False
       self.Paddle_stop = True
 
   def getframe(self, Frozen):
-    """
+    """Called by the controller thread when new data needs to be calculated to send to the
+       controller queue for this axis.
+
+       Returns the number of steps to travel in the next 50ms frame.
     """
     with self.lock:
       send = 0.0          #Final floating point value for RA steps to send to the motor this tick
@@ -442,8 +440,8 @@ class MotorControl():
   """
   def __init__(self):
     logger.debug('motion.MotorControl.__init__: Initializing Global variables')
-    self.Jumping = False        #True if a 'Jump' (motion to desired endpoint coordinates) is in progress
-    self.Paddling = False
+    self.Jumping = False        #True if a 'Jump' (precalculated slew) is in progress for either axis
+    self.Paddling = False       #True if hand-paddle movement is in progress for either axis
     self.Moving = False         #True if the telescope is moving (other than sidereal, non-sidereal offset, flexure and refraction tracking)
     self.PosDirty = False       #Set to True when a move (jump or paddle) finishes, to indicate move has finished. Reset to False by detevent.
     self.ticks = 0              #Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
