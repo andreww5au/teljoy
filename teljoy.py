@@ -34,7 +34,7 @@ import motion
 import detevent
 from pdome import DomeSetMode, DomeMove, DomeMoveWait, DomeOpen, DomeOpenWait, DomeClose, DomeCloseWait
 from sqlint import GetRC3, GetObject
-from detevent import Jump
+from detevent import current
 from digio import press, release, cslew, cset
 from utils import *
 
