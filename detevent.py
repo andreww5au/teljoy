@@ -17,6 +17,7 @@ import time
 import threading
 import cPickle
 import copy
+import traceback
 
 from globals import *
 import pdome
@@ -29,7 +30,52 @@ import sqlint
 detthread = None     #Contains the thread object running DetermineEvent after the init() function is called
 
 
-class PaddleStatus:
+class EventLoop:
+  """Allows a set of functions to be registered that must be called at
+     regular intervals. One call to 'run' will iterate through all
+     registered functions, catching and logging any errors.
+  """
+  def __init__(self):
+    self.looptime = 0.2
+    self.Functions = {}
+    self.Errors = {}
+    self.exit = False
+  def register(self, name, function):
+    self.Functions[name] = function
+    self.Errors[name] = {}
+  def remove(self,name):
+    if name in self.Functions:
+      del self.Functions[name]
+  def runall(self):
+    for name,function in self.Functions.iteritems():
+      try:
+        function()
+      except:
+        now = time.time()
+        error = traceback.format_exc()
+        self.Errors[now] = error
+        logger.error("Error in EventLoop function %s: %s" % (name, error))
+        #Later, maybe remove a function here if it throws exceptions too often?
+  def runloop(self, looptime=0.2):
+    """Loop forever iterating over the registered functions. Use time.sleep
+       to make sure the loop is run no more often than once every 'looptime'
+       seconds. Maintain 'self.runtime' as the measured time, in seconds,
+       the last time the loop was run.
+
+       Set self.exit to True to exit the loop
+    """
+    self.looptime = looptime
+    logger.info("Event loop started")
+    while not self.exit:
+      self._Tlast = time.time()
+      self.runall()
+      self.runtime = time.time()-self._Tlast
+      if self.runtime < self.looptime:
+        time.sleep(self.looptime - self.runtime)
+    logger.info("Event loop exited.")
+
+
+class Paddles:
   """An instance of this class is used to store the state of the hand paddle
      buttons, current motion, and speed settings. 
      
@@ -288,7 +334,7 @@ def SaveStatus():
   """
   #TODO - replace with RPC calls to share state data  
   f = open('/tmp/teljoy.status','w')
-  cPickle.dump((Current,motion.motors,pdome.status,errors,prefs),f)
+  cPickle.dump((Current,motion.motors,pdome.dome,errors,prefs),f)
   f.close()
 
 
@@ -321,18 +367,18 @@ def CheckDirtyDome():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  if ( (abs(pdome.DomeCalcAzi(Current)-pdome.status.NewDomeAzi) > 6) and
-       ((time.time()-pdome.status.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
-       (not pdome.status.DomeInUse) and
-       (not pdome.status.ShutterInUse) and
-       pdome.status.DomeTracking and
+  if ( (abs(pdome.CalcAzi(Current)-pdome.dome.NewDomeAzi) > 6) and
+       ((time.time()-pdome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
+       (not pdome.dome.DomeInUse) and
+       (not pdome.dome.ShutterInUse) and
+       pdome.dome.DomeTracking and
        (not motion.motors.Moving) and
-       pdome.status.AutoDome and
+       pdome.dome.AutoDome and
        (not motion.motors.PosDirty) ):
-    pdome.DomeMove(pdome.DomeCalcAzi(Current))
+    pdome.dome.move(pdome.CalcAzi(Current))
 
 
-def CheckDBUpdate(db=None):
+def CheckDBUpdate():
   """Make sure that the current state is saved to the SQL database approximately once 
      every second. Exits without an error if the SQL connection isn't available.
      
@@ -342,19 +388,17 @@ def CheckDBUpdate(db=None):
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  global DBLastTime
-  if db is None:
-    return
+  global db, DBLastTime
   if (time.time()-DBLastTime) > 1.0:
     foo = sqlint.Info() 
     foo.posviolate = Current.posviolate
     foo.moving = motion.motors.Moving
     foo.EastOfPier = prefs.EastOfPier
     foo.NonSidOn = prefs.NonSidOn
-    foo.DomeInUse = pdome.status.DomeInUse
-    foo.ShutterInUse = pdome.status.ShutterInUse
-    foo.ShutterOpen = pdome.status.ShutterOpen
-    foo.DomeTracking = pdome.status.DomeTracking
+    foo.DomeInUse = pdome.dome.DomeInUse
+    foo.ShutterInUse = pdome.dome.ShutterInUse
+    foo.ShutterOpen = pdome.dome.ShutterOpen
+    foo.DomeTracking = pdome.dome.DomeTracking
     foo.Frozen = motion.motors.Frozen
     foo.RA_guideAcc = paddles.RA_GuideAcc
     foo.DEC_guideAcc = paddles.DEC_GuideAcc
@@ -363,16 +407,14 @@ def CheckDBUpdate(db=None):
     DBLastTime = time.time()
 
 
-def DoTJbox(db=None):
+def DoTJbox():
   """Read the tjbox database table and carry out any commanded actions.
      Exits without an error if the SQL connection isn't available.
 
      This function is called by CheckTJBox.
   """
   #TODO - add an RPC interface for external commands
-  global ProspLastTime, TJboxAction
-  if db is None:
-    return
+  global db, ProspLastTime, TJboxAction
   BObj, other = sqlint.ReadTJbox(db=db)
   if BObj is None or other is None:
     return
@@ -396,8 +438,8 @@ def DoTJbox(db=None):
           found = True
       if found and (not motion.limits.HWLimit):
         AltErr = Jump(JObj, prefs.SlewRate)  #Goto new position}
-        if pdome.status.AutoDome and (not AltErr):
-          pdome.DomeMove(pdome.DomeCalcAzi(JObj))
+        if pdome.dome.AutoDome and (not AltErr):
+          pdome.dome.move(pdome.CalcAzi(JObj))
         if AltErr:
           logger.error('detevent.DoTJBox: Object in TJbox below Alt Limit')
         else:
@@ -407,8 +449,8 @@ def DoTJbox(db=None):
         sqlint.ClearTJbox(db=db)
     elif other.action == 'jumprd':
       AltErr = Jump(BObj, prefs.SlewRate)
-      if pdome.status.AutoDome and (not AltErr):
-        pdome.DomeMove(pdome.DomeCalcAzi(BObj))
+      if pdome.dome.AutoDome and (not AltErr):
+        pdome.dome.move(pdome.CalcAzi(BObj))
       if AltErr:
         logger.error('detevent.DoTJbox: Object in TJbox below Alt Limit')
       else:
@@ -439,16 +481,16 @@ def DoTJbox(db=None):
 
     elif other.action == 'dome':
       if other.DomeAzi < 0:
-        pdome.DomeMove(pdome.DomeCalcAzi(Current))
+        pdome.dome.move(pdome.CalcAzi(Current))
       else:
-        pdome.DomeMove(other.DomeAzi)
+        pdome.dome.move(other.DomeAzi)
       TJboxAction = other.action
 
     elif other.action == 'shutter':
       if other.Shutter:
-        pdome.DomeOpen()           #True for open}
+        pdome.dome.open()           #True for open}
       else:
-        pdome.DomeClose()
+        pdome.dome.close()
       TJboxAction = other.action
 
     elif (other.action == 'freez') or (other.action == 'freeze'):
@@ -460,7 +502,7 @@ def DoTJbox(db=None):
       sqlint.ClearTJbox(db=db)
 
 
-def CheckTJbox(db=None):
+def CheckTJbox():
   """Check the command table in the database and carry out any commanded actions.
      Check the progress of any previous commands still being acted on.
      Exits without an error if the SQL connection isn't available.     
@@ -468,22 +510,20 @@ def CheckTJbox(db=None):
      This function is called at regular intervals by the DetermineEvent loop.
   """
   #TODO - add an RPC interface for external commands
-  global TJboxAction
-  if db is None:
-    return
+  global db, TJboxAction
   if TJboxAction == 'none':
     if sqlint.ExistsTJbox(db=db):
-      DoTJbox(db=db)
+      DoTJbox()
   elif TJboxAction in ['jumpid','jumprd','jumpaa','offset']:
-    if (not motion.motors.Moving) and (not pdome.status.DomeInUse):
+    if (not motion.motors.Moving) and (not pdome.dome.DomeInUse):
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
   elif TJboxAction == 'dome':
-    if not pdome.status.DomeInUse:
+    if not pdome.dome.DomeInUse:
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
   elif TJboxAction == 'shutter':
-    if not pdome.status.ShutterInUse:
+    if not pdome.dome.ShutterInUse:
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
 
@@ -501,9 +541,9 @@ def CheckTimeout():
      This function is called at regular intervals by the DetermineEvent loop.
   """
   #TODO - make timeout configurable via teljoy.ini and globals.prefs, with 0 to disable.
-  if ((time.time()-ProspLastTime) > 600) and pdome.status.ShutterOpen and (not pdome.status.ShutterInUse):
+  if ((time.time()-ProspLastTime) > 600) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
     logger.critical('detevent.CheckTimeout: No communication with Prosp for over 10 minutes!\nClosing Shutter, Freezing Telescope.')
-    pdome.DomeClose()
+    pdome.dome.close()
     motion.motors.Frozen = True
 
 
@@ -646,29 +686,6 @@ def Jump(FObj, Rate=None):
     Current.posviolate = False    #signal a valid original RA and Dec
 
 
-def DetermineEvent():
-  """The main loop that handles housekeeping tasks - communications, status updates,
-     hand-paddle switch sensing, etc.
-  """
-  db = sqlint.InitSQL()    #Get a new db object and use it for this detevent thread
-  if db is None:
-    logger.warn('detevent.DetermineEvent: Detevent loop started, but with no SQL access.')
-  while True:
-    UpdateCurrent()        #add all motion to 'Current' object coordinates
-    RelRef()               #calculate refraction+flexure correction velocities, check for
-                           #    altitude too low and set 'AltError' if true
-    SaveStatus()           #Save the current state as pickled data to a status file
-    errors.update()        #Increment and check watchdog timer to detect low-level motor control failure
-    CheckDirtyPos()        #Check to see if dynamic 'saved position' file needs updating after a move
-    CheckDirtyDome()       #Check to see if dome needs moving if DomeTracking is on
-    pdome.DomeCheckMove()  #Check to see if dome has reached destination azimuth
-    motion.limits.check()  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
-    CheckDBUpdate(db=db)   #Update database at intervals with saved state information
-    CheckTJbox(db=db)      #Look for a new database record in the command table for automatic control events
-    CheckTimeout()         #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
-    paddles.check()        #Check and act on changes to hand-paddle buttons and switch state.
-
-    time.sleep(0.1)        #Loop approximately 10 times per second
 
 
 def IniPos():
@@ -687,7 +704,7 @@ def IniPos():
     Current.DecC = prefs.ObsLat*3600
   else:
     errors.CalError = False
-    pdome.status.ShutterOpen = info.ShutterOpen
+    pdome.dome.ShutterOpen = info.ShutterOpen
     prefs.EastOfPier = info.EastOfPier
 
   motion.motors.Frozen = False    #Always start out not frozen
@@ -710,22 +727,45 @@ def IniPos():
   Current.AltAziConv()
   logger.debug('detevent.IniPos: New Alt/Azi: %4.1f, %4.1f' % (Current.Alt, Current.Azi))
 
-  pdome.status.NewDomeAzi = pdome.DomeCalcAzi(Current)
-  pdome.status.DomeLastTime = time.time()
+  pdome.dome.NewDomeAzi = pdome.CalcAzi(Current)
+  pdome.dome.DomeLastTime = time.time()
 
 
 def init():
-  global detthread, paddles, Current, LastObj
+  global db, eventloop, detthread, paddles, Current, LastObj
   logger.debug('Detevent unit init started')
-  paddles = PaddleStatus()
+
+  db = sqlint.InitSQL()    #Get a new db object and use it for this detevent thread
+  if db is None:
+    logger.warn('detevent.DetermineEvent: Detevent loop started, but with no SQL access.')
+
+  paddles = Paddles()
   Current = correct.CalcPosition()
   LastObj = correct.CalcPosition()
   IniPos()
+
+  eventloop = EventLoop()
+  eventloop.register('UpdateCurrent', UpdateCurrent)         #add all motion to 'Current' object coordinates
+  eventloop.register('RelRef', RelRef)                       #calculate refraction+flexure correction velocities, check for
+                                                             #    altitude too low and set 'AltError' if true
+  eventloop.register('SaveStatus', SaveStatus)               #Save the current state as pickled data to a status file
+  eventloop.register('errors.update', errors.update)         #Increment and check watchdog timer to detect low-level motor control failure
+  eventloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if dynamic 'saved position' file needs updating after a move
+  eventloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
+  eventloop.register('pdome.dome.check', pdome.dome.check)  #Check to see if dome has reached destination azimuth
+  eventloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
+  eventloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
+  eventloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
+  eventloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
+  eventloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
+
   logger.debug('Detevent unit init finished')
-  detthread = threading.Thread(target=DetermineEvent, name='detevent-thread')
+  detthread = threading.Thread(target=eventloop.runloop, name='detevent-thread')
   detthread.daemon = True
   detthread.start()
   logger.debug('detevent.init: Detevent thread started.')
+
+
 
 paddles = None
 Current = None

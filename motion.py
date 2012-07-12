@@ -124,10 +124,10 @@ class Axis():
      a single axis. Replaces RA_variable and DEC_variable type attributes of the
      MotorControl class.
   """
-  def __init__(self):
+  def __init__(self, sidereal=0.0):
     """Set up empty attributes for a new axis record.
     """
-    self.sidereal = 0.0        #Sidereal rate for this axis (prefs.RAsid for RA, 0.0 for DEC)
+    self.sidereal = sidereal   #Sidereal rate for this axis (prefs.RAsid for RA, 0.0 for DEC)
     self.up = 0                #number of 50ms ticks to ramp motor to max velocity for slew
     self.down = 0              #number of 50ms ticks to ramp motor down after slew
     self.plateau = 0           #number of 50ms ticks in the plateau of a slew
@@ -153,7 +153,7 @@ class Axis():
     self.lock = threading.RLock()
 
   def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
+    """Can't pickle the lock object when saving state
     """
     d = self.__dict__.copy()
     del d['lock']
@@ -249,6 +249,9 @@ class Axis():
 
        All parameters output from this procedure are in motor steps/time pulse.
     """
+    if Rate <= 0:
+      logger.error('StartJump called with zero or negative Rate')
+      return True
     with self.lock:
       #calculate max_vel.
       max_vel = abs(Rate)*PULSE            #unsigned value steps/pulse
@@ -257,19 +260,16 @@ class Axis():
       ramp_time = abs(float(Rate))/MOTOR_ACCEL     #MOTOR_ACCEL is in steps/sec/sec
       num_pulses = math.trunc(ramp_time/PULSE)
 
-      #speed increment per time pulse in motor steps/pulse.
       if num_pulses > 0:
+        #speed increment per time pulse in motor steps/pulse:
         add_to_vel = max_vel/num_pulses
+        #The number of motor steps in a ramp:
+        num_ramp_steps = add_to_vel*(num_pulses*num_pulses/2.0+num_pulses/2.0)
       else:
-        add_to_vel = 0
-
-      #The number of motor steps in a ramp is?
-      num_ramp_steps = add_to_vel*(num_pulses*num_pulses/2.0+num_pulses/2.0)
-
-      if add_to_vel == 0:
         add_to_vel = max_vel
+        num_ramp_steps = 0
 
-        #Account for the direction of the jump.
+      #Account for the direction of the jump.
       if delta < 0:
         self.add_vel = -add_to_vel
         self.max_vel = -max_vel
@@ -281,19 +281,20 @@ class Axis():
 
       #Calculate the ramp and plateau values.
       if delta == 0.0:
-        #no jump in RA axis
+        #no jump
         self.up = 0
         self.down = 0
         self.plateau = 0
         self.remain = 0
         self.Jumping = False
-      elif abs(delta) < abs(2.0*self.add_vel):
-        #Small jump - add delta to self.GOffset.
+      elif abs(delta) < abs(self.add_vel):
+        #Small jump - add delta to self.hold.
         self.up = 0
         self.down = 0
         self.plateau = 0
         self.remain = 0
         self.Jumping = False
+        self.hold += delta
       elif abs(delta) > 2.0*num_ramp_steps:
         #Jump is large enough to reach max velocity - has a Plateau
         self.up = num_pulses
@@ -457,8 +458,7 @@ class MotorControl():
     self.PosDirty = False       #Set to True when a move (jump or paddle) finishes, to indicate move has finished. Reset to False by detevent.
     self.ticks = 0              #Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
     self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
-    self.RA = Axis()
-    self.RA.sidereal = prefs.RAsid
+    self.RA = Axis(sidereal=prefs.RAsid)
     self.DEC = Axis()
     self.Driver = usbcon.Driver(getframe=self.getframe)
     logger.debug('motion.MotorControl.__init__: finished global vars')

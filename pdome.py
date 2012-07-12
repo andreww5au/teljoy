@@ -19,7 +19,7 @@ DOMEPORT = 1     #Python serial ports numbered 0,1,2,..., Pascal ports numbered 
 ser = None   #Later instantiated as serial device
 
 
-class DomeStatus:
+class Dome:
   """An instance of this class is used to store the current dome motion 
      state, as well as some dome control preferences.
   """
@@ -35,6 +35,7 @@ class DomeStatus:
     self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
     self.NewDomeAzi = 0             #Desired dome azimuth for move, or current dome azimuth if move has finished
     self.NewShutter = ''            #Desired shutter state ('O' or 'C') for open/close
+    self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.1)
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
@@ -56,38 +57,147 @@ class DomeStatus:
     del d['__setattr__']
     return d
 
+  def _waitprompt(self):
+    """If not busy, the dome controller will return a '?' prompt in response to a CR character.
+       If it's busy, the dome controller will consume and ignore any input.
 
-def DomeAzi():
-  """Return the current dome azimuth in degrees (or the destination azimuth if moving).
-  """
-  return status.NewDomeAzi
+       This method will see if a prompt has been sent by the controller. If so, it returns True.
+       If not, it sends a CR character to the controller and returns 'False'.
+    """
+    chars = []
+    c = ''
+    while c <> '':
+      c = self.ser.read(1)
+      chars.append(c)
+    gots = ''.join(chars)
+
+    if '?' not in gots:
+      self.ser.write(chr(13))
+      time.sleep(0.2)
+      return False
+    else:
+      time.sleep(0.3)
+      return True
+
+  def move(self, az=None):
+    """Move dome to the specified azimuth. Return immediately without waiting for the move to
+       finish, or even guarantee that the move command has been sent - this function is likely to
+       do nothing unless self.check is being called repeatedly to actually manage the communications
+       with the dome controller (eg by the detevent.DetermineEvent loop).
+
+       If the dome or shutter is in use, this function exits with an error.
+
+       If the dome controller is busy, and hasn't returned a prompt, set the desired azimuth and
+       let later calls to DomeCheckMove do the actual communication.
+    """
+    if not self.AutoDome:
+      logger.error('pdome.DomeMove: Dome not in auto mode.')
+      return
+    if type(az) == float or type(az) == int:
+      if az < 0 or az > 360:
+        logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not %d" % az)
+        return
+    elif az is None:
+      try:
+        val = raw_input("Enter new dome azimuth(0-359): ")
+        az = int(val)
+        if az < 0 or az > 359:
+          assert ValueError
+      except ValueError:
+        print "Must be an integer between 0 and 359, not %d" % az
+        return
+    if self.DomeInUse or self.ShutterInUse:
+      logger.error("pdome.DomeMove: Dome or shutter active - wait for it to finish...")
+      return
+    self.NewDomeAzi = az
+    self.DomeInUse = True
+    self.DomeThere = False
+    self.DomeMoved = False
+    if self._waitprompt():               #if the controller isn't busy, send the new azimuth
+      self.DomeMoved = True
+      self.ser.write('%d' % az)
+
+  def check(self):
+    """Should be called repeatedly (eg by detevent.DetermineEvent) to manage communication
+       with the dome controller.
+    """
+    if self.DomeInUse:
+      if self.DomeMoved:
+        self.DomeThere = self._waitprompt()
+      else:
+        if self._waitprompt():
+          self.DomeMoved = True
+          self.ser.write('%d' % self.NewDomeAzi)
+      if self.DomeThere:
+        self.DomeInUse = False
+        self.DomeLastTime = time.time()
+    if self.ShutterInUse:
+      if self.DomeMoved:
+        self.DomeThere = self._waitprompt()
+      else:
+        if self._waitprompt():
+          self.DomeMoved = True
+          self.ser.write(self.NewShutter+chr(13))
+      if self.DomeThere:
+        self.ShutterInUse = False
+
+  def open(self):
+    """Open dome shutter. Return immediately without waiting for the shutter to finish opening, or even
+       guarantee that the open command has been sent - this function is likely to
+       do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
+       with the dome controller (eg by the detevent.DetermineEvent loop).
+
+       If the dome or shutter is in use, this function exits with an error.
+
+       If the dome controller is busy, and hasn't returned a prompt, set the desired shutter state and
+       let later calls to DomeCheckMove do the actual communication.
+    """
+    if not self.AutoDome:
+      logger.error('pdome.DomeOpen: Dome not in auto mode.')
+      return
+    if self.DomeInUse or self.ShutterInUse:
+      logger.error('pdome.DomeOpen: Dome or shutter active - wait for it to finish...')
+      return
+
+    self.NewShutter = 'O'
+    self.ShutterOpen = True
+    self.ShutterInUse = True
+    self.DomeThere = False
+    self.DomeMoved = False
+    if self._waitprompt():              #if the controller isn't busy, send the new shutter state
+      self.DomeMoved = True
+      self.ser.write('O'+chr(13))
+
+  def close(self):
+    """Close dome shutter. Return immediately without waiting for the shutter to finish closing, or even
+       guarantee that the close command has been sent - this function is likely to
+       do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
+       with the dome controller (eg by the detevent.DetermineEvent loop).
+
+       If the dome or shutter is in use, this function exits with an error.
+
+       If the dome controller is busy, and hasn't returned a prompt, set the desired shutter state and
+       let later calls to DomeCheckMove do the actual communication.
+    """
+    if not self.AutoDome:
+      logger.error('pdome.DomeClose: Dome not in auto mode.')
+      return
+    if self.DomeInUse or self.ShutterInUse:
+      logger.error('pdome.DomeClose: Dome or shutter active - wait for it to finish...')
+      return
+
+    self.NewShutter = 'C'
+    self.ShutterOpen = False
+    self.ShutterInUse = True
+    self.DomeThere = False
+    self.DomeMoved = False
+    if self._waitprompt():               #if the controller isn't busy, send the new shutter state
+      self.DomeMoved = True
+      self.ser.write('C'+chr(13))
 
 
-def DomeHalt():
-  """Stop all dome motion. Can't be done using Perth dome (no effect).
-  """
-  pass
-  
-  
-def DomeSetMode(mode=None):
-  """Set the state of the AutoDome flag to the value given. If the argument is
-     True, the dome will be moved by Teljoy. If False, Teljoy will not attempt to 
-     move the dome under any condition.
-     
-     If no argument is given, ask the user on the command line for a Y/N response.
-  """
-  if type(mode)<>str and (mode is not None):
-    status.AutoDome = bool(mode)
-    return
-  elif type(mode) == str:
-    val = mode
-  else:
-    val = raw_input("Is dome in automatic mode? (Y/n): ")
-  val = val.upper().strip()[:1]
-  status.AutoDome = (val <> 'N')
-  
 
-def DomeCalcAzi(Obj):
+def CalcAzi(Obj):
   """Calculates the dome azimuth for a given telescope position, passed as a
      correct.CalcPosition object.
      
@@ -140,203 +250,6 @@ def DomeCalcAzi(Obj):
   return Azi
 
 
-def WaitPrompt():
-  """If not busy, the dome controller will return a '?' prompt in response to a CR character.
-     If it's busy, the dome controller will consume and ignore any input.
-     
-     This function will see if a prompt has been sent by the controller. If so, it returns True.
-     If not, it sends a CR character to the controller and returns 'False'.
-  """
-  chars = []
-  c = ''
-  while c <> '':
-    c = ser.read(1)
-    chars.append(c)
-  gots = ''.join(chars)
-
-  if '?' not in gots:
-    ser.write(chr(13))
-    time.sleep(0.2)
-    return False
-  else:
-    time.sleep(0.3)
-    return True
-
-
-def DomeInitialise():
-  """Set up serial port, and initialise dome status flags.
-  """
-  global ser
-  ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.1)
-  status.DomeInUse = False
-  status.DomeThere = True
-  status.ShutterInUse = False
-  status.NewShutter = ''
-
-
-def DomeMove(az=None):
-  """Move dome to the specified azimuth. Return immediately without waiting for the move to
-     finish, or even guarantee that the move command has been sent - this function is likely to
-     do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
-     with the dome controller (eg by the detevent.DetermineEvent loop).
-     
-     If the dome or shutter is in use, this function exits with an error.
-     
-     If the dome controller is busy, and hasn't returned a prompt, set the desired azimuth and 
-     let later calls to DomeCheckMove do the actual communication.
-  """
-  if not status.AutoDome:
-    logger.error('pdome.DomeMove: Dome not in auto mode.')
-    return
-  if type(az) == float or type(az) == int:
-    if az < 0 or az > 360:
-      logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not %d" % az)
-      return
-  elif az is None:
-    try:
-      val = raw_input("Enter new dome azimuth(0-359): ")
-      az = int(val)
-      if az < 0 or az > 359:
-        assert ValueError
-    except ValueError:
-      print "Must be an integer between 0 and 359, not %d" % az
-      return
-  if status.DomeInUse or status.ShutterInUse:
-    logger.error("pdome.DomeMove: Dome or shutter active - wait for it to finish...")
-    return
-  status.NewDomeAzi = az
-  status.DomeInUse = True
-  status.DomeThere = False
-  status.DomeMoved = False
-  if WaitPrompt():               #if the controller isn't busy, send the new azimuth
-    status.DomeMoved = True
-    ser.write('%d' % az)
-
-
-def DomeCheckMove():
-  """Should be called repeatedly (eg by detevent.DetermineEvent) to manage communication
-     with the dome controller.
-  """
-  if status.DomeInUse:
-    if status.DomeMoved:
-      status.DomeThere = WaitPrompt()
-    else:
-      if WaitPrompt():
-        status.DomeMoved = True
-        ser.write('%d' % status.NewDomeAzi)
-    if status.DomeThere:
-      status.DomeInUse = False
-      status.DomeLastTime = time.time()
-  if status.ShutterInUse:
-    if status.DomeMoved:
-      status.DomeThere = WaitPrompt()
-    else:
-      if WaitPrompt():
-        status.DomeMoved = True
-        ser.write(status.NewShutter+chr(13))
-    if status.DomeThere:
-      status.ShutterInUse = False
-
-
-def DomeOpen():
-  """Open dome shutter. Return immediately without waiting for the shutter to finish opening, or even
-     guarantee that the open command has been sent - this function is likely to
-     do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
-     with the dome controller (eg by the detevent.DetermineEvent loop).
-     
-     If the dome or shutter is in use, this function exits with an error.
-     
-     If the dome controller is busy, and hasn't returned a prompt, set the desired shutter state and 
-     let later calls to DomeCheckMove do the actual communication.
-  """
-  if not status.AutoDome:
-    logger.error('pdome.DomeOpen: Dome not in auto mode.')
-    return
-  if status.DomeInUse or status.ShutterInUse:
-    logger.error('pdome.DomeOpen: Dome or shutter active - wait for it to finish...')
-    return
-
-  status.NewShutter = 'O'
-  status.ShutterOpen = True
-  status.ShutterInUse = True
-  status.DomeThere = False
-  status.DomeMoved = False
-  if WaitPrompt():              #if the controller isn't busy, send the new shutter state
-    status.DomeMoved = True
-    ser.write('O'+chr(13))
-
-
-def DomeClose():
-  """Close dome shutter. Return immediately without waiting for the shutter to finish closing, or even
-     guarantee that the close command has been sent - this function is likely to
-     do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
-     with the dome controller (eg by the detevent.DetermineEvent loop).
-     
-     If the dome or shutter is in use, this function exits with an error.
-     
-     If the dome controller is busy, and hasn't returned a prompt, set the desired shutter state and 
-     let later calls to DomeCheckMove do the actual communication.
-  """
-  if not status.AutoDome:
-    logger.error('pdome.DomeClose: Dome not in auto mode.')
-    return
-  if status.DomeInUse or status.ShutterInUse:
-    logger.error('pdome.DomeClose: Dome or shutter active - wait for it to finish...')
-    return
-
-  status.NewShutter = 'C'
-  status.ShutterOpen = False
-  status.ShutterInUse = True
-  status.DomeThere = False
-  status.DomeMoved = False
-  if WaitPrompt():               #if the controller isn't busy, send the new shutter state
-    status.DomeMoved = True
-    ser.write('C'+chr(13))
-
-
-def DomeOpenWait():
-  """Open dome shutter, and return when the shutter is fully open.
-     This function is likely to do nothing unless DomeCheckMove is being
-     called repeatedly to actually manage the communications
-     with the dome controller (eg by the detevent.DetermineEvent loop).
-     
-     If the dome or shutter is in use, this function gives an error and
-     doesn't open the dome shutter.
-  """
-  DomeOpen()
-  logger.debug('pdome.DomeOpenWait: Waiting for shutter')
-  while status.ShutterInUse:
-    time.sleep(1)
-  
-
-def DomeCloseWait():
-  """Close dome shutter, and return when the shutter is fully closed.
-     This function is likely to do nothing unless DomeCheckMove is being
-     called repeatedly to actually manage the communications
-     with the dome controller (eg by the detevent.DetermineEvent loop).
-     
-     If the dome or shutter is in use, this function gives an error and
-     doesn't close the dome shutter.
-  """
-  DomeClose()
-  logger.debug('pdome.DomeCloseWait: Waiting for shutter:')
-  while status.ShutterInUse:
-    time.sleep(1)
-  
-  
-def DomeMoveWait(Azi):
-  """Move dome to the specified azimuth, and return when the dome has reached the desired position.
-     This function is likely to do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
-     with the dome controller (eg by the detevent.DetermineEvent loop).
-     
-     If the dome or shutter is in use, this function gives an error and doesn't move the dome.
-  """
-  DomeMove(Azi)
-  logger.debug('pdome.DomeMoveWait: Waiting for dome:')
-  while status.DomeInUse:
-    time.sleep(1)
-
-
 def DegToRad(r):    #Originally in MATHS.PAS
   return (float(r)/180)*math.pi
 
@@ -344,14 +257,11 @@ def RadToDeg(r):    #Originally in MATHS.PAS
   return (r/math.pi)*180
 
 
-status = DomeStatus()
+dome = Dome()
 
 ConfigDefaults.update({'DomeTracking':'0', 'AskDomeStatus':0, 'DefaultAutoDome':0})
 CP,CPfile = UpdateConfig()
 
-status.DomeTracking = CP.getboolean('Toggles','DomeTracking')
-ask = CP.getboolean('Toggles','AskDomeStatus')
-status.AutoDome = CP.getboolean('Toggles','DefaultAutoDome')
-if ask:
-  DomeSetMode()
-  
+dome.DomeTracking = CP.getboolean('Toggles','DomeTracking')
+dome.AutoDome = CP.getboolean('Toggles','DefaultAutoDome')
+
