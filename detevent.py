@@ -23,8 +23,8 @@ from globals import *
 import pdome
 import correct
 import motion
-import digio
 import sqlint
+from handpaddles import paddles
 
 
 detthread = None     #Contains the thread object running DetermineEvent after the init() function is called
@@ -75,256 +75,251 @@ class EventLoop:
     logger.info("Event loop exited.")
 
 
-class Paddles:
-  """An instance of this class is used to store the state of the hand paddle
-     buttons, current motion, and speed settings. 
-     
-     Note that for the Perth telescope:
-       -The Fine paddle speed can be one of 'Guide' or 'Set'
-       -The Coarse paddle speed can be one of 'Set' or 'Slew'
-     For the NZ telescope:
-       -There is no fine paddle
-       -The Coarse paddle speed can be one of 'Guide', 'Set', or 'Slew'
+class CurrentPosition(correct.CalcPosition):
+  """A special position object that's used only to store the current telescope coordinates, and
+     allow jumps from this position.
   """
-  def __init__(self):
-    self.RA_GuideAcc = 0.0         #Accumulated guide motion, from motion.motors.RA_guidelog
-    self.DEC_GuideAcc = 0.0
-    self.ButtonPressedRA = False   #True if one of the RA direction buttons is pressed
-    self.ButtonPressedDEC = False  #True if one of the DEC direction buttons is pressed
-    self.FineMode = 'FSet'         #one of 'FSet' or 'FGuide', depending on 'Fine' paddle speed toggle switch
-    self.CoarseMode = 'CSet'       #one of 'CSet' or 'CSlew' or 'CGuide', depending on 'Coarse' paddle speed toggle switch
-    self.RAdir = ''                #one of 'fineEast',  'fineWest',  'CoarseEast', or  'CoarseWest'  
-    self.DECdir = ''               #one of 'fineNorth', 'fineSouth', 'CoarseNorth', or 'CoarseSouth'
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
+  def UpdatePosFile(self):
+    """Save the current position to the 'saved position' file.
 
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
+       The saved position file isn't actually used any more. It used to be the source of the
+       initial position on startup, but now the current state from the database (saved by
+       detevent.CheckDBUpdate and sqlint.UpdateSQLCurrent) is used instead.
+
+       This method is called by CheckDirtyPos a set interval after a telescope move has finished.
     """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
+    t = correct.TimeRec()   #Defaults to 'now'
+    d = t.UT
+    try:
+      pfile = open(poslog,'w')
+    except:
+      logger.error('detevent.UpdatePosFile: Path not found')
+      return
+    pfile.write('ID:      %s\n' % self.ObjID)
+    pfile.write('Cor. RA: %f\n' % (self.RaC/15.0,))
+    pfile.write('Cor. Dec:%f\n' % self.DecC)
+    pfile.write('SysT:    %d %d %6.3f\n' % (d.hour,d.minute,d.second+d.microsecond/1e6) )  #Old file used hundredths of a sec
+    pfile.write('Sys_Date:%d %d %d\n' % (d.day,d.month,d.year) )
+    pfile.write('Jul Day: %f\n' % t.JD)
+    pfile.write('LST:     %f\n' % (t.LST*3600,))
+    pfile.close()
 
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
+  def UpdatePosition(self):
+    """Update Current sky coordinates from paddle and refraction motion
+
+       This function is called at regular intervals by the DetermineEvent loop.
     """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    return d
+    #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
+    if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
+      self.posviolate = True
 
-  def __repr__(self):
-    s = "<PaddleStatus: GuideAcc=(%f,%f) " % (self.RA_GuideAcc, self.DEC_GuideAcc)
-    if self.ButtonPressedRA:
-      s += "(RA:%s) " % self.RAdir
-    if self.ButtonPressedDEC:
-      s += "(DEC:%s) " % self.DECdir
-    s += " >"
-    return s
+    #account for paddle and non-sid. motion, and limit encounters}
+    self.RaA += motion.motors.RA.padlog/20
+    self.DecA += motion.motors.DEC.padlog/20
 
-  def check(self):
-    """Read the actual handle paddle button and switch state, using the digio module, and 
-       handle them appropriately. When the state of the direction buttons changes (press or
-       release), set the appropriate motion control flags and velocity parameters, then
-       start or stop the actual motors.
-       
-       This method is called at regular intervals by the DetermineEvent loop.
+    #above, plus real-time refraction+flexure+guide in the fully corrected coords}
+    self.RaC += motion.motors.RA.padlog/20 + motion.motors.RA.reflog/20 + motion.motors.RA.guidelog/20
+    self.DecC += motion.motors.DEC.padlog/20 + motion.motors.DEC.reflog/20 + motion.motors.DEC.guidelog/20
+    paddles.RA_GuideAcc += motion.motors.RA.guidelog/20
+    paddles.DEC_GuideAcc += motion.motors.DEC.guidelog/20
+
+    with motion.motors.RA.lock:
+      motion.motors.RA.padlog = 0
+      motion.motors.RA.reflog = 0
+      motion.motors.RA.guidelog = 0
+    with motion.motors.DEC.lock:
+      motion.motors.DEC.padlog = 0
+      motion.motors.DEC.reflog = 0
+      motion.motors.DEC.guidelog = 0
+
+    if self.RaA > (24*60*60*15):
+      self.RaA -= (24*60*60*15)
+    if self.RaA < 0:
+      self.RaA += (24*60*60*15)
+
+    if self.RaC > (24*60*60*15):
+      self.RaC -= (24*60*60*15)
+    if self.RaC < 0:
+      self.RaC += (24*60*60*15)
+
+  def RelRef(self):
+    """Calculates real time refraction and flexure correction velocities for the current position.
+       These velocities are mixed into the telescope motion by the low-level control loop
+       in motion.motors.TimeInt.
+
+       This function is called at regular intervals by the DetermineEvent loop.
     """
-    #Read the Hand-paddle inputs}
-    cb = digio.ReadCoarse(motion.motors.Driver.inputs)
-    fb = digio.ReadFine(motion.motors.Driver.inputs)
+    NUM_REF = 600                  # no of interrupts in time_inc time.
+    SIDCORRECT = 30.08213727/3600  #number of siderial hours in update time
 
-    #check the Fine paddle speed switches and set appropriate mode and velocity
-    if ((fb & digio.FGuideMsk)==digio.FGuideMsk):
-      self.FineMode = 'FGuide'
-      FinePaddleRate = prefs.GuideRate
+    #**Begin refraction correction**
+    self.Time.update()
+    self.AltAziConv()           #Calculate Alt/Az now
+
+    errors.AltError = False
+    if self.Alt < prefs.AltWarning:
+      errors.AltError = True
+
+    if prefs.RefractionOn:
+      oldRAref,oldDECref = self.Refrac()   #Calculate and save refraction correction now
     else:
-      self.FineMode = 'FSet'
-      FinePaddleRate = prefs.FineSetRate
+      oldRAref = 0
+      oldDECref = 0
 
-    #* Check the fine paddle by comparing fb to a set of masks}
-    if ((fb & digio.FNorth)==digio.FNorth):        #Compare with the north mask}
-      if not self.ButtonPressedDEC:          #The button has just been pressed}
-        self.ButtonPressedDEC = True
-        self.DECdir = 'fineNorth'
-        Paddle_max_vel = FinePaddleRate
-        motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='fineNorth'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedDEC = False
-      motion.motors.DEC.StopPaddle()
-
-    if ((fb & digio.FSouth)==digio.FSouth):            #Check with South Mask}
-      if not self.ButtonPressedDEC:
-        self.ButtonPressedDEC = True
-        self.DECdir = 'fineSouth'
-        Paddle_max_vel = -FinePaddleRate
-        motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='fineSouth'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedDEC = False
-      motion.motors.DEC.StopPaddle()
-
-    if ((fb & digio.FEast)==digio.FEast):              #Check the Eastmask}
-      if (not self.ButtonPressedRA) and motion.limits.CanEast():
-        self.ButtonPressedRA = True
-        self.RAdir = 'fineEast'
-        Paddle_max_vel = FinePaddleRate
-        motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='fineEast'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedRA = False
-      motion.motors.RA.StopPaddle()
-
-    if ((fb & digio.FWest)==digio.FWest):               #Check the West mask}
-      if (not self.ButtonPressedRA) and motion.limits.CanWest():
-        self.ButtonPressedRA = True
-        self.RAdir = 'fineWest'
-        Paddle_max_vel = -FinePaddleRate
-        motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='fineWest'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedRA = False
-      motion.motors.RA.StopPaddle()
-
-    #check the Coarse paddle speed switches and set appropriate mode and velocity
-#$IFDEF NZ}
-#    if ((cb & digio.CspaMsk)==digio.CspaMsk) and ((cb & digio.CspbMsk)==digio.CspbMsk):
-#      self.CoarseMode = 'CSet'
-#      CoarsePaddleRate = prefs.CoarseSetRate
-#    else:
-#      if ((cb & digio.CspbMsk)==digio.CspbMsk):
-#        self.CoarseMode = 'CGuide'
-#        CoarsePaddleRate = prefs.GuideRate
-#      else:
-#        self.CoarseMode = 'CSlew'
-#        CoarsePaddleRate = prefs.SlewRate
-#$ELSE}
-    if ((cb & digio.CSlewMsk)==digio.CSlewMsk):
-      self.CoarseMode = 'CSlew'
-      logger.info('SLEW')
-      CoarsePaddleRate = prefs.SlewRate
+    if prefs.FlexureOn:
+      oldRAflex,oldDECflex = self.Flex()   #Calculate and save flexure correction now
     else:
-      self.CoarseMode = 'CSet'
-      CoarsePaddleRate = prefs.CoarseSetRate
-#$ENDIF}
+      oldRAflex = 0
+      oldDECflex = 0
 
-    #**Check the Coarse paddle by comparing cb to a set of masks}
-    if ((cb & digio.CNorth)==digio.CNorth):
-      logger.info('N')
-      if not self.ButtonPressedDEC:
-        self.ButtonPressedDEC = True
-        self.DECdir = 'coarseNorth'
-        Paddle_max_vel = CoarsePaddleRate
-        motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='coarseNorth'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedDEC = False
-      motion.motors.DEC.StopPaddle()
+    if prefs.RealTimeOn:
+      self.Time.LST += SIDCORRECT   #advance sidereal time by 30 solar seconds
+      self.AltAziConv()             #Calculate the alt/az at that future LST
 
-    if ((cb & digio.CSouth)==digio.CSouth):
-      logger.info('S')
-      if not self.ButtonPressedDEC:
-        self.ButtonPressedDEC = True
-        self.DECdir = 'coarseSouth'
-        Paddle_max_vel = -CoarsePaddleRate
-        motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='coarseSouth'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedDEC = False
-      motion.motors.DEC.StopPaddle()
+      if prefs.RefractionOn:
+        newRAref,newDECref = self.Refrac()  #Calculate refraction for future time
+      else:
+        newRAref = 0.0
+        newDECref = 0.0
 
-    if ((cb & digio.CEast)==digio.CEast):
-      logger.info('E')
-      if (not self.ButtonPressedRA) and motion.limits.CanEast():
-        self.ButtonPressedRA = True
-        self.RAdir = 'coarseEast'
-        Paddle_max_vel = CoarsePaddleRate
-        motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='coarseEast'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedRA = False
-      motion.motors.RA.StopPaddle()
+      if prefs.FlexureOn:
+        newRAflex,newDECflex = self.Flex()  #Calculate flexure for new time
+      else:
+        newRAflex = 0.0
+        newDECflex = 0.0
 
-    if ((cb & digio.CWest)==digio.CWest):
-      logger.info('W')
-      if (not self.ButtonPressedRA) and motion.limits.CanWest():
-        self.ButtonPressedRA = True
-        self.RAdir = 'coarseWest'
-        Paddle_max_vel = -CoarsePaddleRate
-        motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='coarseWest'):
-      #Mask does not match but the motor is running}
-      self.ButtonPressedRA = False
-      motion.motors.RA.StopPaddle()
+      self.Time.update()     #Return to the current time
+      self.AltAziConv()      #Recalculate Alt/Az for now
 
+      deltaRA = (newRAref-oldRAref) + (newRAflex-oldRAflex)
+      deltaDEC = (newDECref-oldDECref) + (newDECflex-oldDECflex)
 
-def UpdatePosFile():
-  """Save the current position to the 'saved position' file.
-     
-     The saved position file isn't actually used any more. It used to be the source of the
-     initial position on startup, but now the current state from the database (saved by
-     detevent.CheckDBUpdate and sqlint.UpdateSQLCurrent) is used instead.
-     
-     This function is called by CheckDirtyPos a set interval after a telescope move has finished.
-  """
-  t = correct.TimeRec()   #Defaults to 'now'
-  d = t.UT
-  try:
-    pfile = open(poslog,'w')
-  except:
-    logger.error('detevent.UpdatePosFile: Path not found')
-    return
-  pfile.write('ID:      %s\n' % Current.ObjID)
-  pfile.write('Cor. RA: %f\n' % (Current.RaC/15.0,))
-  pfile.write('Cor. Dec:%f\n' % Current.DecC)
-  pfile.write('SysT:    %d %d %6.3f\n' % (d.hour,d.minute,d.second+d.microsecond/1e6) )  #Old file used hundredths of a sec
-  pfile.write('Sys_Date:%d %d %d\n' % (d.day,d.month,d.year) )
-  pfile.write('Jul Day: %f\n' % t.JD)
-  pfile.write('LST:     %f\n' % (t.LST*3600,))
-  pfile.close()
+      #Calculate refraction/flexure correction velocities in steps/50ms
+      RA_ref = 20.0*(deltaRA/NUM_REF)
+      DEC_ref = 20.0*(deltaDEC/NUM_REF)
 
+      #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
+      #and flag RefError if we've reached that cap.
+      errors.RefError = False
+      if abs(RA_ref) > 200:
+        RA_ref = 200*(RA_ref/abs(RA_ref))
+        errors.RefError = True
+      if abs(DEC_ref) > 200:
+        DEC_ref = 200*(DEC_ref/abs(DEC_ref))
+        errors.RefError = True
 
-def UpdateCurrent():  
-  """Update Current sky coordinates from paddle and refraction motion
+      #Set the actual refraction/flexure correction velocities in steps/50ms
+      with motion.motors.RA.lock:
+        motion.motors.RA.refraction = RA_ref
+      with motion.motors.DEC.lock:
+        motion.motors.DEC.refraction = DEC_ref
+    else:
+      #**Stop the refraction correction**
+      with motion.motors.RA.lock:
+        motion.motors.RA.refraction = 0.0
+      with motion.motors.DEC.lock:
+        motion.motors.DEC.refraction = 0.0
+      errors.RefError = False
 
-     This function is called at regular intervals by the DetermineEvent loop.
-  """
-  #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
-  if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
-    Current.posviolate = True
+  def Jump(self, FObj, Rate=None):
+    """Jump to new position.
 
-  #account for paddle and non-sid. motion, and limit encounters}
-  Current.RaA += motion.motors.RA.padlog/20
-  Current.DecA += motion.motors.DEC.padlog/20
+       Inputs:
+         FObj - a correct.CalcPosition object containing the destination position
+         Rate - the motor speed, in steps/second
 
-  #above, plus real-time refraction+flexure+guide in the fully corrected coords}
-  Current.RaC += motion.motors.RA.padlog/20 + motion.motors.RA.reflog/20 + motion.motors.RA.guidelog/20
-  Current.DecC += motion.motors.DEC.padlog/20 + motion.motors.DEC.reflog/20 + motion.motors.DEC.guidelog/20
-  paddles.RA_GuideAcc += motion.motors.RA.guidelog/20
-  paddles.DEC_GuideAcc += motion.motors.DEC.guidelog/20
+       Slews in RA by (FObj.RaC-Current.RaC), and slews in DEC by (FObj.DecC-Current.DecC).
+       Returns 'True' if Alt of initial or final object is too low, 'False' if the slew proceeded OK.
 
-  with motion.motors.RA.lock:
-    motion.motors.RA.padlog = 0
-    motion.motors.RA.reflog = 0
-    motion.motors.RA.guidelog = 0
-  with motion.motors.DEC.lock:
-    motion.motors.DEC.padlog = 0
-    motion.motors.DEC.reflog = 0
-    motion.motors.DEC.guidelog = 0
+       This method is called by DoTJBox (that handles external commands) as well as by
+       the user from the command line.
+    """
+    global LastObj
+    if Rate is None:
+      Rate = prefs.SlewRate
+      #TODO - handle locking properly so we don't slew during a slew, or during paddle motion
+    if motion.motors.Moving:
+      logger.error('detevent.Jump called while telescope in motion!')
+      return True
+    self.UpdatePosition()             #Apply accumulated paddle and guide movement to current position
+    FObj.update(FObj)                      #Correct final object coordinates
 
-  if Current.RaA > (24*60*60*15):
-    Current.RaA -= (24*60*60*15)
-  if Current.RaA < 0:
-    Current.RaA += (24*60*60*15)
+    if prefs.HighHorizonOn:
+      AltCutoffTo = prefs.AltCutoffHi
+    else:
+      AltCutoffTo = prefs.AltCutoffLo
 
-  if Current.RaC > (24*60*60*15):
-    Current.RaC -= (24*60*60*15)
-  if Current.RaC < 0:
-    Current.RaC += (24*60*60*15)
+    if (self.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
+      logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (self.Alt,FObj.Alt))
+      return True
+    else:
+      DelRA = FObj.RaC - self.RaC
+
+      if abs(DelRA) > (3600*15*12):
+        if DelRA < 0:
+          DelRA += (3600*15*24)
+        else:
+          DelRA -= (3600*15*24)
+      DelDEC = FObj.DecC - self.DecC
+
+      DelRA = DelRA*20        #Convert to number of motor steps}
+      DelDEC = DelDEC*20
+      motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
+
+      LastObj = copy.deepcopy(self)                    #Save the current position
+      self.RaC, self.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
+      self.RaA, self.DecA = FObj.RaA, FObj.DecA
+      self.Ra, self.Dec = FObj.Ra, FObj.Dec
+      self.Epoch = FObj.Epoch
+      self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
+      self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
+      with motion.motors.RA.lock:
+        motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
+      with motion.motors.DEC.lock:
+        motion.motors.DEC.track = self.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
+      self.posviolate = False    #signal a valid original RA and Dec
+
+  def IniPos(self):
+    """This function is called on startup to set the 'Current' position
+       and other data to something reasonable on startup.
+
+       Uses the RA, DEC and LST in the state information saved by
+       detevent.ChecKDBUpdate and sqlint.UpdateSQLCurrent approximately
+       once per second.
+    """
+    info, HA, LastMod = sqlint.ReadSQLCurrent(self)
+    if info is None:            #Flag a Calibration Error if there was no valid data in the table
+      errors.CalError = True
+      #If there's no saved position, assume telescope is pointed straight up
+      HA = 0
+      self.DecC = prefs.ObsLat*3600
+    else:
+      errors.CalError = False
+      pdome.dome.ShutterOpen = info.ShutterOpen
+      prefs.EastOfPier = info.EastOfPier
+
+    motion.motors.Frozen = False    #Always start out not frozen
+
+    self.Time.update()
+    rac = (self.Time.LST+HA)*15*3600
+    if rac > 24*15*3600:
+      rac -= 24*15*3600
+    elif rac < 0.0:
+      rac += 24*15*3600
+    self.RaC = rac
+
+    self.Ra = self.RaC
+    self.Dec = self.DecC
+    self.RaA = self.RaC
+    self.DecA = self.DecC
+    self.Epoch = 0.0
+
+    logger.debug('detevent.IniPos: Old Alt/Azi: %4.1f, %4.1f' % (self.Alt, self.Azi))
+    self.AltAziConv()
+    logger.debug('detevent.IniPos: New Alt/Azi: %4.1f, %4.1f' % (self.Alt, self.Azi))
+
+    pdome.dome.NewDomeAzi = pdome.CalcAzi(self)
+    pdome.dome.DomeLastTime = time.time()
 
 
 def SaveStatus():
@@ -334,7 +329,7 @@ def SaveStatus():
   """
   #TODO - replace with RPC calls to share state data  
   f = open('/tmp/teljoy.status','w')
-  cPickle.dump((Current,motion.motors,pdome.dome,errors,prefs),f)
+  cPickle.dump((current,motion.motors,pdome.dome,errors,prefs),f)
   f.close()
 
 
@@ -352,7 +347,7 @@ def CheckDirtyPos():
     DirtyTime = time.time()                 #just finished move}
 
   if (DirtyTime<>0) and (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and not motion.motors.Moving:
-    UpdatePosFile()
+    current.UpdatePosFile()
     DirtyTime = 0
     motion.motors.PosDirty = False
     paddles.RA_GuideAcc = 0.0
@@ -367,7 +362,7 @@ def CheckDirtyDome():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  if ( (abs(pdome.CalcAzi(Current)-pdome.dome.NewDomeAzi) > 6) and
+  if ( (abs(pdome.CalcAzi(current)-pdome.dome.NewDomeAzi) > 6) and
        ((time.time()-pdome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
        (not pdome.dome.DomeInUse) and
        (not pdome.dome.ShutterInUse) and
@@ -375,7 +370,7 @@ def CheckDirtyDome():
        (not motion.motors.Moving) and
        pdome.dome.AutoDome and
        (not motion.motors.PosDirty) ):
-    pdome.dome.move(pdome.CalcAzi(Current))
+    pdome.dome.move(pdome.CalcAzi(current))
 
 
 def CheckDBUpdate():
@@ -391,7 +386,7 @@ def CheckDBUpdate():
   global db, DBLastTime
   if (time.time()-DBLastTime) > 1.0:
     foo = sqlint.Info() 
-    foo.posviolate = Current.posviolate
+    foo.posviolate = current.posviolate
     foo.moving = motion.motors.Moving
     foo.EastOfPier = prefs.EastOfPier
     foo.NonSidOn = prefs.NonSidOn
@@ -403,7 +398,7 @@ def CheckDBUpdate():
     foo.RA_guideAcc = paddles.RA_GuideAcc
     foo.DEC_guideAcc = paddles.DEC_GuideAcc
     foo.LastError = LastError
-    sqlint.UpdateSQLCurrent(Current, foo, db)
+    sqlint.UpdateSQLCurrent(current, foo, db)
     DBLastTime = time.time()
 
 
@@ -437,7 +432,7 @@ def DoTJbox():
         if (JObj is not None) and JObj.numfound == 1:
           found = True
       if found and (not motion.limits.HWLimit):
-        AltErr = Jump(JObj, prefs.SlewRate)  #Goto new position}
+        AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
         if pdome.dome.AutoDome and (not AltErr):
           pdome.dome.move(pdome.CalcAzi(JObj))
         if AltErr:
@@ -448,7 +443,7 @@ def DoTJbox():
         TJboxAction = 'none'
         sqlint.ClearTJbox(db=db)
     elif other.action == 'jumprd':
-      AltErr = Jump(BObj, prefs.SlewRate)
+      AltErr = current.Jump(BObj, prefs.SlewRate)
       if pdome.dome.AutoDome and (not AltErr):
         pdome.dome.move(pdome.CalcAzi(BObj))
       if AltErr:
@@ -467,21 +462,21 @@ def DoTJbox():
     elif other.action == 'offset':
       RAOffset = other.OffsetRA
       DECOffset = other.OffsetDEC
-      DelRA = 20*RAOffset/math.cos(Current.DecC/3600*math.pi/180)  #conv to motor steps}
+      DelRA = 20*RAOffset/math.cos(current.DecC/3600*math.pi/180)  #conv to motor steps}
       DelDEC = 20*DECOffset
       motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
-      if (not Current.posviolate):
-        Current.Ra += RAOffset/math.cos(Current.DecC/3600*math.pi/180)
-        Current.Dec += DECOffset
-      Current.RaA += RAOffset/math.cos(Current.DecC/3600*math.pi/180)
-      Current.DecA += DECOffset
-      Current.RaC += RAOffset/math.cos(Current.DecC/3600*math.pi/180)
-      Current.DecC += DECOffset
+      if (not current.posviolate):
+        current.Ra += RAOffset/math.cos(current.DecC/3600*math.pi/180)
+        current.Dec += DECOffset
+      current.RaA += RAOffset/math.cos(current.DecC/3600*math.pi/180)
+      current.DecA += DECOffset
+      current.RaC += RAOffset/math.cos(current.DecC/3600*math.pi/180)
+      current.DecC += DECOffset
       TJboxAction = other.action
 
     elif other.action == 'dome':
       if other.DomeAzi < 0:
-        pdome.dome.move(pdome.CalcAzi(Current))
+        pdome.dome.move(pdome.CalcAzi(current))
       else:
         pdome.dome.move(other.DomeAzi)
       TJboxAction = other.action
@@ -547,206 +542,23 @@ def CheckTimeout():
     motion.motors.Frozen = True
 
 
-def RelRef():
-  """Calculates real time refraction and flexure correction velocities for the current position.
-     These velocities are mixed into the telescope motion by the low-level control loop
-     in motion.motors.TimeInt.
-
-     This function is called at regular intervals by the DetermineEvent loop.
-  """
-  NUM_REF = 600                  # no of interrupts in time_inc time.
-  SIDCORRECT = 30.08213727/3600  #number of siderial hours in update time
-
-  #**Begin refraction correction**
-  Current.Time.update()
-  Current.AltAziConv()           #Calculate Alt/Az now
-
-  errors.AltError = False
-  if Current.Alt < prefs.AltWarning:
-    errors.AltError = True
-
-  if prefs.RefractionOn:
-    oldRAref,oldDECref = Current.Refrac()   #Calculate and save refraction correction now
-  else:
-    oldRAref = 0
-    oldDECref = 0
-
-  if prefs.FlexureOn:
-    oldRAflex,oldDECflex = Current.Flex()   #Calculate and save flexure correction now
-  else:
-    oldRAflex = 0
-    oldDECflex = 0
-
-  if prefs.RealTimeOn:
-    Current.Time.LST += SIDCORRECT   #advance sidereal time by 30 solar seconds
-    Current.AltAziConv()             #Calculate the alt/az at that future LST
-
-    if prefs.RefractionOn:
-      newRAref,newDECref = Current.Refrac()  #Calculate refraction for future time
-    else:
-      newRAref = 0.0
-      newDECref = 0.0
-
-    if prefs.FlexureOn:
-      newRAflex,newDECflex = Current.Flex()  #Calculate flexure for new time
-    else:
-      newRAflex = 0.0
-      newDECflex = 0.0
-
-    Current.Time.update()     #Return to the current time
-    Current.AltAziConv()      #Recalculate Alt/Az for now
-
-    deltaRA = (newRAref-oldRAref) + (newRAflex-oldRAflex)
-    deltaDEC = (newDECref-oldDECref) + (newDECflex-oldDECflex)
-
-    #Calculate refraction/flexure correction velocities in steps/50ms
-    RA_ref = 20.0*(deltaRA/NUM_REF)
-    DEC_ref = 20.0*(deltaDEC/NUM_REF)
-
-    #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
-    #and flag RefError if we've reached that cap.
-    errors.RefError = False
-    if abs(RA_ref) > 200:
-      RA_ref = 200*(RA_ref/abs(RA_ref))
-      errors.RefError = True
-    if abs(DEC_ref) > 200:
-      DEC_ref = 200*(DEC_ref/abs(DEC_ref))
-      errors.RefError = True
-
-    #Set the actual refraction/flexure correction velocities in steps/50ms
-    with motion.motors.RA.lock:
-      motion.motors.RA.refraction = RA_ref
-    with motion.motors.DEC.lock:
-      motion.motors.DEC.refraction = DEC_ref
-  else:
-    #**Stop the refraction correction**
-    with motion.motors.RA.lock:
-      motion.motors.RA.refraction = 0.0
-    with motion.motors.DEC.lock:
-      motion.motors.DEC.refraction = 0.0
-    errors.RefError = False
-
-
-def Jump(FObj, Rate=None):
-  """Jump to new position.
-  
-     Inputs:
-       FObj - a correct.CalcPosition object containing the destination position
-       Rate - the motor speed, in steps/second
-       
-     Slews in RA by (FObj.RaC-Current.RaC), and slews in DEC by (FObj.DecC-Current.DecC).
-     Returns 'True' if Alt of initial or final object is too low, 'False' if the slew proceeded OK.
-     
-     This function is called by the DoTJBox (that handles external commands) as well as by
-     the user from the command line.
-  """
-  global Current, LastObj
-  if Rate is None:
-    Rate = prefs.SlewRate
-  #TODO - handle locking properly so we don't slew during a slew, or during paddle motion
-  if motion.motors.Moving:
-    logger.error('detevent.Jump called while telescope in motion!')
-    return True
-  UpdateCurrent()             #Apply accumulated paddle and guide movement to current position
-  FObj.update(FObj)                      #Correct final object
-
-  if prefs.HighHorizonOn:
-    AltCutoffTo = prefs.AltCutoffHi
-  else:
-    AltCutoffTo = prefs.AltCutoffLo
-
-  if (Current.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
-    logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (Current.Alt,FObj.Alt))
-    return True
-  else:
-    DelRA = FObj.RaC - Current.RaC
-
-    if abs(DelRA) > (3600*15*12):
-      if DelRA < 0:
-        DelRA += (3600*15*24)
-      else:
-        DelRA -= (3600*15*24)
-    DelDEC = FObj.DecC - Current.DecC
-
-    DelRA = DelRA*20        #Convert to number of motor steps}
-    DelDEC = DelDEC*20
-    motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
-
-    LastObj = copy.deepcopy(Current)                    #Save the current position
-    Current.RaC, Current.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
-    Current.RaA, Current.DecA = FObj.RaA, FObj.DecA
-    Current.Ra, Current.Dec = FObj.Ra, FObj.Dec
-    Current.Epoch = FObj.Epoch
-    Current.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
-    Current.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
-    with motion.motors.RA.lock:
-      motion.motors.RA.track = Current.TraRA              #Set the actual hardware trackrate in the motion controller
-    with motion.motors.DEC.lock:
-      motion.motors.DEC.track = Current.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
-    Current.posviolate = False    #signal a valid original RA and Dec
-
-
-
-
-def IniPos():
-  """This function is called on startup to set the 'Current' position
-     and other data to something reasonable on startup.
-     
-     Uses the RA, DEC and LST in the state information saved by
-     detevent.ChecKDBUpdate and sqlint.UpdateSQLCurrent approximately
-     once per second.
-  """
-  info, HA, LastMod = sqlint.ReadSQLCurrent(Current)
-  if info is None:            #Flag a Calibration Error if there was no valid data in the table
-    errors.CalError = True
-    #If there's no saved position, assume telescope is pointed straight up
-    HA = 0
-    Current.DecC = prefs.ObsLat*3600
-  else:
-    errors.CalError = False
-    pdome.dome.ShutterOpen = info.ShutterOpen
-    prefs.EastOfPier = info.EastOfPier
-
-  motion.motors.Frozen = False    #Always start out not frozen
-
-  Current.Time.update()
-  rac = (Current.Time.LST+HA)*15*3600
-  if rac > 24*15*3600:
-    rac -= 24*15*3600
-  elif rac < 0.0:
-    rac += 24*15*3600
-  Current.RaC = rac
-
-  Current.Ra = Current.RaC
-  Current.Dec = Current.DecC
-  Current.RaA = Current.RaC
-  Current.DecA = Current.DecC
-  Current.Epoch = 0.0
-
-  logger.debug('detevent.IniPos: Old Alt/Azi: %4.1f, %4.1f' % (Current.Alt, Current.Azi))
-  Current.AltAziConv()
-  logger.debug('detevent.IniPos: New Alt/Azi: %4.1f, %4.1f' % (Current.Alt, Current.Azi))
-
-  pdome.dome.NewDomeAzi = pdome.CalcAzi(Current)
-  pdome.dome.DomeLastTime = time.time()
 
 
 def init():
-  global db, eventloop, detthread, paddles, Current, LastObj
+  global db, eventloop, detthread, paddles, current, LastObj
   logger.debug('Detevent unit init started')
 
   db = sqlint.InitSQL()    #Get a new db object and use it for this detevent thread
   if db is None:
     logger.warn('detevent.DetermineEvent: Detevent loop started, but with no SQL access.')
 
-  paddles = Paddles()
-  Current = correct.CalcPosition()
+  current = CurrentPosition()
   LastObj = correct.CalcPosition()
-  IniPos()
+  current.IniPos()
 
   eventloop = EventLoop()
-  eventloop.register('UpdateCurrent', UpdateCurrent)         #add all motion to 'Current' object coordinates
-  eventloop.register('RelRef', RelRef)                       #calculate refraction+flexure correction velocities, check for
+  eventloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'Current' object coordinates
+  eventloop.register('RelRef', current.RelRef)                       #calculate refraction+flexure correction velocities, check for
                                                              #    altitude too low and set 'AltError' if true
   eventloop.register('SaveStatus', SaveStatus)               #Save the current state as pickled data to a status file
   eventloop.register('errors.update', errors.update)         #Increment and check watchdog timer to detect low-level motor control failure
@@ -767,8 +579,7 @@ def init():
 
 
 
-paddles = None
-Current = None
+current = None
 LastObj = None
 poslog = prefs.LogDirName + '/teljoy.pos'
 ProspLastTime = time.time()

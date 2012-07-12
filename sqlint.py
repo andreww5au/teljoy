@@ -62,7 +62,7 @@ def getdb(user=None, password=None, host=None, database=None):
 class Info:
   """Used to pass miscellaneous state information to and from the database function/s.
      Names reflect the original attribute names in correct.CalcPosition, 
-     motors.MotorControl, globals.Prefs, pdome.DomeStatus as well as the detevent.LastError
+     motors.MotorControl, globals.Prefs, pdome.Dome as well as the detevent.LastError
      variable.
 
      Used to let clients access Teljoy internal state, required to interface to Prosp, the
