@@ -32,7 +32,7 @@ from correct import CalcPosition as Pos
 
 import motion
 import detevent
-from pdome import DomeSetMode, DomeMove, DomeMoveWait, DomeOpen, DomeOpenWait, DomeClose, DomeCloseWait
+from pdome import dome
 from sqlint import GetRC3, GetObject
 from detevent import Jump
 from digio import press, release, cslew, cset
