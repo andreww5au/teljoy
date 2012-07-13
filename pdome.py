@@ -16,7 +16,6 @@ ETA = 0.2/RD                          #?
 #Serial port for communication with dome controller:
 DOMEPORT = 1     #Python serial ports numbered 0,1,2,..., Pascal ports numbered 1,2,3,...
 
-ser = None   #Later instantiated as serial device
 
 
 class Dome:
