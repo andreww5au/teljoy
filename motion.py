@@ -13,20 +13,6 @@ import time
 from globals import *
 import usbcon
 
-DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
-
-#MOTOR_ACCEL = 2.0*25000            #2.0 (revolutions/sec/sec) * 25000 (steps/revolution)
-MOTOR_ACCEL = 6000        #For test motors, this is 6000/20 = 300 steps/sec/sec, with a max vel of 2000 steps/sec
-PULSE = 0.05                       #50 milliseconds per 'tick'
-
-#Bit masks for limit switches on the New Zealand telescope. No limit switches
-#currently readable for Perth telescope.
-POWERMSK = 0x01
-HORIZMSK = 0x02
-MESHMSK  = 0x04
-EASTMSK  = 0x08
-WESTMSK  = 0x10
-
 
 intthread = None
 

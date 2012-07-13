@@ -29,15 +29,19 @@
 """
 
 
-CNorth    = 0x02                        #Mask for north on coarse paddles (Green on test cable)
-CSouth    = 0x01                        #Mask for south (red on test cable)
+CNorth    = 0x01                        #Mask for north on coarse paddles (red on test cable)
+CSouth    = 0x02                        #Mask for south (green on test cable)
 CEast     = 0x04                        #Mask for east (blue on test cable
 CWest     = 0x08                        #Mask for west (yellow on test cable)
 
-FNorth    = 0x02                        #Mask for north on fine paddle (1)}
-FSouth    = 0x01                        #Mask for south (2)}
-FEast     = 0x04                        #Mask for east (4)}
-FWest     = 0x08                        #Mask for west (8)}
+FNorth    = 0x01                        #Mask for north on fine paddle
+FSouth    = 0x02                        #Mask for south
+FEast     = 0x04                        #Mask for east
+FWest     = 0x08                        #Mask for west
+
+CSlewMsk  = 0x10                        #This bit is set if the coarse paddle is set to 'Slew' speed
+FGuideMsk = 0x10                        #This bit is set if the fine paddle is set to 'Guide' speed
+
 
 #Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
 #IFDEF NZ
@@ -45,9 +49,14 @@ FWest     = 0x08                        #Mask for west (8)}
 #RightMsk = 2
 #CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
 #CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
-
-CSlewMsk  = 0x10
-FGuideMsk = 0x10
+#
+# #Bit masks for limit switches on the New Zealand telescope. No limit switches
+#currently readable for Perth telescope.
+#POWERMSK = 0x01
+#HORIZMSK = 0x02
+#MESHMSK  = 0x04
+#EASTMSK  = 0x08
+#WESTMSK  = 0x10
 
 
 #$IFDEF NZ}
@@ -136,15 +145,33 @@ FB = 0           #Default to Fine-set speed (ignore fine-guide)
 LastDirn = ''
 LastPaddle = ''
 
+#Which paddles to simulate using press, release functions
+DUMMY = ['F']
+#DUMMY = ['C', 'F']  #List of paddles to  be simulated.
+
+#Which paddle the test-rig should operate (using input bits 8-15)
+#TESTPADDLE = None
+TESTPADDLE = 'C'
+
 def ReadCoarse(inputs):
+  if 'C' in DUMMY:
+    return CB
+  if TESTPADDLE == 'C':
+    offset = 8
+  else:
+    offset = 0
   if inputs <> 0L:
-    print hex((inputs >> 8) & 0xFF)
-  return (inputs >> 8) & 0xFF
-#  return CB
+    print hex((inputs >> offset) & 0xFF)
+  return (inputs >> offset) & 0xFF
+
 
 def ReadFine(inputs):
-#  return (inputs >> 24) & 0xFF
-  return FB
+  if 'F' in DUMMY:
+    return FB
+  offset = 8   #Test paddle is connected to the same inputs as the real 'Fine' paddle
+  if inputs <> 0L:
+    print hex((inputs >> offset) & 0xFF)
+  return (inputs >> offset) & 0xFF
 
 def ReadLimit():
  return 0     #No limit switches readable on Perth telescope
@@ -152,7 +179,6 @@ def ReadLimit():
 
 #################
 # Dummy button-push routines, used for testing
-
 
 
 def press(dirn, paddle='F'):

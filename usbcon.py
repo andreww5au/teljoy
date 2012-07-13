@@ -63,27 +63,51 @@ class Driver(controller.Driver):
       controller.MC_PIN_FLAG_MCA_O_FUNCTION_LOW | \
       controller.MC_PIN_FLAG_MCB_O_FUNCTION_LOW
 
-    # Set the deceleration (in steps per frame per frame) to use when shutting down:
-    configuration.mc_a_shutdown_acceleration = 5
-    configuration.mc_b_shutdown_acceleration = 5
+    if REALMOTORS:   #If using the real, micro-stepped telescope motors:
+      # Set the length of a frame, in cycles of the controller clock frequency. In
+      # this example a frame is 50ms, or 1/20th of a second:
+      configuration.mc_frame_period = self.host.clock_frequency / 20
 
-    # Set the acceleration limit (in steps per frame per frame) on each axis:
-    configuration.mc_a_acceleration_limit = 5
-    configuration.mc_b_acceleration_limit = 5
+      # Set the velocity limit (in steps per frame) on each axis:
+      configuration.mc_a_velocity_limit = 6000
+      configuration.mc_b_velocity_limit = 6000
 
-    # Set the velocity limit (in steps per frame) on each axis:
-    configuration.mc_a_velocity_limit = 100
-    configuration.mc_b_velocity_limit = 100
+      # Set the acceleration limit (in steps per frame per frame) on each axis:
+      configuration.mc_a_acceleration_limit = 250
+      configuration.mc_b_acceleration_limit = 250
 
-    configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
+      # Set the deceleration (in steps per frame per frame) to use when shutting down:
+      configuration.mc_a_shutdown_acceleration = 250
+      configuration.mc_b_shutdown_acceleration = 250
 
-    # Set the length of a frame, in cycles of the controller clock frequency. In
-    # this example a frame is 50ms, or 1/20th of a second:
-    configuration.mc_frame_period = self.host.clock_frequency / 20
+      # Set the pulse width, in cycles of the clock frequency (12MHz). In this
+      # example the pulse width is 50 clock cycles, and the off time is 50 clock
+      # cycles, for a 100 clock cycle period. At the maximum velocity of 6000
+      # steps per frame, this would be a 120kHz square wave:
+      configuration.mc_pulse_width = self.host.clock_frequency / 240000
+      configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 240000
+    else:   #If using the slow, non-microstepped test rig
+      # Set the length of a frame, in cycles of the controller clock frequency. In
+      # this example a frame is 50ms, or 1/20th of a second:
+      configuration.mc_frame_period = self.host.clock_frequency / 20
 
-    # Set the pulse width, in cycles of the controller clock frequency. In this
-    # example the pulse width is 500us:
-    configuration.mc_pulse_width = self.host.clock_frequency / 10000
+      # Set the velocity limit (in steps per frame) on each axis:
+      configuration.mc_a_velocity_limit = 100
+      configuration.mc_b_velocity_limit = 100
+
+      # Set the acceleration limit (in steps per frame per frame) on each axis:
+      configuration.mc_a_acceleration_limit = 5
+      configuration.mc_b_acceleration_limit = 5
+
+      # Set the deceleration (in steps per frame per frame) to use when shutting down:
+      configuration.mc_a_shutdown_acceleration = 5
+      configuration.mc_b_shutdown_acceleration = 5
+
+      # Set the pulse width, in cycles of the controller clock frequency. In this
+      # example the pulse width is 500us:
+      configuration.mc_pulse_width = self.host.clock_frequency / 10000
+      configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
+
 
     # Invert all the GPIO inputs, so they are active when pulled low:
     for pin in configuration.pins[0:48]:
@@ -120,8 +144,8 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_denominator = 10
     configuration.mc_guider_b_limit = 20
 
-    # Set eight pins to an output:
-    for pin in configuration.pins[8:16]:
+    # Set sixteen pins to inputs, with values reported:
+    for pin in configuration.pins[0:16]:
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
