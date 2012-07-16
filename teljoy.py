@@ -54,6 +54,6 @@ def r():
 if __name__ == '__main__':
   motion.KickStart()
   detevent.init()
-  Current = detevent.Current
+  current = detevent.current
 
-
+Jump = detevent.current.Jump

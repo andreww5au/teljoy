@@ -22,7 +22,7 @@ class Driver(controller.Driver):
     self.inputs = 0L
 
   def get_expected_controller_version(self):
-    return (0, 3)
+    return (0, 4)
 
   def initialise(self, state_details):
     # Print out controller version details:
