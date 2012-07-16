@@ -11,7 +11,7 @@ import usb1, libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 3)
+module_version = (0, 4)
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
@@ -44,6 +44,8 @@ TC_WRITE_OUTPUTS = 0x04
 TC_ENQUEUE = 0x05
 TC_GET_COUNTERS = 0x06
 TC_GET_DEBUG_REGISTERS = 0x07
+TC_SET_GUIDER_VALUES = 0x08
+TC_GET_GUIDER_RESULT = 0x09
 
 TC_STATE_COMMAND_RESET_QUEUE = 0x00
 TC_STATE_COMMAND_SHUTDOWN = 0x01
@@ -164,6 +166,10 @@ MC_PIN_FLAG_MCB_O_FUNCTION_LOW = (0 << 14)
 MC_PIN_FLAG_MCB_O_FUNCTION_HIGH = (1 << 14)
 MC_PIN_FLAG_MCB_O_FUNCTION_RUNNING = (2 << 14)
 MC_PIN_FLAG_MCB_O_FUNCTION_FRAME_CLOCK = (3 << 14)
+
+GUIDER_RUN_AT_NEXT_AVAILABLE_FRAME = 1
+GUIDER_RUN_AT_FRAME = 2
+GUIDER_RUN_AT_NOT_BEFORE_FRAME = 3
 
 fpga_control_bit_descriptions = [ \
 	"CONTROL_BIT_ENABLE_MC", \
@@ -445,6 +451,9 @@ class StateDetails(object):
 class CounterDetails(object):
 	pass
 
+class GuiderResult(object):
+	pass
+
 class ControllerTimer(object):
 	def __init__(self, controller, expiry_time, callback):
 		self._controller = controller
@@ -588,48 +597,49 @@ class Controller(object):
 		transfer.submit()
 
 	def _complete_interrupt_read(self, transfer):
-		if transfer.getStatus() == libusb1.LIBUSB_TRANSFER_COMPLETED:
-			buffer = transfer.getBuffer()
+		try:
+			if transfer.getStatus() == libusb1.LIBUSB_TRANSFER_COMPLETED:
+				buffer = transfer.getBuffer()
 
-			changed, state, flags, exception, inputs, \
-			  last_enqueued_frame, last_dequeued_frame = \
-			  struct.unpack("<BBHLQLL", buffer)
+				changed, state, flags, exception, inputs, \
+				  last_enqueued_frame, last_dequeued_frame = \
+				  struct.unpack("<BBHLQLL", buffer)
 
-			self._last_enqueued_frame = last_enqueued_frame
-			self._last_dequeued_frame = last_dequeued_frame
+				self._last_enqueued_frame = last_enqueued_frame
+				self._last_dequeued_frame = last_dequeued_frame
 
-			if self._last_inputs != inputs:
-				self._last_inputs = inputs
+				if self._last_inputs != inputs:
+					self._last_inputs = inputs
 
-				if self._driver_initialised:
-					self._driver.inputs_changed(inputs)
+					if self._driver_initialised:
+						self._driver.inputs_changed(inputs)
 
-			if self._last_state != state:
-				self._last_state = state
+				if self._last_state != state:
+					self._last_state = state
 
-				self._last_state_details = StateDetails(self, state, exception)
+					self._last_state_details = StateDetails(self, state, exception)
 
-				if self._last_state_callback is not None:
-					callback = self._last_state_callback
-					self._last_state_callback = None
+					if self._last_state_callback is not None:
+						callback = self._last_state_callback
+						self._last_state_callback = None
 
-					callback()
+						callback()
 
-				if self._driver_initialised:
-					self._driver.state_changed(self._last_state_details)
+					if self._driver_initialised:
+						self._driver.state_changed(self._last_state_details)
 
-			self._initiate_interrupt_read()
+				self._initiate_interrupt_read()
 
-			if not self._enqueue_in_progress:
-				self._call_enqueue_available()
-				
-		else:
-			self.stop()
-		
-			self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
-			  "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
-
-		transfer.close()
+				if not self._enqueue_in_progress:
+					self._call_enqueue_available()
+					
+			else:
+				self.stop()
+			
+				self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
+				  "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
+		finally:
+			transfer.close()
 
 	def reset_queue(self):
 		"""Resets the queue while leaving the controller configured.
@@ -883,6 +893,8 @@ class Controller(object):
 	def _handle_error(self, failure):
 		failure.printTraceback()
 
+		return failure
+
 	def enqueue_frame(self, a_steps, b_steps):
 		"""Enqueues a frame and returns the frame number of the enqueued frame.
 
@@ -911,6 +923,7 @@ class Controller(object):
 		return frame_number
 
 	def _handle_enqueue_completed(self, bytes_written):
+		print "X Done"
 		self._enqueue_in_progress = False
 
 		self._call_enqueue_available()
@@ -956,6 +969,41 @@ class Controller(object):
 		counters.b_measured_steps = struct.unpack("<Lllllll", buffer)
 
 		return counters
+
+	def set_guider_values(self, run_at, frame_number, values):
+		reserved = 0
+
+		if frame_number is None: frame_number = 0
+
+		buffer = struct.pack("<BBHL", run_at, reserved, reserved, frame_number)
+
+		for a_steps, b_steps in values:
+			buffer += struct.pack("<hh", a_steps, b_steps)
+
+		if len(buffer) > 64:
+			raise ControllerUsageException("Too many guider values were specified.")
+
+		d = self._control_write(TC_SET_GUIDER_VALUES, buffer)
+		d.addCallback(self._handle_set_guider_values_completed)
+		d.addErrback(self._handle_error)
+
+		return d
+
+	def _handle_set_guider_values_completed(self, bytes_written):
+		d = self._control_read(TC_GET_GUIDER_RESULT, 8)
+		d.addCallback(self._handle_convert_guider_result)
+		d.addErrback(self._handle_error)
+
+		return d
+
+	def _handle_convert_guider_result(self, buffer):
+		frame, count = struct.unpack("<LL", buffer)
+
+		result = GuiderResult()
+		result.frame = frame
+		result.count = count
+
+		return result
 
 class Driver(object):
 	def internal_attach_host(self, host):
