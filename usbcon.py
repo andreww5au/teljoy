@@ -73,8 +73,8 @@ class Driver(controller.Driver):
       configuration.mc_b_velocity_limit = 6000
 
       # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 250
-      configuration.mc_b_acceleration_limit = 250
+      configuration.mc_a_acceleration_limit = 300
+      configuration.mc_b_acceleration_limit = 300
 
       # Set the deceleration (in steps per frame per frame) to use when shutting down:
       configuration.mc_a_shutdown_acceleration = 250
