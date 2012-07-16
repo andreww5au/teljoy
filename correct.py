@@ -183,10 +183,10 @@ class CalcPosition(Position):        #Position class defined in globals.py
        
        Note that since the correction is for the reference frame itself, there's no 
        reason the destination epoch needs to be the current date - we just need the
-       'Current' and destination coordinates for any jumps to be in the same reference
+       'current' and destination coordinates for any jumps to be in the same reference
        frame (equinox). 
        
-       It might be more sensible to keep the 'Current' coordinates (detevent.Current)
+       It might be more sensible to keep the 'current' coordinates (detevent.current)
        in J2000 equinox, and convert all targets to that equinox.
 
        Note that for historical reasons, the equinox for the coordinates is stored in the 'Epoch'

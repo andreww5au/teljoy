@@ -557,7 +557,7 @@ def init():
   current.IniPos()
 
   eventloop = EventLoop()
-  eventloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'Current' object coordinates
+  eventloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'current' object coordinates
   eventloop.register('RelRef', current.RelRef)                       #calculate refraction+flexure correction velocities, check for
                                                              #    altitude too low and set 'AltError' if true
   eventloop.register('SaveStatus', SaveStatus)               #Save the current state as pickled data to a status file

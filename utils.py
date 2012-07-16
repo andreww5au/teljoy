@@ -14,23 +14,23 @@ def Reset(ra=None, dec=None, epoch=2000.0, objid=''):
      years, and objid is an optional short string with an ID.
   """
   n = correct.CalcPosition(ra=ra, dec=dec, epoch=epoch, objid=objid)
-  detevent.Current.Ra, detevent.Current.Dec, detevent.Current.Epoch = n.Ra, n.Dec, n.Epoch
-  detevent.Current.update()
+  detevent.current.Ra, detevent.current.Dec, detevent.current.Epoch = n.Ra, n.Dec, n.Epoch
+  detevent.current.update()
 
 
 def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
   """
-  DelRA = 20*ora/math.cos(detevent.Current.DecC/3600*math.pi/180)  #conv to motor steps
+  DelRA = 20*ora/math.cos(detevent.current.DecC/3600*math.pi/180)  #conv to motor steps
   DelDEC = 20*odec
   motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
-  if (not detevent.Current.posviolate):
-    detevent.Current.Ra +=ora/math.cos(detevent.Current.DecC/3600*math.pi/180)
-    detevent.Current.Dec += odec
-  detevent.Current.RaA += ora/math.cos(detevent.Current.DecC/3600*math.pi/180)
-  detevent.Current.DecA += odec
-  detevent.Current.RaC += ora/math.cos(detevent.Current.DecC/3600*math.pi/180)
-  detevent.Current.DecC += odec
+  if (not detevent.current.posviolate):
+    detevent.current.Ra +=ora/math.cos(detevent.current.DecC/3600*math.pi/180)
+    detevent.current.Dec += odec
+  detevent.current.RaA += ora/math.cos(detevent.current.DecC/3600*math.pi/180)
+  detevent.current.DecA += odec
+  detevent.current.RaC += ora/math.cos(detevent.current.DecC/3600*math.pi/180)
+  detevent.current.DecC += odec
 
 
 

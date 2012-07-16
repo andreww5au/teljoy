@@ -21,13 +21,13 @@ if __name__ == '__main__':
     time.sleep(1)
     f = open('/tmp/teljoy.status','r')
     try:
-      Current, motors, dstatus, errors, prefs = cPickle.load(f)
+      current, motors, dstatus, errors, prefs = cPickle.load(f)
     except EOFError:
       print '.'
       f.close()
       continue
     f.close()
-    if Current.Time.LST == LastLST:
+    if current.Time.LST == LastLST:
       if not displayed:
         displayed = True
         print "<no data>"
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         flags.append('Dome Active')
       if dstatus.DomeTracking:
         flags.append('DomeTr')
-      print "%s [%s] %s" % (Current, ','.join(flags), errors)
-      LastLST = Current.Time.LST
+      print "%s [%s] %s" % (current, ','.join(flags), errors)
+      LastLST = current.Time.LST
       displayed = False
   
