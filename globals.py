@@ -34,11 +34,11 @@ CLASSDEBUG = True    #If true, trap all classes to catch attributes created outs
 
 PULSE = 0.05                       #50 milliseconds per 'tick'
 
-REALMOTORS = False   #If true, we're driving the real PLAT telescope, if false, driving test motors.
+REALMOTORS = True   #If true, we're driving the real PLAT telescope, if false, driving test motors.
 
 if REALMOTORS:
   DIVIDER = 1   #Don't scale step values for real telescope
-  MOTOR_ACCEL = 2.0*25000     #2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
+  MOTOR_ACCEL = 6000     #2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
 else:
   DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
   MOTOR_ACCEL = 6000        #For test motors, this is 15 steps/frame/frame
