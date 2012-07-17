@@ -149,6 +149,11 @@ class Driver(controller.Driver):
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
+    # Set the shutdown pins to outputs:
+    for pin_number in (52, 53, 58, 59):
+	configuration.pins[pin_number].direction = controller.CONTROLLER_PIN_OUTPUT
+	configuration.pins[pin_number].function = controller.CONTROLLER_PIN_FUNCTION_GPIO
+
     # Send the configuration to the controller:
     d = self.host.configure(configuration)
 
@@ -163,6 +168,12 @@ class Driver(controller.Driver):
     return d
 
   def _initialise_configuration_written(self, configuration):
+    # Set the shutdown pin values:
+    d = self.host.set_outputs((1 << 52) | (1 << 58))
+    d.addCallback(self._initialise_outputs_set)
+    d.addErrback(self._initialise_error_occurred)
+
+  def _initialise_outputs_set(self, _):
     logger.info("* Successfully Configured")
 
     # Schedule the first call of a timer that will toggle the output every second:
