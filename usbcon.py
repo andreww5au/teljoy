@@ -240,11 +240,16 @@ class Driver(controller.Driver):
         print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
 
   def state_changed(self, details):
-    logger.info("* Run State Change:")
-    logger.info(`details`)
+    logger.error("* Run State Change:")
+    logger.error(`details`)
 
     if details.state == controller.TC_STATE_EXCEPTION:
-      self.host.stop()
+      d = self.host.get_axis_exception_details()
+      d.addCallback(self._get_axis_exception_details_completed)
+
+  def _get_axis_exception_details_completed(self, details):
+    logger.error("Exception Details: %s" % details)
+    self.host.stop()
 
   def inputs_changed(self, inputs):
     logger.debug("* %s" % binstring(inputs))
