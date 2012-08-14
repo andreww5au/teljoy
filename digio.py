@@ -146,12 +146,12 @@ LastDirn = ''
 LastPaddle = ''
 
 #Which paddles to simulate using press, release functions
-DUMMY = ['F']
+DUMMY = []
 #DUMMY = ['C', 'F']  #List of paddles to  be simulated.
 
 #Which paddle the test-rig should operate (using input bits 8-15)
-#TESTPADDLE = None
-TESTPADDLE = 'C'
+TESTPADDLE = None
+#TESTPADDLE = 'C'
 
 def ReadCoarse(inputs):
   if 'C' in DUMMY:
