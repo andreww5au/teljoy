@@ -160,8 +160,8 @@ def ReadCoarse(inputs):
     offset = 8
   else:
     offset = 0
-  if inputs <> 0L:
-    print hex((inputs >> offset) & 0xFF)
+#  if inputs <> 0L:
+#    print hex((inputs >> offset) & 0xFF)
   return (inputs >> offset) & 0xFF
 
 
@@ -169,8 +169,8 @@ def ReadFine(inputs):
   if 'F' in DUMMY:
     return FB
   offset = 8   #Test paddle is connected to the same inputs as the real 'Fine' paddle
-  if inputs <> 0L:
-    print hex((inputs >> offset) & 0xFF)
+#  if inputs <> 0L:
+#    print hex((inputs >> offset) & 0xFF)
   return (inputs >> offset) & 0xFF
 
 def ReadLimit():
