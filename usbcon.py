@@ -252,7 +252,7 @@ class Driver(controller.Driver):
     self.host.stop()
 
   def inputs_changed(self, inputs):
-    logger.debug("* %s" % binstring(inputs))
+    logger.info("* %s" % binstring(inputs))
     self.inputs = inputs
 
   def run(self):
