@@ -46,6 +46,8 @@ TC_GET_COUNTERS = 0x06
 TC_GET_DEBUG_REGISTERS = 0x07
 TC_SET_GUIDER_VALUES = 0x08
 TC_GET_GUIDER_RESULT = 0x09
+TC_GET_EXCEPTION_DETAILS_LENGTH = 0x0a
+TC_GET_EXCEPTION_DETAILS = 0x0b
 
 TC_STATE_COMMAND_RESET_QUEUE = 0x00
 TC_STATE_COMMAND_SHUTDOWN = 0x01
@@ -923,6 +925,7 @@ class Controller(object):
 		return frame_number
 
 	def _handle_enqueue_completed(self, bytes_written):
+#		print "X Done"
 		self._enqueue_in_progress = False
 
 		self._call_enqueue_available()
@@ -1003,6 +1006,51 @@ class Controller(object):
 		result.count = count
 
 		return result
+
+	def get_exception_details(self):
+		d = self._control_read(TC_GET_EXCEPTION_DETAILS_LENGTH, 4)
+		d.addCallback(self._handle_get_exception_details_got_length)
+		d.addErrback(self._handle_error)
+
+		return d
+
+	def _handle_get_exception_details_got_length(self, buffer):
+		(length,) = struct.unpack("<L", buffer)
+
+		if length > 0:
+			d = self._control_read(TC_GET_EXCEPTION_DETAILS, length)
+			d.addErrback(self._handle_error)
+
+			return d
+		else:
+			return None
+
+	def get_axis_exception_details(self):
+		d = self.get_exception_details()
+		d.addCallback(self._handle_get_axis_exception_details_completed)
+		d.addErrback(self._handle_error)
+
+		return d
+
+	def _handle_get_axis_exception_details_completed(self, buffer):
+		if buffer is None:
+			return {}
+
+		axis_index, steps, guider_steps, previous_remainder_steps, current_remainder_steps, \
+		  previous_negative_direction, current_negative_direction, \
+		  reserved_a, reserved_b = struct.unpack("<LiiiiBBBB", buffer)
+
+		details = {}
+		details["axis_index"] = axis_index
+		details["steps"] = steps
+		details["guider_steps"] = guider_steps
+		details["previous_remainder_steps"] = previous_remainder_steps
+		details["current_remainder_steps"] = current_remainder_steps
+		details["previous_negative_direction"] = previous_negative_direction
+		details["current_negative_direction"] = current_negative_direction
+
+		return details
+
 
 class Driver(object):
 	def internal_attach_host(self, host):
