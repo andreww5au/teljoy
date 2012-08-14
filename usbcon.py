@@ -118,16 +118,16 @@ class Driver(controller.Driver):
       pin.function = controller.CONTROLLER_PIN_FUNCTION_SPECIAL
 
     # Set the limit switch inputs to the specific pins they are connected to:
-    configuration.mc_a_positive_limit_input = controller.PIN_GPIO_0
-    configuration.mc_a_negative_limit_input = controller.PIN_GPIO_1
-    configuration.mc_b_positive_limit_input = controller.PIN_GPIO_2
-    configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
+    # configuration.mc_a_positive_limit_input = controller.PIN_GPIO_0
+    # configuration.mc_a_negative_limit_input = controller.PIN_GPIO_1
+    # configuration.mc_b_positive_limit_input = controller.PIN_GPIO_2
+    # configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
 
     # Set the guider input pins:
-    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_4
-    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_5
-    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_6
-    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_7
+    # configuration.mc_a_positive_guider_input = controller.PIN_GPIO_4
+    # configuration.mc_a_negative_guider_input = controller.PIN_GPIO_5
+    # configuration.mc_b_positive_guider_input = controller.PIN_GPIO_6
+    # configuration.mc_b_negative_guider_input = controller.PIN_GPIO_7
 
     # Set the guider sample interval, in cycles of the controller clock frequency.
     # In this example, the guider is polled every 1ms, giving a maximum of
