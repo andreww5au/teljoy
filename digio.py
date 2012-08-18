@@ -146,7 +146,7 @@ LastDirn = ''
 LastPaddle = ''
 
 #Which paddles to simulate using press, release functions
-DUMMY = []
+DUMMY = ['C','F']
 #DUMMY = ['C', 'F']  #List of paddles to  be simulated.
 
 #Which paddle the test-rig should operate (using input bits 8-15)
