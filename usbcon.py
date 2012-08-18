@@ -240,8 +240,8 @@ class Driver(controller.Driver):
         print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
 
   def state_changed(self, details):
-    logger.error("* Run State Change:")
-    logger.error(`details`)
+    logger.info("* Run State Change:")
+    logger.info(`details`)
 
     if details.state == controller.TC_STATE_EXCEPTION:
       d = self.host.get_axis_exception_details()
