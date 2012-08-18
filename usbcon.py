@@ -110,8 +110,8 @@ class Driver(controller.Driver):
 
 
     # Invert all the GPIO inputs, so they are active when pulled low:
-    for pin in configuration.pins[0:48]:
-      pin.invert_input = True
+#    for pin in configuration.pins[0:48]:
+#      pin.invert_input = True
 
     # Set all of the motor control pins to motor control instead of just GPIO:
     for pin in configuration.pins[48:60]:
@@ -144,8 +144,8 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_denominator = 10
     configuration.mc_guider_b_limit = 20
 
-    # Set sixteen pins to inputs, with values reported:
-    for pin in configuration.pins[0:16]:
+    # Set 24 pins to inputs, with values reported:
+    for pin in configuration.pins[0:24]:
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
