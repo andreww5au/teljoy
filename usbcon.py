@@ -46,6 +46,9 @@ class Driver(controller.Driver):
 
   def _initialise_queue_reset(self, _):
     # Create a configuration for the controller:
+    """
+
+    """
     configuration = controller.ControllerConfiguration(self.host)
 
     # The motor controller will start once 8 frames are enqueued:
@@ -73,8 +76,8 @@ class Driver(controller.Driver):
       configuration.mc_b_velocity_limit = 6000
 
       # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 300
-      configuration.mc_b_acceleration_limit = 300
+      configuration.mc_a_acceleration_limit = 600   #Should be at least three times the maximum add_to_vel,
+      configuration.mc_b_acceleration_limit = 600   #  so up to six times MOTOR_ACCEL
 
       # Set the deceleration (in steps per frame per frame) to use when shutting down:
       configuration.mc_a_shutdown_acceleration = 250
@@ -108,10 +111,9 @@ class Driver(controller.Driver):
       configuration.mc_pulse_width = self.host.clock_frequency / 10000
       configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
 
-
     # Invert all the GPIO inputs, so they are active when pulled low:
-#    for pin in configuration.pins[0:48]:
-#      pin.invert_input = True
+    for pin in configuration.pins[0:48]:
+      pin.invert_input = True
 
     # Set all of the motor control pins to motor control instead of just GPIO:
     for pin in configuration.pins[48:60]:
@@ -144,22 +146,22 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_denominator = 10
     configuration.mc_guider_b_limit = 20
 
-    # Set 24 pins to inputs, with values reported:
+    # Set 24 pins to inputs, with values reported (coarse, fine and 'test' hand paddles):
     for pin in configuration.pins[0:24]:
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
+    #Set the actual hand-paddle bits to NOT inverted, as they are active high.
+    for pin in [1,2,3,4,5, 16,17,18,19,20]:
+      pin.invert_input = False
+
     # Set the shutdown pins to outputs:
     for pin_number in (52, 53, 58, 59):
-	configuration.pins[pin_number].direction = controller.CONTROLLER_PIN_OUTPUT
-	configuration.pins[pin_number].function = controller.CONTROLLER_PIN_FUNCTION_GPIO
+      configuration.pins[pin_number].direction = controller.CONTROLLER_PIN_OUTPUT
+      configuration.pins[pin_number].function = controller.CONTROLLER_PIN_FUNCTION_GPIO
 
     # Send the configuration to the controller:
     d = self.host.configure(configuration)
-
-    # Set one input pin so that any changes are reported by
-    # calling inputs_changed on this driver class:
-#    configuration.pins[controller.PIN_GPIO_9].report_input = True
 
     # The deferred is completed once the configuration is written:
     d.addCallback(self._initialise_configuration_written)

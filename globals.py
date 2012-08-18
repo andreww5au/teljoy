@@ -43,6 +43,13 @@ else:
   DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
   MOTOR_ACCEL = 6000        #For test motors, this is 15 steps/frame/frame
 
+#Which paddles to simulate using press, release functions
+DUMMYPADDLES = ['C','F']
+#DUMMY = ['C', 'F']  #List of paddles to  be simulated.
+
+#Which paddle the test-rig should operate (using input bits 8-15)
+TESTPADDLE = None
+#TESTPADDLE = 'C'
 
 FILTERS = ['Clear','Red','NCN','Blue','Visual','Infrared','Empty','Hole']
 

@@ -28,6 +28,7 @@
     to be at 0x1b0 = 432.
 """
 
+from globals import *
 
 CNorth    = 0x01                        #Mask for north on coarse paddles (red on test cable)
 CSouth    = 0x02                        #Mask for south (green on test cable)
@@ -145,42 +146,31 @@ FB = 0           #Default to Fine-set speed (ignore fine-guide)
 LastDirn = ''
 LastPaddle = ''
 
-#Which paddles to simulate using press, release functions
-DUMMY = ['C','F']
-#DUMMY = ['C', 'F']  #List of paddles to  be simulated.
-
-#Which paddle the test-rig should operate (using input bits 8-15)
-TESTPADDLE = None
-#TESTPADDLE = 'C'
 
 def ReadCoarse(inputs):
-  if 'C' in DUMMY:
+  if 'C' in DUMMYPADDLES:
     return CB
   if TESTPADDLE == 'C':
-    offset = 8
+    val = (inputs >> 8) & 0xFF          #bits 8-15 for test paddle
   else:
-    offset = 0
-#  if inputs <> 0L:
-#    print hex((inputs >> offset) & 0xFF)
-  if (inputs >> offset) & 0x0F not in [0,1,2,4,8]:
+    val = inputs & 0xFF                 #bits 0-7, not inverted for real coarse paddle
+  if (val & 0x0F) not in [0,1,2,4,8]:
     return 0    #more than one button pressed, so ignore inputs
   else:
-    return (inputs >> offset) & 0xFF
+    return val
 
 
 def ReadFine(inputs):
-  if 'F' in DUMMY:
+  if 'F' in DUMMYPADDLES:
     return FB
   if TESTPADDLE == 'F':
-    offset = 8
+    val = (inputs >> 8) & 0xFF          #bits 8-15, inverted for test paddle
   else:
-    offset = 16
-#  if inputs <> 0L:
-#    print hex((inputs >> offset) & 0xFF)
-  if (inputs >> offset) & 0x0F not in [0,1,2,4,8]:
+    val = (inputs >> 16) & 0xFF         #bits 16-23, not inverted for real fine paddle
+  if (val & 0x0F) not in [0,1,2,4,8]:
     return 0    #more than one button pressed, so ignore inputs
   else:
-    return (inputs >> offset) & 0xFF
+    return val
 
 def ReadLimit():
  return 0     #No limit switches readable on Perth telescope
