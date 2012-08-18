@@ -135,7 +135,6 @@ class Axis():
     self.guidelog = 0          #Accumulated motion from autoguider
     self.hold = 0              #These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
     self.frac = 0.0            #These store the accumulated fractional ticks, left over from previous frames
-    self.old_sign = False      #These are direction flags (False=negative) for the last velocity values sent
     self.Jumping = False       #True if a pre-calculated slew is in progress for this axis.
     self.Paddling = False      #True if hand-paddle motion is in progress for this axis
     self.lock = threading.RLock()
@@ -406,8 +405,7 @@ class Axis():
 
       send = send / DIVIDER     #TODO - remove this hack for use on the actual telescope, only needed for test motors.
 
-      #Add the 'held' values for this axis, from a previous tick where a zero was sent when the axis direction changed
-      #This was a hardware requirement for PC23, not for USB controller, but we'll do ti anyway to be safe.
+      #Add any 'held' values for this axis, containing small offsets that can bypass the ramp calculations
       if self.hold <> 0:
         send += self.hold
         self.hold = 0
@@ -419,15 +417,6 @@ class Axis():
       if abs(self.frac) > 1.0:
         int_send += math.trunc(self.frac)
         self.frac -= math.trunc(self.frac)
-
-      #**CHECKS**
-      #if the sign of send has changed since the last
-      # pulse add int_send to self.hold and reset int_send to 0.0
-      sign = (int_send >= 0)
-      if sign <> self.old_sign:     #Set an initial value for self.old_sign
-        self.old_sign = sign
-        self.hold = int_send             #include this velocity in the next pulse
-        int_send = 0
 
       #Now send it to the controller queue!
       return int_send
