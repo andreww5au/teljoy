@@ -162,16 +162,25 @@ def ReadCoarse(inputs):
     offset = 0
 #  if inputs <> 0L:
 #    print hex((inputs >> offset) & 0xFF)
-  return (inputs >> offset) & 0xFF
+  if (inputs >> offset) & 0x0F not in [0,1,2,4,8]:
+    return 0    #more than one button pressed, so ignore inputs
+  else:
+    return (inputs >> offset) & 0xFF
 
 
 def ReadFine(inputs):
   if 'F' in DUMMY:
     return FB
-  offset = 8   #Test paddle is connected to the same inputs as the real 'Fine' paddle
+  if TESTPADDLE == 'F':
+    offset = 8
+  else:
+    offset = 16
 #  if inputs <> 0L:
 #    print hex((inputs >> offset) & 0xFF)
-  return (inputs >> offset) & 0xFF
+  if (inputs >> offset) & 0x0F not in [0,1,2,4,8]:
+    return 0    #more than one button pressed, so ignore inputs
+  else:
+    return (inputs >> offset) & 0xFF
 
 def ReadLimit():
  return 0     #No limit switches readable on Perth telescope
