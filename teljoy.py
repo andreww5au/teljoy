@@ -27,6 +27,8 @@
    updated every second.
 """
 
+import time
+
 from globals import *
 from correct import CalcPosition as Pos
 
