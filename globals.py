@@ -38,7 +38,7 @@ REALMOTORS = True   #If true, we're driving the real PLAT telescope, if false, d
 
 if REALMOTORS:
   DIVIDER = 1   #Don't scale step values for real telescope
-  MOTOR_ACCEL = 6000     #2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
+  MOTOR_ACCEL = 50000     #2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
 else:
   DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
   MOTOR_ACCEL = 6000        #For test motors, this is 15 steps/frame/frame
@@ -48,7 +48,7 @@ FILTERS = ['Clear','Red','NCN','Blue','Visual','Infrared','Empty','Hole']
 
 CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini']    #Initialisation file path
 
-LOGLEVEL_CONSOLE = logging.INFO      #Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
+LOGLEVEL_CONSOLE = logging.DEBUG      #Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
 LOGLEVEL_LOGFILE = logging.DEBUG      #Logging level for logfile
 LOGFILE = "/tmp/teljoy.log"
 
