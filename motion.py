@@ -16,6 +16,8 @@ import usbcon
 
 intthread = None
 
+log = []
+
 def KickStart():
   """Start the motion control thread to keep the motor queue full.
   """
@@ -510,6 +512,8 @@ class MotorControl():
 
     if prefs.EastOfPier:
       int_DEC = -int_DEC      #Invert DEC direction if tel. east of pier
+
+    log.append((int_RA, int_DEC))    #Add ste values to the log list. TODO - delete this line...
 
     #Now send word_RA and word_DEC to the controller queue!
     return (int_RA, int_DEC)
