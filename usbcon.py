@@ -147,7 +147,7 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_limit = 20
 
     # Set 24 pins to inputs, with values reported (coarse, fine and 'test' hand paddles):
-    for pin in configuration.pins[0:24]:
+    for pin in configuration.pins[0:32]:
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
