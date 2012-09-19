@@ -22,7 +22,7 @@ class Driver(controller.Driver):
     self.inputs = 0L
 
   def get_expected_controller_version(self):
-    return (0, 4)
+    return (0, 5)
 
   def initialise(self, state_details):
     # Print out controller version details:
@@ -76,8 +76,8 @@ class Driver(controller.Driver):
       configuration.mc_b_velocity_limit = 6000
 
       # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 600   #Should be at least three times the maximum add_to_vel,
-      configuration.mc_b_acceleration_limit = 600   #  so up to six times MOTOR_ACCEL
+      configuration.mc_a_acceleration_limit = 800   #Should be at least three times the maximum add_to_vel,
+      configuration.mc_b_acceleration_limit = 800   #  so up to six times MOTOR_ACCEL
 
       # Set the deceleration (in steps per frame per frame) to use when shutting down:
       configuration.mc_a_shutdown_acceleration = 250
