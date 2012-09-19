@@ -44,7 +44,8 @@ else:
   MOTOR_ACCEL = 6000        #For test motors, this is 15 steps/frame/frame
 
 #Which paddles to simulate using press, release functions
-DUMMYPADDLES = ['C','F']
+#DUMMYPADDLES = ['C','F']
+DUMMYPADDLES = []
 #DUMMY = ['C', 'F']  #List of paddles to  be simulated.
 
 #Which paddle the test-rig should operate (using input bits 8-15)
