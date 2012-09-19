@@ -1,7 +1,7 @@
 #! /usr/local/bin/python2.7
 # coding=latin1
 
-# Copyright © Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
+# Copyright Â© Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
 # This file is internal, confidential source code and is protected by
 # trade secret and copyright laws.
 
@@ -11,13 +11,10 @@ import usb1, libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 4)
+module_version = (0, 5)
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
-def _patched_getUserData(self):
-    return self._USBTransfer__transfer.contents.user_data
-
 class _patched_Poller(object):
 	def __init__(self, poller):
 		self._poller = poller
@@ -34,7 +31,8 @@ class _patched_Poller(object):
 		else:
 			self._poller.poll(None)
 
-usb1.USBTransfer.getUserData = _patched_getUserData
+assert getattr(usb1.USBTransfer, "getUserData") is not None, \
+  "A newer version of the python-libusb1 library is required."
 
 TC_ISSUE_STATE_COMMAND = 0x00
 TC_GET_VERSION = 0x01
@@ -925,7 +923,6 @@ class Controller(object):
 		return frame_number
 
 	def _handle_enqueue_completed(self, bytes_written):
-#		print "X Done"
 		self._enqueue_in_progress = False
 
 		self._call_enqueue_available()
@@ -1051,12 +1048,11 @@ class Controller(object):
 
 		return details
 
-
 class Driver(object):
 	def internal_attach_host(self, host):
 		self.host = host
 
-	def initialise(self, state_details):
+	def initialise(self):
 		"""Called when the controller first starts the event loop.
 
 		During initialisation, the driver can check the current state of the controller,
