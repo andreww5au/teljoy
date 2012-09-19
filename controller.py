@@ -11,13 +11,10 @@ import usb1, libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 4)
+module_version = (0, 5)
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
-def _patched_getUserData(self):
-    return self._USBTransfer__transfer.contents.user_data
-
 class _patched_Poller(object):
 	def __init__(self, poller):
 		self._poller = poller
@@ -34,7 +31,8 @@ class _patched_Poller(object):
 		else:
 			self._poller.poll(None)
 
-usb1.USBTransfer.getUserData = _patched_getUserData
+assert getattr(usb1.USBTransfer, "getUserData") is not None, \
+  "A newer version of the python-libusb1 library is required."
 
 TC_ISSUE_STATE_COMMAND = 0x00
 TC_GET_VERSION = 0x01
@@ -925,7 +923,6 @@ class Controller(object):
 		return frame_number
 
 	def _handle_enqueue_completed(self, bytes_written):
-#		print "X Done"
 		self._enqueue_in_progress = False
 
 		self._call_enqueue_available()
