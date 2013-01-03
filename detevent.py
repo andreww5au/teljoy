@@ -318,8 +318,30 @@ class CurrentPosition(correct.CalcPosition):
     self.AltAziConv()
     logger.debug('detevent.IniPos: New Alt/Azi: %4.1f, %4.1f' % (self.Alt, self.Azi))
 
-    pdome.dome.NewDomeAzi = pdome.CalcAzi(self)
+    pdome.dome.NewDomeAzi = pdome.dome.CalcAzi(self)
     pdome.dome.DomeLastTime = time.time()
+
+  def Reset(self, obj):
+    """Set the current RA and DEC to those in the specified object (must be an instance of correct.CalcPosition)
+    """
+    obj.update()
+    self.Ra, self.Dec, self.Epoch = obj.Ra, obj.Dec, obj.Epoch
+    self.update()
+
+  def Offset(self, ora, odec):
+    """Make a tiny slew from the current position, by ora,odec arcseconds.
+    """
+    DelRA = 20*ora/math.cos(self.DecC/3600*math.pi/180)  #conv to motor steps
+    DelDEC = 20*odec
+    motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
+    if not self.posviolate:
+      self.Ra +=ora/math.cos(self.DecC/3600*math.pi/180)
+      self.Dec += odec
+    self.RaA += ora/math.cos(self.DecC/3600*math.pi/180)
+    self.DecA += odec
+    self.RaC += ora/math.cos(self.DecC/3600*math.pi/180)
+    self.DecC += odec
+
 
 
 def SaveStatus():
@@ -362,7 +384,7 @@ def CheckDirtyDome():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  if ( (abs(pdome.CalcAzi(current)-pdome.dome.NewDomeAzi) > 6) and
+  if ( (abs(pdome.dome.CalcAzi(current)-pdome.dome.NewDomeAzi) > 6) and
        ((time.time()-pdome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
        (not pdome.dome.DomeInUse) and
        (not pdome.dome.ShutterInUse) and
@@ -370,7 +392,7 @@ def CheckDirtyDome():
        (not motion.motors.Moving) and
        pdome.dome.AutoDome and
        (not motion.motors.PosDirty) ):
-    pdome.dome.move(pdome.CalcAzi(current))
+    pdome.dome.move(pdome.dome.CalcAzi(current))
 
 
 def CheckDBUpdate():
@@ -428,13 +450,13 @@ def DoTJbox():
       if JObj is not None:
         found = True
       else:
-        JObj = sqlint.GetRC3(BObj.ObjID, 0, db=db)
+        JObj = sqlint.GetRC3(BObj.ObjID, num=0, db=db)
         if (JObj is not None) and JObj.numfound == 1:
           found = True
       if found and (not motion.limits.HWLimit):
         AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
         if pdome.dome.AutoDome and (not AltErr):
-          pdome.dome.move(pdome.CalcAzi(JObj))
+          pdome.dome.move(pdome.dome.CalcAzi(JObj))
         if AltErr:
           logger.error('detevent.DoTJBox: Object in TJbox below Alt Limit')
         else:
@@ -445,7 +467,7 @@ def DoTJbox():
     elif other.action == 'jumprd':
       AltErr = current.Jump(BObj, prefs.SlewRate)
       if pdome.dome.AutoDome and (not AltErr):
-        pdome.dome.move(pdome.CalcAzi(BObj))
+        pdome.dome.move(pdome.dome.CalcAzi(BObj))
       if AltErr:
         logger.error('detevent.DoTJbox: Object in TJbox below Alt Limit')
       else:
@@ -465,7 +487,7 @@ def DoTJbox():
       DelRA = 20*RAOffset/math.cos(current.DecC/3600*math.pi/180)  #conv to motor steps}
       DelDEC = 20*DECOffset
       motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
-      if (not current.posviolate):
+      if not current.posviolate:
         current.Ra += RAOffset/math.cos(current.DecC/3600*math.pi/180)
         current.Dec += DECOffset
       current.RaA += RAOffset/math.cos(current.DecC/3600*math.pi/180)
@@ -476,7 +498,7 @@ def DoTJbox():
 
     elif other.action == 'dome':
       if other.DomeAzi < 0:
-        pdome.dome.move(pdome.CalcAzi(current))
+        pdome.dome.move(pdome.dome.CalcAzi(current))
       else:
         pdome.dome.move(other.DomeAzi)
       TJboxAction = other.action

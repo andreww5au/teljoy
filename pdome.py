@@ -194,59 +194,57 @@ class Dome:
       self.DomeMoved = True
       self.ser.write('C'+chr(13))
 
+  def CalcAzi(self, Obj):
+    """Calculates the dome azimuth for a given telescope position, passed as a
+       correct.CalcPosition object.
 
+       Because the telescope is mounted off-centre on the equatorial axis, and the
+       dome radius is roughly the as the tube length, there is a considerable
+       difference between telescope and dome azimuth.
 
-def CalcAzi(Obj):
-  """Calculates the dome azimuth for a given telescope position, passed as a
-     correct.CalcPosition object.
-     
-     Because the telescope is mounted off-centre on the equatorial axis, and the
-     dome radius is roughly the as the tube length, there is a considerable
-     difference between telescope and dome azimuth. 
-     
-     The correction is made by transforming the position of the centre of the 
-     telescope tube to cartesian coordinates (x0,y0,z0), projecting the direction
-     of the telescope from that position to the surface of the dome sphere (Exx2, Why2, Zee2), 
-     and transforming that back to polar coordinates for the dome centre.
-     
-     Returns the calculated dome azimuth, in degrees.
-  """
-  if prefs.EastOfPier:
-    p = -ABSP
-  else:
-    p = ABSP
-  ObjRA = Obj.Ra/54000                     #in hours
-  AziRad = DegToRad(Obj.Azi)
-  AltRad = DegToRad(Obj.Alt)
-  ha = DegToRad((Obj.Time.LST-ObjRA)*15)   #in rads
+       The correction is made by transforming the position of the centre of the
+       telescope tube to cartesian coordinates (x0,y0,z0), projecting the direction
+       of the telescope from that position to the surface of the dome sphere (Exx2, Why2, Zee2),
+       and transforming that back to polar coordinates for the dome centre.
 
-  y0 = -p*math.sin(ha)*math.sin(DegToRad(prefs.ObsLat))    #N-S component of scope centre displacement from dome centre
-  x0 = p*math.cos(ha)                                      #E-W component of scope centre displacement from dome centre
-  z0 = ETA-p*math.sin(ha)*math.cos(DegToRad(prefs.ObsLat)) #up-down component of scope centre displacement from dome centre
-  a = -math.cos(AltRad)*math.sin(AziRad)
-  b = -math.cos(AltRad)*math.cos(AziRad)
-  c = math.sin(AltRad)
-  Alpha = (a*a+c*c)/(b*b)
-  Beta = 2*(a*x0+c*z0)/b
-  Aye = Alpha + 1
-  Bee = Beta - 2*Alpha*y0
-  Cee = Alpha*y0*y0 - Beta*y0 + x0*x0 + z0*z0 - 1
-  Why1 = ( -Bee + math.sqrt(Bee*Bee-4*Aye*Cee) )/(2*Aye)
-  Exx1 = ((Why1-y0)*a/b + x0)
-  Zee1 = (Why1-y0)*c/b + z0
-  Why2 = ( -Bee - math.sqrt(Bee*Bee-4*Aye*Cee) )/(2*Aye)
-  Exx2 = ((Why2-y0)*a/b + x0)
-#  Zee2 = (Why2-y0)*c/b + z0                         #Not necessary as we only want the corrected Azimuth, not elevation
-  if Zee1>0:
-    Azi = RadToDeg(math.atan2(Exx1,Why1))
-  else:
-    Azi = RadToDeg(math.atan2(Exx2,Why2))
+       Returns the calculated dome azimuth, in degrees.
+    """
+    if prefs.EastOfPier:
+      p = -ABSP
+    else:
+      p = ABSP
+    ObjRA = Obj.Ra/54000                     #in hours
+    AziRad = DegToRad(Obj.Azi)
+    AltRad = DegToRad(Obj.Alt)
+    ha = DegToRad((Obj.Time.LST-ObjRA)*15)   #in rads
 
-  Azi = Azi + 180
-  if (Azi > 360):
-    Azi = Azi - 360
+    y0 = -p*math.sin(ha)*math.sin(DegToRad(prefs.ObsLat))    #N-S component of scope centre displacement from dome centre
+    x0 = p*math.cos(ha)                                      #E-W component of scope centre displacement from dome centre
+    z0 = ETA-p*math.sin(ha)*math.cos(DegToRad(prefs.ObsLat)) #up-down component of scope centre displacement from dome centre
+    a = -math.cos(AltRad)*math.sin(AziRad)
+    b = -math.cos(AltRad)*math.cos(AziRad)
+    c = math.sin(AltRad)
+    Alpha = (a*a+c*c)/(b*b)
+    Beta = 2*(a*x0+c*z0)/b
+    Aye = Alpha + 1
+    Bee = Beta - 2*Alpha*y0
+    Cee = Alpha*y0*y0 - Beta*y0 + x0*x0 + z0*z0 - 1
+    Why1 = ( -Bee + math.sqrt(Bee*Bee-4*Aye*Cee) )/(2*Aye)
+    Exx1 = ((Why1-y0)*a/b + x0)
+    Zee1 = (Why1-y0)*c/b + z0
+    Why2 = ( -Bee - math.sqrt(Bee*Bee-4*Aye*Cee) )/(2*Aye)
+    Exx2 = ((Why2-y0)*a/b + x0)
+  #  Zee2 = (Why2-y0)*c/b + z0                         #Not necessary as we only want the corrected Azimuth, not elevation
+    if Zee1>0:
+      Azi = RadToDeg(math.atan2(Exx1,Why1))
+    else:
+      Azi = RadToDeg(math.atan2(Exx2,Why2))
 
-  return Azi
+    Azi += 180
+    if Azi > 360:
+      Azi -= 360
+
+    return Azi
 
 
 def DegToRad(r):    #Originally in MATHS.PAS

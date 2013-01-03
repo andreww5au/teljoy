@@ -104,10 +104,14 @@ class Position:
      attribute. Strictly speaking, 'Epoch' refers to the time an observation or measurement
      was made, and NOT the coordinate reference frame used.
   """
-  def __init__(self, ra=None, dec=None, epoch=2000.0, objid=''):
+  def __init__(self, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
     """Accepts optional 'ra', 'dec' and 'objid' arguments. 'ra' and 'dec' can be sexagesimal 
        strings (in hours:minutes:seconds for RA and degrees:minutes:seconds for DEC), or
        numeric values (fractional hours for RA, fractional degrees for DEC).
+
+       If 'domepos' (saved as self.DomePos) is None, then the dome azimuth is
+       calculated automatically when the telescope is slewed, otherwise the given
+       value (in degrees) is used for the dome azimuth when slewing to this position.
      
        objid is an optional identifier for the target specified.
     """
@@ -125,6 +129,7 @@ class Position:
     else:
       self.Dec = dec * 3600.0
     self.Epoch = epoch                     #Equinox for apparent Ra & Dec
+    self.DomePos = domepos
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
@@ -248,7 +253,17 @@ class Prefs:
     self.NonSidOn = False
     self.WaitBeforePosUpdate = CP.getint('Dome','WaitTime')
     self.MinWaitBetweenDomeMoves = CP.getint('Dome','MinBetween')
-    self.LogDirName = CP.get('Paths','LogDirName')  
+    self.LogDirName = CP.get('Paths','LogDirName')
+    self.CapHourAngle = CP.get('Presets', 'CapHourAngle')
+    self.CapDec = CP.get('Presets', 'CapDec')
+    self.StowHourAngle = CP.get('Presets', 'StowHourAngle')
+    self.StowDec = CP.get('Presets', 'StowDec')
+    self.StowDomeAzi = CP.get('Presets', 'StowDomeAzi')
+    self.DomeFlatHourAngle = CP.get('Presets', 'DomeFlatHourAngle')
+    self.DomeFlatDec = CP.get('Presets', 'DomeFlatDec')
+    self.DomeFlatDomeAzi = CP.get('Presets', 'DomeFlatDomeAzi')
+    self.SkyFlatHourAngle = CP.get('Presets', 'SkyFlatHourAngle')
+    self.SkyFlatDec = CP.get('Presets', 'SkyFlatDec')
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
@@ -280,7 +295,7 @@ def sexstring(value=0,sp=':',fixed=False):
   try:
     aval = abs(value)
     error = 0
-  except:
+  except TypeError:
     aval = 0.0
     error = 1
   if value < 0:

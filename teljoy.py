@@ -53,9 +53,18 @@ def r():
   release('N', paddle='C')
   release('S', paddle='C')
 
+
+def Jump(ob):
+  detevent.current.Jump(ob)
+  if dome.AutoDome:
+    if ob.domepos is None:
+      dome.move(az=dome.CalcAzi(ob))
+    else:
+      dome.move(az=ob.domepos)
+
+
 if __name__ == '__main__':
   motion.KickStart()
   detevent.init()
   current = detevent.current
 
-Jump = detevent.current.Jump

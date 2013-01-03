@@ -5,7 +5,7 @@
 
 import time
 import datetime
-from math import sin,cos,tan,asin,acos,atan,atan2,pi,sqrt,trunc,floor,modf
+from math import sin,cos,tan,asin,acos,atan2,pi,sqrt,trunc,floor,modf
 
 from globals import *
 
@@ -56,16 +56,17 @@ class TimeRec:
     return "[UT:%s LST:%s]" % (self.UT.time().isoformat()[:-7], sexstring(self.LST,fixed=True))
 
   def CalcJulDay(self):
-    "Calculate full Julian Day for the time in self.UT"
+    """Calculate full Julian Day for the time in self.UT
+    """
     year, month = self.UT.year, self.UT.month
     if (month == 1) or (month == 2):
-      year = year - 1
-      month = month + 12
-    A = floor(year/100.0);
-    B = 2 - A + floor(A/4.0);
+      year -= 1
+      month += 12
+    A = floor(year/100.0)
+    B = 2 - A + floor(A/4.0)
     jd = floor(365.25 * year) + floor(30.6001 * (month + 1))
     jd = jd + self.UT.day + (self.UT.hour + (self.UT.minute/60.0) + (self.UT.second/3600.0) + self.UT.microsecond/3.6e9) / 24.0
-    jd = jd + 1720994 + B + 0.5;
+    jd = jd + 1720994 + B + 0.5
     self.JD = jd
 
   def CalcLST(self):
@@ -75,7 +76,7 @@ class TimeRec:
       self.CalcJulDay()
     T = ((int(self.JD-0.5)+0.5)-2415020)/36525        #Remove fractional day part of JD and convert to centuries since 1900.0
     LST = (modf(0.276919398+(100.0021359*T)+(0.000001075*T*T))[0])*24
-    LST = LST + MSOLDY*(self.UT.hour + self.UT.minute/60.0 + self.UT.second/3600.0 + self.UT.microsecond/3.6e9)
+    LST += MSOLDY*(self.UT.hour + self.UT.minute/60.0 + self.UT.second/3600.0 + self.UT.microsecond/3.6e9)
 
     L = 279.69668 + 36000.76892*T + 0.0003025*T*T     #Sun's mean longtitude
     Ld = 270.4342 + 481267.8831*T - 0.001133*T*T      #Moon's mean longtitude
@@ -95,9 +96,9 @@ class TimeRec:
              - 0.0149*sin(2*L-2*Ld+Md) + 0.0124*sin(2*L-Omega)
              + 0.0114*sin(2*Ld-Md) )
     Epsi = 23.452294-0.0130125*T - 0.00000164*T*T + 0.000000503*T*T*T
-    LST = LST + (dphi*cos(DegToRad(Epsi)))/(15*3600)
+    LST += (dphi*cos(DegToRad(Epsi)))/(15*3600)
 
-    LST = LST - prefs.ObsLong/15.0    #Convert Sidereal Time at 0 longitude to real, local S.T.
+    LST -= prefs.ObsLong/15.0    #Convert Sidereal Time at 0 longitude to real, local S.T.
     while LST > 24.0:
       LST -= 24
     while LST < 0:
@@ -119,14 +120,14 @@ class CalcPosition(Position):        #Position class defined in globals.py
   """Subclass globals.Position to add astrometric calculation methods.
      Extra coordinate attributes (RaA, RaC, DecA, DecC) are all in arcseconds.
   """
-  def __init__(self, ra=None, dec=None, epoch=2000.0, objid=''):
+  def __init__(self, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
     self.RaA,self.DecA = (0.0,0.0)        #Apparent sky position (not including refraction or flexure)
     self.RaC,self.DecC = (0.0,0.0)        #Fully Corrected Ra and Dec
     self.Alt,self.Azi = (0.0,0.0)         #Apparent Altitude and Azimuth
     self.TraRA,self.TraDEC = (0.0,0.0)         #Non-sidereal track rate for moving objects, in arcsec/second (which is identical to steps/50ms)
     self.posviolate = False               #False if RaC/DecC matches Ra/Dec/Epoch, True if moved since value calculated
     self.Time = TimeRec()                 #Time to use for the coordinate transforms
-    Position.__init__(self, ra=ra, dec=dec, epoch=epoch, objid=objid)
+    Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     if (ra is not None) and (dec is not None):
       self.update()
 
@@ -166,7 +167,7 @@ class CalcPosition(Position):        #Position class defined in globals.py
     if ObjDec < -90:
       ObjDec = -89.9999999
     alt1 = sin(DegToRad(prefs.ObsLat))
-    alt1 = alt1*(sin(DegToRad(ObjDec)))
+    alt1 *= sin(DegToRad(ObjDec))
     co = cos(DegToRad(prefs.ObsLat))
     cd = cos(DegToRad(ObjDec))
     H = DegToRad((self.Time.LST-ObjRa)*15.0)
@@ -198,9 +199,6 @@ class CalcPosition(Position):        #Position class defined in globals.py
             #This is taken from Astronomical Formulae for Calculators, Jean Meeus,
             #    3rd Ed. 1985.  P:65-67.
     """
-    nRA = 0
-    nDEC = 0
-    
     if (self.Epoch is None) or (self.Epoch == 0.0):    #if the original equinox is zero, assume the
       now = time.gmtime()                              #   coordinates refer to equinox-of-date
       epoch = now.tm_year + now.tm_yday/365.0
@@ -245,7 +243,7 @@ class CalcPosition(Position):        #Position class defined in globals.py
       z = 1e-6
     h = DegToRad((self.Time.LST-ObjRa)*15)     #Hour angle in radians}
     dummy = trunc(h/(2*pi))
-    h = h - (dummy*2*pi)
+    h -= dummy*2*pi
     obs = DegToRad(prefs.ObsLat)                    #Observatory Lat in radians}
     R = -1
     NewR = 0
@@ -353,37 +351,37 @@ class CalcPosition(Position):        #Position class defined in globals.py
     dd = 0
 
     if abs(cosd) > 1e-3:                       #CH     {check for overflow on the division}
-      dr = dr + (FlexData.CH / cosd)
+      dr += (FlexData.CH / cosd)
 
-    dr = dr - (FlexData.MA * cosh * tand)      #MA
-    dd = dd + (FlexData.MA * sinh)
+    dr -= (FlexData.MA * cosh * tand)      #MA
+    dd += (FlexData.MA * sinh)
 
-    dr = dr + (FlexData.ME * sinh * tand)      #ME
-    dd = dd + (FlexData.ME * cosh)
+    dr += (FlexData.ME * sinh * tand)      #ME
+    dd += (FlexData.ME * cosh)
 
-    dr = dr - (FlexData.DAF * (cosp * cosh + sinp * tand) )    #DAF
+    dr -= (FlexData.DAF * (cosp * cosh + sinp * tand) )    #DAF
 
-    dr = dr + (FlexData.HCEC * cosh)           #HCEC
+    dr += (FlexData.HCEC * cosh)           #HCEC
 
-    dr = dr + (FlexData.HCES * sinh)           #HCES
+    dr += (FlexData.HCES * sinh)           #HCES
 
-    dd = dd + (FlexData.DCEC * cosd)           #DCEC
+    dd += (FlexData.DCEC * cosd)           #DCEC
 
-    dd = dd + (FlexData.DCES * sind)           #DCES
+    dd += (FlexData.DCES * sind)           #DCES
 
-    dr = dr + (FlexData.DNP * sinh * tand)     #DNP
+    dr += (FlexData.DNP * sinh * tand)     #DNP
 
     if abs(cosd) > 1e-3:                       #TF    {check for overflow on the division}
-      dr = dr + (FlexData.TF * cosp * sinh / cosd)
-    dd = dd + (FlexData.TF * (cosp * cosh * sind - sinp * cosd))
+      dr += (FlexData.TF * cosp * sinh / cosd)
+    dd += (FlexData.TF * (cosp * cosh * sind - sinp * cosd))
 
-    dr = dr + (FlexData.NP * tand)             #NP
+    dr += (FlexData.NP * tand)             #NP
 
-    dr = dr + (FlexData.HHSH2 * sin(2*h))      #HHSH2
+    dr += (FlexData.HHSH2 * sin(2*h))      #HHSH2
 
-    dr = dr + (FlexData.HHSD * sind)           #HHSD
+    dr += (FlexData.HHSD * sind)           #HHSD
 
-    dr = dr + (FlexData.HHCD * cosd)           #HHCD
+    dr += (FlexData.HHCD * cosd)           #HHCD
 
     return dr, -dd       # Invert dec offset to match default TPOINT output
     
@@ -406,6 +404,27 @@ class CalcPosition(Position):        #Position class defined in globals.py
       self.RaC += dRA
       self.DecC += dDEC
       
+
+class HADecPosition(CalcPosition):
+  """Subclass CalcPosition to handle fixed (HourAngle/Dec positions, for tasks like
+     pointing at the flatfielding screen, parking the telescope, etc. Source attributes
+     and arguments to __init__ are ha (in hours, dec (in degrees), and domepos (in degrees).
+
+     The update() method is overridden to first calculate .Ra and .Dec from the
+  """
+  def __init__(self, ha=None, dec=None, epoch=0.0, domepos=None, objid=''):
+    self.HA = ha
+    self.Time = TimeRec()                 #Time to use for the coordinate transforms
+    CalcPosition.__init__(self, ra=self.Time.LST+self.HA, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
+    self.update()
+
+  def update(self, now=True):
+    """Override normal position update to calculate the current ra/dec from the fixed hour-angle/dec position
+       before doing the astropmetric calculations.
+    """
+    self.Time.update(now=now)
+    self.Ra = (self.Time.LST + self.HA)*15*3600
+    CalcPosition.update(self)
 
 
 class FlexureProfile:
@@ -454,8 +473,8 @@ def cot(r):         #Originally in MATHS.PAS
 
 def Reduce(r):      #Originally in MATHS.PAS
   n = trunc(r/360.0)
-  r = r - (n*360)
-  if (r < 0):
+  r -= n*360
+  if r < 0:
     return r + 360
   else:
     return r

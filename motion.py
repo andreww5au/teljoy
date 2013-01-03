@@ -286,8 +286,8 @@ class Axis():
         #Jump is large enough to reach max velocity - has a Plateau
         self.up = num_pulses
         self.down = num_pulses
-        steps_plateau = delta - 2.0*(num_ramp_steps)*sign
-        pulses_plateau = steps_plateau/(self.max_vel)
+        steps_plateau = delta - 2.0*num_ramp_steps*sign
+        pulses_plateau = steps_plateau /self.max_vel
         self.plateau = math.trunc(pulses_plateau)      #number of pulses in the plateau
         sum_of_pulses = self.up*2 + self.plateau
         self.remain = (steps_plateau-self.plateau*self.max_vel)/sum_of_pulses
@@ -298,12 +298,12 @@ class Axis():
         num_steps_hold = abs(delta)
         while True:
           steps_used = 2.0*add_to_vel*(ramp_pulses_part+1)
-          num_steps_hold = num_steps_hold - steps_used
+          num_steps_hold -= steps_used
           if num_steps_hold < 0.0:
-            num_steps_hold = num_steps_hold + steps_used
+            num_steps_hold += steps_used
             break
           else:
-            ramp_pulses_part = ramp_pulses_part + 1
+            ramp_pulses_part += 1
         self.up = ramp_pulses_part
         self.down = ramp_pulses_part
         self.plateau = 0
@@ -423,9 +423,9 @@ class Axis():
 
 
 class MotorControl():
-  """An instance of this class handles all low-level motion control, with one method
-     (Timeint) running continuously in a background thread to keep the controller 
-     queue full.
+  """An instance of this class handles all low-level motion control, with one background thread running
+     self.Driver.run to keep the controller queue full. This thread is started when the 'KickStart()' function
+     is called by the main program.
   """
   def __init__(self):
     logger.debug('motion.MotorControl.__init__: Initializing Global variables')
@@ -502,17 +502,12 @@ class MotorControl():
     if prefs.EastOfPier:
       int_DEC = -int_DEC      #Invert DEC direction if tel. east of pier
 
-#    log.append((int_RA, int_DEC))    #Add ste values to the log list. TODO - delete this line...
-
     #Now send word_RA and word_DEC to the controller queue!
     return (int_RA, int_DEC)
 
 
 
 #Main init routine for unit
-#Set initial values
-
-ticks = 0
 
 limits = LimitStatus()
 motors = MotorControl()
