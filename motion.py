@@ -476,7 +476,6 @@ class MotorControl():
     if self.PosDirty:
       flags.append("PosDirty")
     mesg += "  Flags: [%s]\n" % (', '.join(flags))
-    mesg += "  up/down/plateau = %d/%d/%d" % (self.up, self.down, self.plateau)
     mesg += "RA: %s" % self.RA
     mesg += "Dec: %s" % self.DEC
     mesg += '>\n'
