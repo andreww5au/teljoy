@@ -144,15 +144,15 @@ class Axis():
     flags = []
     if self.Paddling:
       if self.Paddle_Start:
-        flags += "Paddling:Start"
+        flags.append("Paddling:Start")
       elif self.Paddle_stop:
-        flags += "Paddling:Stop"
+        flags.append("Paddling:Stop")
       else:
-        flags += "Paddling"
+        flags.append("Paddling")
     if self.Jumping:
-      flags += "Jumping"
+      flags.append("Jumping")
     if not self.finish:
-      flag += "Jump not finished"
+      flags.append("Jump not finished")
     mesg += "  Flags: [%s]\n" % (', '.join(flags))
     mesg += "  up/down/plateau = %d/%d/%d" % (self.up, self.down, self.plateau)
     mesg += '>\n'
@@ -461,6 +461,28 @@ class MotorControl():
     logger.debug('motion.MotorControl.__init__: finished global vars')
     if CLASSDEBUG:
       self.__setattr__ = self.debug
+
+  def __repr__(self):
+    mesg = "<Motors: ticks=%d"
+    flags = []
+    if self.Jumping:
+      flags.append("Jumping")
+    if self.Moving:
+      flags.append("Moving")
+    if self.Paddling:
+      flags.append("Paddling")
+    if self.Frozen:
+      flags.append("Frozen")
+    if self.PosDirty:
+      flags.append("PosDirty")
+    mesg += "  Flags: [%s]\n" % (', '.join(flags))
+    mesg += "  up/down/plateau = %d/%d/%d" % (self.up, self.down, self.plateau)
+    mesg += "RA: %s" % self.RA
+    mesg += "Dec: %s" % self.DEC
+    mesg += '>\n'
+    return mesg
+
+
 
   def debug(self,name,value):
     """Trap all attribute writes, and raise an error if the attribute
