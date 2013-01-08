@@ -415,7 +415,12 @@ class HADecPosition(CalcPosition):
   def __init__(self, ha=None, dec=None, epoch=0.0, domepos=None, objid=''):
     self.HA = ha
     self.Time = TimeRec()                 #Time to use for the coordinate transforms
-    CalcPosition.__init__(self, ra=self.Time.LST+self.HA, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
+    ra = self.time.LST + self.HA
+    if ra < 0.0:
+      ra += 24.0
+    if ra > 24.0:
+      ra -= 24.0
+    CalcPosition.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     self.update()
 
   def update(self, now=True):
