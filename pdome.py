@@ -196,7 +196,8 @@ class Dome:
 
   def CalcAzi(self, Obj):
     """Calculates the dome azimuth for a given telescope position, passed as a
-       correct.CalcPosition object.
+       correct.CalcPosition object. If that object has a DomePos attribute that is
+       a valid number, use that instead of the calculated value.
 
        Because the telescope is mounted off-centre on the equatorial axis, and the
        dome radius is roughly the as the tube length, there is a considerable
@@ -209,6 +210,8 @@ class Dome:
 
        Returns the calculated dome azimuth, in degrees.
     """
+    if (type(Obj.DomePos) == float) or (type(Obj.DomePos) == int):
+      return float(Obj.DomePos)     #Hard-wired dome azimuth in position record.
     if prefs.EastOfPier:
       p = -ABSP
     else:

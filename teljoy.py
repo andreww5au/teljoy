@@ -40,7 +40,7 @@ from detevent import current
 from digio import press, release, cslew, cset
 from utils import *
 
-
+#Convenience functions for the dummy hand paddle mode - delete once testing is complete.
 def n():
   release('S', paddle='C')
   press('N', paddle='C')
@@ -61,10 +61,7 @@ def r():
 def Jump(ob):
   detevent.current.Jump(ob)
   if dome.AutoDome:
-    if ob.domepos is None:
-      dome.move(az=dome.CalcAzi(ob))
-    else:
-      dome.move(az=ob.domepos)
+    dome.move(az=dome.CalcAzi(ob))
 
 
 if __name__ == '__main__':
