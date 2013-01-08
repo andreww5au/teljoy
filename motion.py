@@ -139,8 +139,8 @@ class Axis():
     self.Paddling = False      #True if hand-paddle motion is in progress for this axis
     self.lock = threading.RLock()
 
-  def __str__(self):
-    mesg =  "<Axis: Sidereal=%f\n"
+  def __repr__(self):
+    mesg =  "<Axis: Sidereal=%f\n" % self.sidereal
     flags = []
     if self.Paddling:
       if self.Paddle_Start:
@@ -153,8 +153,9 @@ class Axis():
       flags += "Jumping"
     if not self.finish:
       flag += "Jump not finished"
-    mesg += "Flags: [%s]" % (', '.join(flags))
-    mesg += "up/down/plateau = %d/%d/%d"
+    mesg += "  Flags: [%s]\n" % (', '.join(flags))
+    mesg += "  up/down/plateau = %d/%d/%d" % (self.up, self.down, self.plateau)
+    mesg += '>\n'
 
     return mesg
 
