@@ -463,7 +463,7 @@ class MotorControl():
       self.__setattr__ = self.debug
 
   def __repr__(self):
-    mesg = "<Motors: ticks=%d"
+    mesg = "<Motors: ticks=%d" % self.ticks
     flags = []
     if self.Jumping:
       flags.append("Jumping")
