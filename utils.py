@@ -2,6 +2,7 @@
 import math
 
 from globals import *
+from pdome import dome
 import correct
 import detevent
 import motion
