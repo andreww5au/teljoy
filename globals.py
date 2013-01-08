@@ -32,6 +32,9 @@ DFPRESS = 1015.92                       #default atm. press. in mb, for refracti
 
 CLASSDEBUG = True    #If true, trap all classes to catch attributes created outside __init__ method
 
+DTABLE = 'ncurrent'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
+#DTABLE = 'current'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
+
 PULSE = 0.05                       #50 milliseconds per 'tick'
 
 REALMOTORS = True   #If true, we're driving the real PLAT telescope, if false, driving test motors.

@@ -8,7 +8,7 @@
    
    These functions fall into three groups:
    -Save or load internal Teljoy state (position, etc) using 
-      the teljoy.ncurrent table. Prosp uses this to insert current
+      the teljoy.DTABLE table. Prosp uses this to insert current
       telescope coordinates into the FITS header, for example.
    -Write to or read from teljoy.tjbox table, used for interprocess communication
       between Teljoy and Prosp (the CCD camera controller). This table normally
@@ -548,14 +548,14 @@ def ReadSQLCurrent(Here, db=None):
                  'ShutterOpen,DomeTracking,Frozen,'+
                  'RA_GuideAcc,DEC_GuideAcc,LastError,'+
                  'unix_timestamp(now())-unix_timestamp(LastMod) '+
-                 'from teljoy.ncurrent')
+                 'from teljoy.%s' % DTABLE)
   except dblib.Error as error:
-    logger.error("sqlint.ReadSQLCurrent: teljoy.ncurrent query error: '%s'" % error)
+    logger.error("sqlint.ReadSQLCurrent: teljoy.%s query error: '%s'" % (DTABLE,error))
     return None, 0, 0
 
   rows = curs.fetchall()
   if not rows:
-    logger.error('sqlint.ReadSQLCurrent: No rows returned from teljoy.ncurrent')
+    logger.error('sqlint.ReadSQLCurrent: No rows returned from teljoy.%s' % DTABLE)
     return None, 0, 0
   else:
     row = rows[0]
@@ -620,13 +620,14 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
       db = gdb
     curs = db.cursor()
   if not CurrentInfo.posviolate:  #if telescope position is valid}
-    qstr1 = "update teljoy.ncurrent set name='%s', ObjRA='%g', ObjDec='%g', ObjEpoch='%g', " % (
+    qstr1 = "update teljoy.%s set name='%s', ObjRA='%g', ObjDec='%g', ObjEpoch='%g', " % (
+                    DTABLE,
                     Here.ObjID,
                     Here.Ra/(15.0*3600),
                     Here.Dec/3600.0,
                     Here.Epoch )
   else:
-    qstr1 = "update teljoy.ncurrent set name='%s', ObjRA=NULL, ObjDec=NULL, ObjEpoch=NULL, " % Here.ObjID
+    qstr1 = "update teljoy.%s set name='%s', ObjRA=NULL, ObjDec=NULL, ObjEpoch=NULL, " % (DTABLE,Here.ObjID)
 
   tmpd = Here.RaC/54000.0 - Here.Time.LST
   if tmpd < -12:
@@ -661,7 +662,7 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
   try:
     curs.execute(querystr)
   except dblib.Error as error:
-    logger.error("sqlint.UpdateSQLCurrent: teljoy.ncurrent query error: '%s'" % error)
+    logger.error("sqlint.UpdateSQLCurrent: teljoy.%s query error: '%s'" % (DTABLE,error))
     logger.error("Query=<%s>" % (querystr,))
   return None
 
