@@ -24,6 +24,16 @@ SKYFLAT = correct.HADecPosition(ha=prefs.SkyFlatHourAngle,
                                 objid='SkyFlat')
 
 
+#TODO - add some arg processing here that allows the user to pass on object, an RA/dec string or
+#       floats, an objid string, etc, for a human-oriented 'Jump' function. Ditto for 'Reset'.
+#Actually, a single function that took an arbitrary arglist and returned an object would save
+#a lot of code re-use.
+def jump(ob):
+  detevent.current.Jump(ob)
+  if dome.AutoDome:
+    dome.move(az=dome.CalcAzi(ob))
+
+
 def reset(ra=None, dec=None, epoch=2000.0, objid=''):
   """Set the current RA and DEC to the values given. 
      'ra' and 'dec' can be sexagesimal strings (in hours:minutes:seconds for RA and degrees:minutes:seconds

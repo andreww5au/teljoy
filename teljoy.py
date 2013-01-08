@@ -54,15 +54,6 @@ def r():
   release('S', paddle='C')
 
 
-#TODO - add some arg processing here that allows the user to pass on object, an RA/dec string or
-#       floats, an objid string, etc, for a human-oriented 'Jump' function. Ditto for 'Reset'.
-#Actually, a single function that took an arbitrary arglist and returned an object would save
-#a lot of code re-use.
-def Jump(ob):
-  detevent.current.Jump(ob)
-  if dome.AutoDome:
-    dome.move(az=dome.CalcAzi(ob))
-
 
 if __name__ == '__main__':
   motion.KickStart()

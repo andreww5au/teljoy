@@ -139,6 +139,25 @@ class Axis():
     self.Paddling = False      #True if hand-paddle motion is in progress for this axis
     self.lock = threading.RLock()
 
+  def __str__(self):
+    mesg =  "<Axis: Sidereal=%f\n"
+    flags = []
+    if self.Paddling:
+      if self.Paddle_Start:
+        flags += "Paddling:Start"
+      elif self.Paddle_stop:
+        flags += "Paddling:Stop"
+      else:
+        flags += "Paddling"
+    if self.Jumping:
+      flags += "Jumping"
+    if not self.finish:
+      flag += "Jump not finished"
+    mesg += "Flags: [%s]" % (', '.join(flags))
+    mesg += "up/down/plateau = %d/%d/%d"
+
+    return mesg
+
   def __getstate__(self):
     """Can't pickle the lock object when saving state
     """
