@@ -152,7 +152,7 @@ class Driver(controller.Driver):
       pin.report_input = True
 
     #Set the actual hand-paddle bits to NOT inverted, as they are active high.
-    for pin_number in [0,1,2,3,4, 16,17,18,19,20]:
+    for pin_number in [0,1,2,3,4, 16,17,18,19,20, 24,25,25,27]:
       configuration.pins[pin_number].invert_input = False
 
     # Set the shutdown pins to outputs:
