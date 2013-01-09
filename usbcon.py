@@ -238,8 +238,8 @@ class Driver(controller.Driver):
       # Every "frame" of step data has a unique number, starting with
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
-      if self.frame_number % 1200 == 0:
-        print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
+      #if self.frame_number % 1200 == 0:
+      #  print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
 
   def state_changed(self, details):
     logger.info("* Run State Change:")

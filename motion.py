@@ -140,7 +140,7 @@ class Axis():
     self.lock = threading.RLock()
 
   def __repr__(self):
-    mesg =  "<Axis: Sidereal=%f\n" % self.sidereal
+    mesg =  "  <Axis: Sidereal=%f\n" % self.sidereal
     flags = []
     if self.Paddling:
       if self.Paddle_Start:
@@ -153,9 +153,9 @@ class Axis():
       flags.append("Jumping")
     if not self.finish:
       flags.append("Jump not finished")
-    mesg += "  Flags: [%s]\n" % (', '.join(flags))
-    mesg += "  up/down/plateau = %d/%d/%d" % (self.up, self.down, self.plateau)
-    mesg += '>\n'
+    mesg += "    Flags: [%s]\n" % (', '.join(flags))
+    mesg += "    up/down/plateau = %d/%d/%d" % (self.up, self.down, self.plateau)
+    mesg += '  >\n'
 
     return mesg
 
