@@ -31,7 +31,7 @@ import time
 
 from globals import *
 from correct import CalcPosition as Pos
-
+import usbcon
 import motion
 import detevent
 from pdome import dome
@@ -53,7 +53,12 @@ def r():
   release('N', paddle='C')
   release('S', paddle='C')
 
+c = current
+m = motion.motors
+d = m.Driver
 
+def i():
+  print usbcon.binstring(d.inputs)
 
 if __name__ == '__main__':
   motion.KickStart()
