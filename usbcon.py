@@ -210,14 +210,14 @@ class Driver(controller.Driver):
     d.addCallback(self._complete_check_counters)
 
   def _complete_check_counters(self, counters):
-    logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
-                  (counters.reference_frame_number,
-                   counters.a_total_steps,
-                   counters.b_total_steps,
-                   counters.a_guider_steps,
-                   counters.b_guider_steps,
-                   counters.a_measured_steps,
-                   counters.b_measured_steps))
+#    logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
+#                  (counters.reference_frame_number,
+#                   counters.a_total_steps,
+#                   counters.b_total_steps,
+#                   counters.a_guider_steps,
+#                   counters.b_guider_steps,
+#                   counters.a_measured_steps,
+#                   counters.b_measured_steps))
 
     self.host.add_timer(60.0, self._check_counters)
 
