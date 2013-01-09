@@ -476,12 +476,10 @@ class MotorControl():
     if self.PosDirty:
       flags.append("PosDirty")
     mesg += "  Flags: [%s]\n" % (', '.join(flags))
-    mesg += "RA: %s" % self.RA
-    mesg += "Dec: %s" % self.DEC
+    mesg += "RA:\n%s" % self.RA
+    mesg += "Dec:\n%s" % self.DEC
     mesg += '>\n'
     return mesg
-
-
 
   def debug(self,name,value):
     """Trap all attribute writes, and raise an error if the attribute
