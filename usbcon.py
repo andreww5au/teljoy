@@ -126,10 +126,10 @@ class Driver(controller.Driver):
     # configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
 
     # Set the guider input pins:
-    # configuration.mc_a_positive_guider_input = controller.PIN_GPIO_4
-    # configuration.mc_a_negative_guider_input = controller.PIN_GPIO_5
-    # configuration.mc_b_positive_guider_input = controller.PIN_GPIO_6
-    # configuration.mc_b_negative_guider_input = controller.PIN_GPIO_7
+    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_24
+    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_25
+    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_26
+    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_27
 
     # Set the guider sample interval, in cycles of the controller clock frequency.
     # In this example, the guider is polled every 1ms, giving a maximum of
