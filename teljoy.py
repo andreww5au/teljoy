@@ -53,7 +53,7 @@ def r():
   release('N', paddle='C')
   release('S', paddle='C')
 
-c = current
+c = detevent.current
 m = motion.motors
 d = m.Driver
 
