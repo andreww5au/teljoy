@@ -294,7 +294,7 @@ class Axis():
         self.plateau = 0
         self.remain = 0
         self.Jumping = False
-      elif abs(delta) < abs(self.add_vel):
+      elif abs(delta) < 2.0*abs(self.add_vel):
         #Small jump - add delta to self.hold.
         self.up = 0
         self.down = 0
