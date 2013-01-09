@@ -143,7 +143,7 @@ class Axis():
     mesg =  "  <Axis: Sidereal=%f\n" % self.sidereal
     flags = []
     if self.Paddling:
-      if self.Paddle_Start:
+      if self.Paddle_start:
         flags.append("Paddling:Start")
       elif self.Paddle_stop:
         flags.append("Paddling:Stop")
