@@ -126,21 +126,22 @@ class CurrentPosition(correct.CalcPosition):
     if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
       self.posviolate = True
 
-    #account for paddle and non-sid. motion, and limit encounters}
-    self.RaA += motion.motors.RA.padlog/20
-    self.DecA += motion.motors.DEC.padlog/20
-
-    #above, plus real-time refraction+flexure+guide in the fully corrected coords}
-    self.RaC += motion.motors.RA.padlog/20 + motion.motors.RA.reflog/20 + motion.motors.RA.guidelog/20
-    self.DecC += motion.motors.DEC.padlog/20 + motion.motors.DEC.reflog/20 + motion.motors.DEC.guidelog/20
-    paddles.RA_GuideAcc += motion.motors.RA.guidelog/20
-    paddles.DEC_GuideAcc += motion.motors.DEC.guidelog/20
-
     with motion.motors.RA.lock:
+      #account for paddle and non-sid. motion, and limit encounters}
+      self.RaA += motion.motors.RA.padlog/20
+      #above, plus real-time refraction+flexure+guide in the fully corrected coords}
+      self.RaC += motion.motors.RA.padlog/20 + motion.motors.RA.reflog/20 + motion.motors.RA.guidelog/20
+      paddles.RA_GuideAcc += motion.motors.RA.guidelog/20
       motion.motors.RA.padlog = 0
       motion.motors.RA.reflog = 0
       motion.motors.RA.guidelog = 0
+
     with motion.motors.DEC.lock:
+      #account for paddle and non-sid. motion, and limit encounters}
+      self.DecA += motion.motors.DEC.padlog/20
+      #above, plus real-time refraction+flexure+guide in the fully corrected coords}
+      self.DecC += motion.motors.DEC.padlog/20 + motion.motors.DEC.reflog/20 + motion.motors.DEC.guidelog/20
+      paddles.DEC_GuideAcc += motion.motors.DEC.guidelog/20
       motion.motors.DEC.padlog = 0
       motion.motors.DEC.reflog = 0
       motion.motors.DEC.guidelog = 0
