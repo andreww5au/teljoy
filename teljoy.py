@@ -53,7 +53,6 @@ def r():
   release('N', paddle='C')
   release('S', paddle='C')
 
-c = detevent.current
 m = motion.motors
 d = m.Driver
 
@@ -64,4 +63,5 @@ if __name__ == '__main__':
   motion.KickStart()
   detevent.init()
   current = detevent.current
+  c = current
 
