@@ -1,5 +1,6 @@
 
 import sys
+import time
 
 from globals import *
 from pdome import dome
@@ -126,7 +127,7 @@ def jump(*args, **kws):
   print "Jumping to:", ob
   detevent.current.Jump(ob)
   if dome.AutoDome:
-    "Moving dome."
+    print "Moving dome."
     dome.move(az=dome.CalcAzi(ob))
 
 Jump = jump

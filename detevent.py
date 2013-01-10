@@ -509,7 +509,7 @@ def DoTJbox():
       DelRA = 20*RAOffset/math.cos(current.DecC/3600*math.pi/180)  #conv to motor steps}
       DelDEC = 20*DECOffset
       motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
-      logger.info("detevent.DoTJbox: Remote small offset shift by %4.1f,%4.1f arcsec" % (DelRA/20, DelDec/20))
+      logger.info("detevent.DoTJbox: Remote small offset shift by %4.1f,%4.1f arcsec" % (DelRA/20, DelDEC/20))
       if not current.posviolate:
         current.Ra += RAOffset/math.cos(current.DecC/3600*math.pi/180)
         current.Dec += DECOffset
