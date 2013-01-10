@@ -119,7 +119,7 @@ p = Pos
 
 
 def jump(*args, **kws):
-  ob = Pos(args=args, kws=kws)
+  ob = Pos(*args, **kws)
   if ob is None:
     print "Can't parse those arguments to get a valid position"
     return
@@ -138,7 +138,7 @@ def reset(*args, **kws):
      for DEC), or numeric values (fractional hours for RA, fractional degrees for DEC). Epoch is in decimal 
      years, and objid is an optional short string with an ID.
   """
-  ob = Pos(args=args, kws=kws)
+  ob = Pos(*args, **kws)
   if ob is None:
     print "Can't parse those arguments to get a valid position"
     return
