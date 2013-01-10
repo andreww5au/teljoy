@@ -54,7 +54,7 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
      Normally that would be an instance of the correct.CalcPosition class, but you can pass an alternate
      base class in using the 'pclass' attribute.
   """
-  ra,dec,epoch,objid,obj = None,None,None,None,None
+  ra,dec,epoch,objid,domepos,obj = None,None,None,None,None,None
   for n in ['ra','RA','Ra']:
     if n in kws.keys():
       ra = kws[n]
