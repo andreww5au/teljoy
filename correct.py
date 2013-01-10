@@ -120,13 +120,22 @@ class CalcPosition(Position):        #Position class defined in globals.py
   """Subclass globals.Position to add astrometric calculation methods.
      Extra coordinate attributes (RaA, RaC, DecA, DecC) are all in arcseconds.
   """
-  def __init__(self, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
+  def __init__(self, obj=None, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
     self.RaA,self.DecA = (0.0,0.0)        #Apparent sky position (not including refraction or flexure)
     self.RaC,self.DecC = (0.0,0.0)        #Fully Corrected Ra and Dec
     self.Alt,self.Azi = (0.0,0.0)         #Apparent Altitude and Azimuth
     self.TraRA,self.TraDEC = (0.0,0.0)         #Non-sidereal track rate for moving objects, in arcsec/second (which is identical to steps/50ms)
     self.posviolate = False               #False if RaC/DecC matches Ra/Dec/Epoch, True if moved since value calculated
     self.Time = TimeRec()                 #Time to use for the coordinate transforms
+    if isinstance(obj,Position):
+      if ra is None:
+        ra = obj.Ra/15.0/3600
+      if dec is None:
+        dec = obj.Dec/3600.0
+      if epoch is None:
+        epoch = obj.Epoch
+      if objid is None:
+        objid = obj.ObjID
     Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     if (ra is not None) and (dec is not None):
       self.update()

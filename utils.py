@@ -6,6 +6,7 @@ from pdome import dome
 import correct
 import detevent
 import motion
+import sqlint
 
 STOW = correct.HADecPosition(ha=prefs.StowHourAngle,
                              dec=prefs.StowDec,
@@ -25,24 +26,114 @@ SKYFLAT = correct.HADecPosition(ha=prefs.SkyFlatHourAngle,
                                 objid='SkyFlat')
 
 
-#TODO - add some arg processing here that allows the user to pass on object, an RA/dec string or
-#       floats, an objid string, etc, for a human-oriented 'Jump' function. Ditto for 'Reset'.
-#Actually, a single function that took an arbitrary arglist and returned an object would save
-#a lot of code re-use.
-def jump(ob):
+def Lookup(objid=''):
+  """Given a string, look up that name in teljoy.objects, the RC3 catalog, and
+     anywhere else that seems reasonable. Return a position object for that name,
+     or None if it can't be found. Try both the name as given, and if that fails,
+     the name converted to all upper case.
+
+     Normally that would be an instance of the correct.CalcPosition class, but you can pass an alternate
+     base class in using the 'pclass' attribute. This alternate class is NOT USED if the ID is used to look
+     up an object in the database, either in teljoy.objects (when a correct.CalcPosition is returned) or in
+     the RC3 catalog (when an sqlint.Galaxy object is returned).
+  """
+  obj = sqlint.GetObject(name=objid)
+  if obj is None:
+    obj = sqlint.GetObject(name=objid.upper())
+  if obj is None:
+    obj = sqlint.GetRC3(gid=objid)
+  if obj is None:
+    obj = sqlint.GetRC3(gid=objid.upper())
+  return obj
+
+
+def Pos(args, kws, pclass=correct.CalcPosition):
+  """Take abitrary arguments stored in 'args' and 'kws' that hopefully specify coordinates, an object
+     name to be looked up, or a position object, and return a position object representing that position.
+
+     Normally that would be an instance of the correct.CalcPosition class, but you can pass an alternate
+     base class in using the 'pclass' attribute.
+  """
+  ra,dec,epoch,objid,obj = None,None,None,None,None
+  for n in ['ra','RA','Ra']:
+    if n in kws.keys():
+      ra = kws[n]
+      break
+  for n in ['dec','Dec','DEC']:
+    if n in kws.keys():
+      dec = kws[n]
+      break
+  for n in ['epoch','Epoch','EPOCH','ep','Ep','equinox','Equinox','eq','Eq']:
+    if n in kws.keys():
+      epoch = kws[n]
+  for n in ['objid','Objid','ObjId','ObjID','objId','objID','id','Id','ID']:
+    if n in kws.keys():
+      objid = kws[n]
+  for n in ['domepos','Domepos','DomePos','domePos','DOMEPOS']:
+    if n in kws.keys():
+      domepos = kws[n]
+  for n in ['o','O','obj','Obj','OBJ','pos','Pos','POS','position','Position']:
+    if n in kws.keys():
+      if isinstance(kws[n], correct.CalcPosition):
+        obj = kws[n]
+        break
+  for o in args:
+    if isinstance(o, correct.CalcPosition):
+      obj = o
+      break
+
+  if obj is not None:
+    return pclass(obj=obj, ra=ra, dec=dec, epoch=epoch, objid=objid, domepos=domepos)
+
+  if (ra is not None) and (dec is not None):
+    if epoch is None:
+      epoch = 2000.0
+    return pclass(ra=ra, dec=dec, epoch=epoch, objid=objid, domepos=domepos)
+
+  if len(args) == 0:
+    if type(objid) == str:
+      return Lookup(objid=objid)
+    else:
+      return None
+  elif len(args) == 1:
+    if type(args[0]) == str:
+      return Lookup(objid=args[0])
+    else:
+      return None
+  elif len(args) == 2:
+    if epoch is None:
+      epoch = 2000.0
+    return pclass(ra=args[0], dec=args[1], epoch=epoch, objid=objid, domepos=domepos)
+  elif len(args) == 3:
+    return pclass(ra=args[0], dec=args[1], epoch=args[2], objid=objid, domepos=domepos)
+
+  return None
+
+
+def jump(*args, **kws):
+  ob = Pos(args=args, kws=kws)
+  if ob is None:
+    print "Can't parse those arguments to get a valid position"
+    return
+  print "Jumping to:", ob
   detevent.current.Jump(ob)
   if dome.AutoDome:
+    "Moving dome."
     dome.move(az=dome.CalcAzi(ob))
 
 
-def reset(ra=None, dec=None, epoch=2000.0, objid=''):
+def reset(*args, **kws):
   """Set the current RA and DEC to the values given. 
      'ra' and 'dec' can be sexagesimal strings (in hours:minutes:seconds for RA and degrees:minutes:seconds
      for DEC), or numeric values (fractional hours for RA, fractional degrees for DEC). Epoch is in decimal 
      years, and objid is an optional short string with an ID.
   """
-  n = correct.CalcPosition(ra=ra, dec=dec, epoch=epoch, objid=objid)
-  detevent.current.Reset(obj=n)
+  ob = Pos(args=args, kws=kws)
+  if ob is None:
+    print "Can't parse those arguments to get a valid position"
+    return
+  print "Resetting current position to:", ob
+  detevent.current.Reset(obj=ob)
 
 
 def offset(ora, odec):
