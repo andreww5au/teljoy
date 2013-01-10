@@ -1,5 +1,5 @@
 
-import math
+import sys
 
 from globals import *
 from pdome import dome
@@ -153,5 +153,34 @@ def offset(ora, odec):
   """
   detevent.current.Offset(ora=ora, odec=odec)
 
+Offset = offset
 
 
+def shutdown():
+  """Go through a telescope and dome shutdown - move the telescope to the cap replacement
+     position and rotate the dome to the park position.
+
+     Then wait for a keypress indicating that the cap is on, and move the telescope to the
+     STOW position, while closing the chutter.
+  """
+  print "About to shut down the system and close+park the dome - are you sure?"
+  ans = raw_input()
+  if 'y' not in ans.upper():
+    print "Aborting."
+    return
+  if not dome.AutoDome:
+    print "Dome not in automatic mode - can't park dome or close shutter"
+  jump(CAP)
+  print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
+  ans = raw_input()
+  if dome.AutoDome:
+    while dome.DomeInUse:
+      print "Waiting for dome to finish moving..."
+      time.sleep(2)
+    print "Closing dome."
+    dome.close()
+  jump(STOW)
+  sys.exit()
+
+Shutdown = shutdown
+ShutDown = shutdown

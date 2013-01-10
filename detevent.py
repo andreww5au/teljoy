@@ -458,6 +458,7 @@ def DoTJbox():
     if other.action in ['error','none']:
       sqlint.ClearTJbox(db=db)
       TJboxAction = 'none'
+
     elif other.action == 'jumpid':
       found = False
       JObj = sqlint.GetObject(BObj.ObjID, db=db)
@@ -469,23 +470,30 @@ def DoTJbox():
           found = True
       if found and (not motion.limits.HWLimit):
         AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
+        logger.info("detevent.DoTJbox: Remote control jump to object: %s" % JObj)
         if pdome.dome.AutoDome and (not AltErr):
           pdome.dome.move(pdome.dome.CalcAzi(JObj))
         if AltErr:
-          logger.error('detevent.DoTJBox: Object in TJbox below Alt Limit')
+          logger.error("detevent.DoTJBox: Object in TJbox below Alt Limit")
         else:
           TJboxAction = other.action
       else:
         TJboxAction = 'none'
         sqlint.ClearTJbox(db=db)
+
     elif other.action == 'jumprd':
       AltErr = current.Jump(BObj, prefs.SlewRate)
+      logger.info("detevent.DoTJbox: Remote control jump to object: %s" % BObj)
       if pdome.dome.AutoDome and (not AltErr):
         pdome.dome.move(pdome.dome.CalcAzi(BObj))
       if AltErr:
         logger.error('detevent.DoTJbox: Object in TJbox below Alt Limit')
       else:
         TJboxAction = other.action
+
+    elif other.action == 'reset':
+      current.Reset(BObj)
+      logger.info("detevent.DoTJbox: Remote control reset current position to %s" % BObj)
 
     elif other.action == 'jumpaa':
       sqlint.ClearTJbox(db=db)
@@ -501,6 +509,7 @@ def DoTJbox():
       DelRA = 20*RAOffset/math.cos(current.DecC/3600*math.pi/180)  #conv to motor steps}
       DelDEC = 20*DECOffset
       motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
+      logger.info("detevent.DoTJbox: Remote small offset shift by %4.1f,%4.1f arcsec" % (DelRA/20, DelDec/20))
       if not current.posviolate:
         current.Ra += RAOffset/math.cos(current.DecC/3600*math.pi/180)
         current.Dec += DECOffset
@@ -513,22 +522,28 @@ def DoTJbox():
     elif other.action == 'dome':
       if other.DomeAzi < 0:
         pdome.dome.move(pdome.dome.CalcAzi(current))
+        logger.info("detevent.DoTJbox: Dome aligned to current telescope position")
       else:
         pdome.dome.move(other.DomeAzi)
+        logger.info("detevent.DoTJbox: Dome moved to %d" % other.DomeAzi)
       TJboxAction = other.action
 
     elif other.action == 'shutter':
       if other.Shutter:
         pdome.dome.open()           #True for open}
+        logger.info("detevent.DoTJbox: remote control - shutter opened")
       else:
         pdome.dome.close()
+        logger.info("detevent.DoTJbox: remote control - shutter closed")
       TJboxAction = other.action
 
     elif (other.action == 'freez') or (other.action == 'freeze'):
       if other.Freeze:
         motion.motors.Frozen = True
+        logger.info("detevent.DoTJbox: remote control - telescope frozen")
       else:
         motion.motors.Frozen = False
+        logger.info("detevent.DoTJbox: remote control - telescope un-frozen")
       TJboxAction = 'none'    #Action complete}
       sqlint.ClearTJbox(db=db)
 

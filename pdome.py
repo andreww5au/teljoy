@@ -38,6 +38,27 @@ class Dome:
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
+  def __call__(self, arg):
+    """This method is run when an instance of this class is treated like a function, and called.
+       Defining it allows the global 'dome' variable containing the current dome state to be
+       treated like a function, so dome(123) would move the dome to Azi=123 degrees, and
+       dome('open') or dome('close) would open and close the shutter.
+
+       This is purely for the convenience of the human at the command line, you can
+       also simply call dome.move(123), dome.open() or dome.close().
+    """
+    if type(arg)==int or type(arg)==float:
+      self.move(arg)
+    elif type(arg)==str:
+      if arg.upper() in ['O','OPEN']:
+        self.open()
+      elif arg.upper() in ['C','CLOSE']:
+        self.close()
+      else:
+        print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
+    else:
+      print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
+
   def debug(self,name,value):
     """Trap all attribute writes, and raise an error if the attribute
        wasn't defined in the __init__ method. Debugging code to catch all
@@ -105,6 +126,9 @@ class Dome:
       except ValueError:
         print "Must be an integer between 0 and 359, not %d" % az
         return
+    if abs(az-self.NewDomeAzi) < 2.0:
+      logger.debug('pdome.DomeMove: no dome slew required')
+      return
     if self.DomeInUse or self.ShutterInUse:
       logger.error("pdome.DomeMove: Dome or shutter active - wait for it to finish...")
       return
