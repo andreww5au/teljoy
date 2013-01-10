@@ -47,7 +47,7 @@ def Lookup(objid=''):
   return obj
 
 
-def Pos(args, kws, pclass=correct.CalcPosition):
+def ParseArgs(args, kws, pclass=correct.CalcPosition):
   """Take abitrary arguments stored in 'args' and 'kws' that hopefully specify coordinates, an object
      name to be looked up, or a position object, and return a position object representing that position.
 
@@ -110,6 +110,14 @@ def Pos(args, kws, pclass=correct.CalcPosition):
   return None
 
 
+#Define a few convenience functions to take flexible arguments and return a position object.
+def Pos(*args, **kws):
+  return ParseArgs(args=args, kws=kws)
+pos = Pos
+position = Pos
+p = Pos
+
+
 def jump(*args, **kws):
   ob = Pos(args=args, kws=kws)
   if ob is None:
@@ -120,6 +128,8 @@ def jump(*args, **kws):
   if dome.AutoDome:
     "Moving dome."
     dome.move(az=dome.CalcAzi(ob))
+
+Jump = jump
 
 
 def reset(*args, **kws):
@@ -134,6 +144,8 @@ def reset(*args, **kws):
     return
   print "Resetting current position to:", ob
   detevent.current.Reset(obj=ob)
+
+Reset = reset
 
 
 def offset(ora, odec):
