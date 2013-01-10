@@ -153,8 +153,23 @@ def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
   """
   detevent.current.Offset(ora=ora, odec=odec)
+  logger.info("Moved small offset distance: %4.1f,%4.1f" % ora,odec)
 
 Offset = offset
+
+
+def freeze():
+  """Freeze the telescope
+  """
+  motion.motors.Frozen = True
+  logger.info("Telescope frozen")
+
+
+def unfreeze():
+  """Un-Freeze the telescope
+  """
+  motion.motors.Frozen = False
+  logger.info("Telescope un-frozen")
 
 
 def shutdown():

@@ -504,19 +504,8 @@ def DoTJbox():
       logger.error("detevent.DoTJbox: Remote control command 'nonsid' not supported.")
 
     elif other.action == 'offset':
-      RAOffset = other.OffsetRA
-      DECOffset = other.OffsetDEC
-      DelRA = 20*RAOffset/math.cos(current.DecC/3600*math.pi/180)  #conv to motor steps}
-      DelDEC = 20*DECOffset
-      motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump}
-      logger.info("detevent.DoTJbox: Remote small offset shift by %4.1f,%4.1f arcsec" % (DelRA/20, DelDEC/20))
-      if not current.posviolate:
-        current.Ra += RAOffset/math.cos(current.DecC/3600*math.pi/180)
-        current.Dec += DECOffset
-      current.RaA += RAOffset/math.cos(current.DecC/3600*math.pi/180)
-      current.DecA += DECOffset
-      current.RaC += RAOffset/math.cos(current.DecC/3600*math.pi/180)
-      current.DecC += DECOffset
+      current.Offset(other.OffsetRA, other.OffsetDEC)
+      logger.info("detevent.DoTJbox: Remote small offset shift by %4.1f,%4.1f arcsec" % (other.OffsetRA, other.OffsetDEC))
       TJboxAction = other.action
 
     elif other.action == 'dome':
