@@ -48,6 +48,8 @@ class EventLoop:
   def remove(self,name):
     if name in self.Functions:
       del self.Functions[name]
+  def shutdown(self):
+    self.exit = True
   def runall(self):
     for name,function in self.Functions.iteritems():
       try:
@@ -66,6 +68,7 @@ class EventLoop:
 
        Set self.exit to True to exit the loop
     """
+    self.exit = False
     self.looptime = looptime
     logger.info("Event loop started")
     while not self.exit:
