@@ -181,7 +181,7 @@ def shutdown():
   """
   print "About to shut down the system and close+park the dome - are you sure?"
   ans = raw_input()
-  if 'y' not in ans.upper():
+  if 'Y' not in ans.upper():
     print "Aborting."
     return
   if not dome.AutoDome:
@@ -196,6 +196,10 @@ def shutdown():
     print "Closing dome."
     dome.close()
   jump(STOW)
+  time.sleep(2)
+  while motion.motors.Moving or dome.DomeInUse or dome.ShutterInUse:
+    print "Waiting for telescope to park and shutter to close."
+    time.sleep(5)
   sys.exit()
 
 Shutdown = shutdown

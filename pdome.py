@@ -14,7 +14,7 @@ ABSP = 0.55/RD                        #Distance from centre of telescope tube to
 ETA = 0.2/RD                          #?
 
 #Serial port for communication with dome controller:
-DOMEPORT = 1     #Python serial ports numbered 0,1,2,..., Pascal ports numbered 1,2,3,...
+DOMEPORT = 0     #Python serial ports numbered 0,1,2,..., Pascal ports numbered 1,2,3,...
 
 
 
@@ -34,7 +34,7 @@ class Dome:
     self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
     self.NewDomeAzi = 0             #Desired dome azimuth for move, or current dome azimuth if move has finished
     self.NewShutter = ''            #Desired shutter state ('O' or 'C') for open/close
-    self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.1)
+    self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.2, rtscts=False, xonxoff=False, dsrdtr=False)
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
@@ -85,7 +85,7 @@ class Dome:
        If not, it sends a CR character to the controller and returns 'False'.
     """
     chars = []
-    c = ''
+    c = 'X'
     while c <> '':
       c = self.ser.read(1)
       chars.append(c)
@@ -150,7 +150,7 @@ class Dome:
       else:
         if self._waitprompt():
           self.DomeMoved = True
-          self.ser.write('%d' % self.NewDomeAzi)
+          self.ser.write('%d\n' % self.NewDomeAzi)
       if self.DomeThere:
         self.DomeInUse = False
         self.DomeLastTime = time.time()
