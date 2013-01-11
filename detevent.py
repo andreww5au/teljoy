@@ -254,12 +254,8 @@ class CurrentPosition(correct.CalcPosition):
     global LastObj
     if Rate is None:
       Rate = prefs.SlewRate
-      #TODO - handle locking properly so we don't slew during a slew, or during paddle motion
-    if motion.motors.Moving:
-      logger.error('detevent.Jump called while telescope in motion!')
-      return True
     self.UpdatePosition()             #Apply accumulated paddle and guide movement to current position
-    FObj.update(FObj)                      #Correct final object coordinates
+    FObj.update()                      #Correct final object coordinates
 
     if prefs.HighHorizonOn:
       AltCutoffTo = prefs.AltCutoffHi
@@ -281,20 +277,25 @@ class CurrentPosition(correct.CalcPosition):
 
       DelRA = DelRA*20        #Convert to number of motor steps}
       DelDEC = DelDEC*20
-      motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
 
-      LastObj = copy.deepcopy(self)                    #Save the current position
-      self.RaC, self.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
-      self.RaA, self.DecA = FObj.RaA, FObj.DecA
-      self.Ra, self.Dec = FObj.Ra, FObj.Dec
-      self.Epoch = FObj.Epoch
-      self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
-      self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
-      with motion.motors.RA.lock:
-        motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
-      with motion.motors.DEC.lock:
-        motion.motors.DEC.track = self.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
-      self.posviolate = False    #signal a valid original RA and Dec
+      with motion.motors.lock:
+        if motion.motors.Moving or motion.motors.Paddling:
+          logger.error('detevent.Jump called while telescope in motion!')
+          return True
+
+        motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
+        LastObj = copy.deepcopy(self)                    #Save the current position
+        self.RaC, self.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
+        self.RaA, self.DecA = FObj.RaA, FObj.DecA
+        self.Ra, self.Dec = FObj.Ra, FObj.Dec
+        self.Epoch = FObj.Epoch
+        self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
+        self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
+        with motion.motors.RA.lock:
+          motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
+        with motion.motors.DEC.lock:
+          motion.motors.DEC.track = self.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
+        self.posviolate = False    #signal a valid original RA and Dec
 
   def IniPos(self):
     """This function is called on startup to set the 'Current' position
@@ -350,14 +351,18 @@ class CurrentPosition(correct.CalcPosition):
     """
     DelRA = 20*ora/math.cos(self.DecC/3600*math.pi/180)  #conv to motor steps
     DelDEC = 20*odec
-    motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
-    if not self.posviolate:
-      self.Ra +=ora/math.cos(self.DecC/3600*math.pi/180)
-      self.Dec += odec
-    self.RaA += ora/math.cos(self.DecC/3600*math.pi/180)
-    self.DecA += odec
-    self.RaC += ora/math.cos(self.DecC/3600*math.pi/180)
-    self.DecC += odec
+    with motion.motors.lock:
+      if motion.motors.Moving or motion.motors.Paddling:
+        logger.error('detevent.Jump called while telescope in motion!')
+        return True
+      motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
+      if not self.posviolate:
+        self.Ra +=ora/math.cos(self.DecC/3600*math.pi/180)
+        self.Dec += odec
+      self.RaA += ora/math.cos(self.DecC/3600*math.pi/180)
+      self.DecA += odec
+      self.RaC += ora/math.cos(self.DecC/3600*math.pi/180)
+      self.DecC += odec
 
 
 

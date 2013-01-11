@@ -457,6 +457,7 @@ class MotorControl():
     self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
     self.RA = Axis(sidereal=prefs.RAsid)
     self.DEC = Axis()
+    self.lock = threading.RLock()
     self.Driver = usbcon.Driver(getframe=self.getframe)
     logger.debug('motion.MotorControl.__init__: finished global vars')
     if CLASSDEBUG:
