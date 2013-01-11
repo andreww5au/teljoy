@@ -26,6 +26,8 @@ import motion
 import sqlint
 from handpaddles import paddles
 
+TIMEOUT = 0   #Set to the number of seconds you want to wait without any contact from Prosp before closing down.
+
 
 detthread = None     #Contains the thread object running DetermineEvent after the init() function is called
 
@@ -576,8 +578,10 @@ def CheckTimeout():
      This function is called at regular intervals by the DetermineEvent loop.
   """
   #TODO - make timeout configurable via teljoy.ini and globals.prefs, with 0 to disable.
-  if ((time.time()-ProspLastTime) > 600) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
-    logger.critical('detevent.CheckTimeout: No communication with Prosp for over 10 minutes!\nClosing Shutter, Freezing Telescope.')
+  if TIMEOUT == 0:
+    return
+  if ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
+    logger.critical('detevent.CheckTimeout: No communication with Prosp for over %d seconds!\nClosing Shutter, Freezing Telescope.' % TIMEOUT)
     pdome.dome.close()
     motion.motors.Frozen = True
 
