@@ -150,8 +150,9 @@ class Position:
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
-    d = self.__dict__.copy()
-    del d['__setattr__']
+    d = {}
+    for n in ['Ra','Dec','Epoch','ObjID','DomePos']:
+      d[n] = self.__dict__[n]
     return d
 
   def __repr__(self):

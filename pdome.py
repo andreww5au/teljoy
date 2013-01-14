@@ -42,6 +42,14 @@ class Dome:
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = {}
+    for n in ['DomeInUse','ShutterInUser','DomeMove','ShutterOpen','DomeThere','AutoDome','DomeTracking','DomeLastTime','NewDomeAzi','NewShutter']:
+      d[n] = self.__dict__[n]
+    return d
+
   def __call__(self, arg):
     """This method is run when an instance of this class is treated like a function, and called.
        Defining it allows the global 'dome' variable containing the current dome state to be
@@ -73,13 +81,6 @@ class Dome:
       self.__dict__[name] = value
     else:
       raise AssertionError, "Setting attribute %s=%s for the first time."
-
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
-    """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    return d
 
   def _waitprompt(self):
     """If not busy, the dome controller will return a '?' prompt in response to a CR character.

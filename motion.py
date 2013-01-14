@@ -463,6 +463,14 @@ class MotorControl():
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = {}
+    for n in ['Jumping','Paddling','Moving','PosDirty','ticks','Frozen']:
+      d[n] = self.__dict__[n]
+    return d
+
   def __repr__(self):
     mesg = "<Motors: ticks=%d" % self.ticks
     flags = []
@@ -492,15 +500,6 @@ class MotorControl():
       self.__dict__[name] = value
     else:
       raise AssertionError, "Setting attribute %s=%s for the first time."
-
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
-    """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    del d['Driver']
-    del d['lock']
-    return d
 
   def Jump(self, delRA, delDEC, Rate):
     """This procedure calculates the profile parameters for a telescope jump.

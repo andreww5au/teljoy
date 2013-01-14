@@ -57,13 +57,13 @@ class Telescope(object):
     self.lock.release()
 
   def GetMotors(self):
-    return motion.motors.__dict__
+    return motion.motors.__getstate__()
 
   def GetCurrent(self):
-    return detevent.current.__dict__
+    return detevent.current.__getstate__()
 
   def GetDome(self):
-    return pdome.dome.__dict__
+    return pdome.dome.__getstate__()
 
 def InitServer():
   global plat, pyro_thread

@@ -31,6 +31,14 @@ class TimeRec:
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = {}
+    for n in ['UT','JD','LST']:
+      d[n] = self.__dict__[n]
+    return d
+
   def debug(self,name,value):
     """Trap all attribute writes, and raise an error if the attribute
        wasn't defined in the __init__ method. Debugging code to catch all
@@ -42,13 +50,6 @@ class TimeRec:
     else:
       raise AssertionError, "Setting attribute %s=%s for the first time."
 
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
-    """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    return d
-    
   def __repr__(self):
     return "<TimeRec: UT='%s', JD=%f, LST=%s >" % (self.UT.ctime(), self.JD, sexstring(self.LST))
     
@@ -139,6 +140,14 @@ class CalcPosition(Position):        #Position class defined in globals.py
     Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     if (ra is not None) and (dec is not None):
       self.update()
+
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = {}
+    for n in ['Ra','Dec','Epoch','RaA','DecA','RaC','DecC','Alt','Azi','ObjID','TraRA','TraDEC','posviolate','Time','DomePos']:
+      d[n] = self.__dict__[n]
+    return d
 
   def __repr__(self):
     if self.posviolate:
