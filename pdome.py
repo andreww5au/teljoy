@@ -46,7 +46,7 @@ class Dome:
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['DomeInUse','ShutterInUser','DomeMove','ShutterOpen','DomeThere','AutoDome','DomeTracking','DomeLastTime','NewDomeAzi','NewShutter']:
+    for n in ['DomeInUse','ShutterInUse','DomeMoved','ShutterOpen','DomeThere','AutoDome','DomeTracking','DomeLastTime','NewDomeAzi','NewShutter']:
       d[n] = self.__dict__[n]
     return d
 
