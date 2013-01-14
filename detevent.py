@@ -300,6 +300,7 @@ class CurrentPosition(correct.CalcPosition):
         self.Epoch = FObj.Epoch
         self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
         self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
+        self.ObjID = FObj.ObjID
         with motion.motors.RA.lock:
           motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
         with motion.motors.DEC.lock:
@@ -352,7 +353,7 @@ class CurrentPosition(correct.CalcPosition):
     """Set the current RA and DEC to those in the specified object (must be an instance of correct.CalcPosition)
     """
     obj.update()
-    self.Ra, self.Dec, self.Epoch = obj.Ra, obj.Dec, obj.Epoch
+    self.Ra, self.Dec, self.Epoch, self.ObjID = obj.Ra, obj.Dec, obj.Epoch, obj.ObjID
     self.update()
 
   def Offset(self, ora, odec):
