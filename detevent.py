@@ -86,7 +86,7 @@ class CurrentPosition(correct.CalcPosition):
   """
   def __repr__(self):
     if self.posviolate:
-      l1 = "Top RA:  %s      LST: %s         ObjID:   --" % (sexstring(self.RaC/15.0/3600,fixed=True), sexstring(self.Time.LST, fixed=True), self.ObjID)
+      l1 = "Top RA:  %s      LST: %s         ObjID:   --" % (sexstring(self.RaC/15.0/3600,fixed=True), sexstring(self.Time.LST, fixed=True))
       l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,fixed=True), self.Time.UT.time().isoformat()[:-4])
       l3 = "Alt:     %s      HA:  %s        ObjRA:   --" %  (sexstring(self.Alt, fixed=True), sexstring(self.RaC/15/3600-self.Time.LST, fixed=True))
       l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  --" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn])
