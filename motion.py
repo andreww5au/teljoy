@@ -463,13 +463,6 @@ class MotorControl():
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
-  def __getstate__(self):
-    """Can't pickle the lock object when saving state
-    """
-    d = self.__dict__.copy()
-    del d['lock']
-    return d
-
   def __repr__(self):
     mesg = "<Motors: ticks=%d" % self.ticks
     flags = []
@@ -506,6 +499,7 @@ class MotorControl():
     d = self.__dict__.copy()
     del d['__setattr__']
     del d['Driver']
+    del d['lock']
     return d
 
   def Jump(self, delRA, delDEC, Rate):
