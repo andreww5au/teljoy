@@ -33,6 +33,7 @@ import detevent
 from pdome import dome
 from digio import press, release, cslew, cset
 from utils import *
+import tjserver
 
 SIGNAL_HANDLERS = {}
 CLEANUP_FUNCTION = None
@@ -109,4 +110,5 @@ if __name__ == '__main__':
   detevent.init()
   current = detevent.current
   c = current
+  tjserver.InitServer()
 
