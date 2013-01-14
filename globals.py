@@ -254,8 +254,8 @@ class Prefs:
     self.Temp = CP.getfloat('Environment','Temp')
     self.Press = CP.getfloat('Environment','Pressure')
     self.NonSidOn = False
-    self.WaitBeforePosUpdate = CP.getint('Dome','WaitTime')
-    self.MinWaitBetweenDomeMoves = CP.getint('Dome','MinBetween')
+    self.WaitBeforePosUpdate = CP.getfloat('Dome','WaitTime')
+    self.MinWaitBetweenDomeMoves = CP.getfloat('Dome','MinBetween')
     self.LogDirName = CP.get('Paths','LogDirName')
     self.CapHourAngle = CP.getfloat('Presets', 'CapHourAngle')
     self.CapDec = CP.getfloat('Presets', 'CapDec')
@@ -370,7 +370,7 @@ ConfigDefaults = {'OrigPosWarn':'True', 'FlexureOn':'True', 'HighHorizonOn':'Fal
                   'CoarseSet':`DFCOARSESETRATE/20`, 'FineSet':`DFFINESETRATE/20`, 'GUIDE':`DFGUIDERATE/20`,
                   'Temp':`DFTEMP`,'Press':`DFPRESS`}
                   
-ConfigDefaults.update( {'WaitTime':'100', 'MinBetween':'5', 'LogDirName':'/tmp'} )
+ConfigDefaults.update( {'WaitTime':'0.5', 'MinBetween':'5', 'LogDirName':'/tmp'} )
 
 
 CP,CPfile = UpdateConfig()
