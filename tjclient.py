@@ -21,9 +21,9 @@ class TelClient(object):
     self.prefs = Status()
 
   def update(self):
-    self.motors.__dict__.update(self.proxy.GetMotors)
-    self.current.__dict__.update(self.proxy.GetCurrent)
-    self.dome.__dict__.update(self.proxy.GetDome)
+    self.motors.__dict__.update(self.proxy.GetMotors())
+    self.current.__dict__.update(self.proxy.GetCurrent())
+    self.dome.__dict__.update(self.proxy.GetDome())
 
 
 def InitClient():
