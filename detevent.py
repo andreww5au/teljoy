@@ -90,6 +90,7 @@ class CurrentPosition(correct.CalcPosition):
       l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,fixed=True), self.Time.UT.time().isoformat()[:-4])
       l3 = "Alt:     %s      HA:  %s        ObjRA:   --" %  (sexstring(self.Alt, fixed=True), sexstring(self.RaC/15/3600-self.Time.LST, fixed=True))
       l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  --" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn])
+      l5 = "Moving:  %s           Frozen: %s           ObjEpoch: --" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen])
     else:
       l1 = "Top RA:  %s      LST: %s         ObjID:   %s" % (sexstring(self.RaC/15.0/3600,fixed=True), sexstring(self.Time.LST, fixed=True), self.ObjID)
       l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,fixed=True), self.Time.UT.time().isoformat()[:-4])
@@ -97,8 +98,8 @@ class CurrentPosition(correct.CalcPosition):
                                                             sexstring(self.Ra/15/3600, fixed=True))
       l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  %s" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn],
                                                                        sexstring(self.Dec/3600, fixed=True))
-    l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
-                                                                  self.Epoch)
+      l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
+                                                                          self.Epoch)
     l6 = "Dome:  %s        Dome Tracking: %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse or pdome.dome.ShutterInUse],
                                                 {False:" No", True:"Yes"}[pdome.dome.DomeTracking])
     return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
