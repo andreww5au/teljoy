@@ -59,10 +59,10 @@ class Telescope(object):
   def GetMotors(self):
     return motion.motors.__dict__
 
-  def getCurrent(self):
+  def GetCurrent(self):
     return detevent.current.__dict__
 
-  def getDome(self):
+  def GetDome(self):
     return pdome.dome.__dict__
 
 def InitServer():
