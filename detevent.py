@@ -104,31 +104,6 @@ class CurrentPosition(correct.CalcPosition):
                                                 {False:" No", True:"Yes"}[pdome.dome.DomeTracking])
     return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
 
-  def UpdatePosFile(self):
-    """Save the current position to the 'saved position' file.
-
-       The saved position file isn't actually used any more. It used to be the source of the
-       initial position on startup, but now the current state from the database (saved by
-       detevent.CheckDBUpdate and sqlint.UpdateSQLCurrent) is used instead.
-
-       This method is called by CheckDirtyPos a set interval after a telescope move has finished.
-    """
-    t = correct.TimeRec()   #Defaults to 'now'
-    d = t.UT
-    try:
-      pfile = open(poslog,'w')
-    except:
-      logger.error('detevent.UpdatePosFile: Path not found')
-      return
-    pfile.write('ID:      %s\n' % self.ObjID)
-    pfile.write('Cor. RA: %f\n' % (self.RaC/15.0,))
-    pfile.write('Cor. Dec:%f\n' % self.DecC)
-    pfile.write('SysT:    %d %d %6.3f\n' % (d.hour,d.minute,d.second+d.microsecond/1e6) )  #Old file used hundredths of a sec
-    pfile.write('Sys_Date:%d %d %d\n' % (d.day,d.month,d.year) )
-    pfile.write('Jul Day: %f\n' % t.JD)
-    pfile.write('LST:     %f\n' % (t.LST*3600,))
-    pfile.close()
-
   def UpdatePosition(self):
     """Update Current sky coordinates from paddle and refraction motion
 
@@ -375,24 +350,17 @@ class CurrentPosition(correct.CalcPosition):
       self.DecC += odec
 
 
-
-def SaveStatus():
-  """Save the current state as pickled data in a status file, so clients can access it.
-
-     This function is called at regular intervals by the DetermineEvent loop.
-  """
-  #TODO - replace with RPC calls to share state data  
-  f = open('/tmp/teljoy.status','w')
-  cPickle.dump((current,motion.motors,pdome.dome,errors,prefs),f)
-  f.close()
-
-
 def CheckDirtyPos():
-  """Check to see if we've just finished a move (hand paddle or profiled jump). If so, 
-     record the time.
+  """Check to see if we've just finished a move (hand paddle or profiled jump).
      
+     The motion.motors.PosDirty flag is true if the telescope while the telescope
+     is moving, AND for a few seconds after it finishes moving. It is reset to False
+     by this function. Other code uses this flag to delay costly actions like
+     moving the dome until it's clear that another movement (eg, paddle button) isn't
+     about to occur).
+
      If more than prefs.WaitBeforePosUpdate seconds have passed since the end of the last
-     move, update the saved state file by calling UpdatePosFile.
+     move, flag the current position as new and stable by clearing the PosDirty flag.
      
      This function is called at regular intervals by the DetermineEvent loop.
   """
@@ -401,7 +369,6 @@ def CheckDirtyPos():
     DirtyTime = time.time()                 #just finished move}
 
   if (DirtyTime<>0) and (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and not motion.motors.Moving:
-    current.UpdatePosFile()
     DirtyTime = 0
     motion.motors.PosDirty = False
     paddles.RA_GuideAcc = 0.0
@@ -620,13 +587,12 @@ def init():
   eventloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'current' object coordinates
   eventloop.register('RelRef', current.RelRef)                       #calculate refraction+flexure correction velocities, check for
                                                              #    altitude too low and set 'AltError' if true
-  eventloop.register('SaveStatus', SaveStatus)               #Save the current state as pickled data to a status file
+  eventloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
   eventloop.register('errors.update', errors.update)         #Increment and check watchdog timer to detect low-level motor control failure
-  eventloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if dynamic 'saved position' file needs updating after a move
+  eventloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if the PosDirty flag needs to be cleared
   eventloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
   eventloop.register('pdome.dome.check', pdome.dome.check)  #Check to see if dome has reached destination azimuth
   eventloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
-  eventloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
   eventloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
   eventloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
   eventloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
@@ -641,7 +607,6 @@ def init():
 
 current = None
 LastObj = None
-poslog = prefs.LogDirName + '/teljoy.pos'
 ProspLastTime = time.time()
 DBLastTime = 0
 TJboxAction = 'none'

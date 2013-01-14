@@ -17,8 +17,7 @@
      >>> jump('NGC 2997')
      >>>
 
-   Run telclient.py in another window to see the current telescope state,
-   updated every second.
+   Hit 'c' then enter to see the current telescope state.
 """
 
 import sys
