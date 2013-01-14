@@ -34,7 +34,11 @@ class Dome:
     self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
     self.NewDomeAzi = 0             #Desired dome azimuth for move, or current dome azimuth if move has finished
     self.NewShutter = ''            #Desired shutter state ('O' or 'C') for open/close
-    self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.2, rtscts=False, xonxoff=False, dsrdtr=False)
+    try:
+      self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.2, rtscts=False, xonxoff=False, dsrdtr=False)
+    except:
+      self.ser = None
+      print "Error opening serial port, no dome communication"
     if CLASSDEBUG:
       self.__setattr__ = self.debug
 
