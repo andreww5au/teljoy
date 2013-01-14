@@ -34,12 +34,12 @@ class Telescope(object):
         logger.info("Teljoy still exists in Pyro nameserver with id: %s" % existing.object)
         logger.info("Previous Pyro daemon socket port: %d" % existing.port)
         # start the daemon on the previous port
-        pyro_daemon = Pyro4.Daemon(host='beaker', port=existing.port)
+        pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=existing.port)
         # register the object in the daemon with the old objectId
         pyro_daemon.register(self, objectId=existing.object)
       except Pyro4.errors.NamingError:
         # just start a new daemon on a random port
-        pyro_daemon = Pyro4.Daemon(host='beaker')
+        pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'))
         # register the object in the daemon and let it get a new objectId
         # also need to register in name server because it's not there yet.
         uri =  pyro_daemon.register(self)
