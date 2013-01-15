@@ -100,8 +100,9 @@ class CurrentPosition(correct.CalcPosition):
                                                                        sexstring(self.Dec/3600, fixed=True))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
-    l6 = "Dome:  %s        Dome Tracking: %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse or pdome.dome.ShutterInUse],
-                                                {False:" No", True:"Yes"}[pdome.dome.DomeTracking])
+    l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse or pdome.dome.ShutterInUse],
+                                                              {False:" No", True:"Yes"}[pdome.dome.DomeTracking],
+                                                              str(errors))
     return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
 
   def UpdatePosition(self):
@@ -246,7 +247,10 @@ class CurrentPosition(correct.CalcPosition):
     else:
       AltCutoffTo = prefs.AltCutoffLo
 
-    if (self.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
+    if errors.CalError:
+      logger.error('Teljoy uncalibrated! - do a Reset() to set the position before slewing')
+      return True
+    elif (self.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
       logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (self.Alt,FObj.Alt))
       return True
     else:
@@ -330,6 +334,7 @@ class CurrentPosition(correct.CalcPosition):
     obj.update()
     self.Ra, self.Dec, self.Epoch, self.ObjID = obj.Ra, obj.Dec, obj.Epoch, obj.ObjID
     self.update()
+    errors.CalError = False
 
   def Offset(self, ora, odec):
     """Make a tiny slew from the current position, by ora,odec arcseconds.
@@ -368,7 +373,10 @@ def CheckDirtyPos():
   if motion.motors.PosDirty and (DirtyTime==0):
     DirtyTime = time.time()                 #just finished move}
 
-  if (DirtyTime<>0) and (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and not motion.motors.Moving:
+  if ( (DirtyTime<>0) and
+       (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and
+       not motion.motors.Moving and
+       not errors.CalError):
     DirtyTime = 0
     motion.motors.PosDirty = False
     paddles.RA_GuideAcc = 0.0
@@ -390,7 +398,8 @@ def CheckDirtyDome():
        pdome.dome.DomeTracking and
        (not motion.motors.Moving) and
        pdome.dome.AutoDome and
-       (not motion.motors.PosDirty) ):
+       (not motion.motors.PosDirty) and
+       not errors.CalError ):
     pdome.dome.move(pdome.dome.CalcAzi(current))
 
 
@@ -560,13 +569,16 @@ def CheckTimeout():
      
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  #TODO - make timeout configurable via teljoy.ini and globals.prefs, with 0 to disable.
+  #TODO - make timeout configurable via teljoy.ini and globals.prefs.
   if TIMEOUT == 0:
-    return
-  if ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
+    errors.TimeoutError = False
+  elif ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
     logger.critical('detevent.CheckTimeout: No communication with Prosp for over %d seconds!\nClosing Shutter, Freezing Telescope.' % TIMEOUT)
+    errors.TimeoutError = True
     pdome.dome.close()
     motion.motors.Frozen = True
+  else:
+    errors.TimeoutError = False
 
 
 
@@ -588,7 +600,6 @@ def init():
   eventloop.register('RelRef', current.RelRef)                       #calculate refraction+flexure correction velocities, check for
                                                              #    altitude too low and set 'AltError' if true
   eventloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
-  eventloop.register('errors.update', errors.update)         #Increment and check watchdog timer to detect low-level motor control failure
   eventloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if the PosDirty flag needs to be cleared
   eventloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
   eventloop.register('pdome.dome.check', pdome.dome.check)  #Check to see if dome has reached destination azimuth

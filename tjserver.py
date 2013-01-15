@@ -10,7 +10,10 @@ from globals import *
 import detevent
 import motion
 import pdome
+import utils
 
+#hmac = "ShiverMeTimbers"
+#Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 class Telescope(object):
   """Class representing RPC access to the internals of an active telescope control object.
@@ -64,6 +67,75 @@ class Telescope(object):
 
   def GetDome(self):
     return pdome.dome.__getstate__()
+
+  def GetPrefs(self):
+    return prefs.__dict__
+
+  def GetInfo(self):
+    return detevent.current.__repr__()
+
+  def jump(self, *args, **kws):
+    ob = utils.Pos(*args, **kws)
+    if ob is None:
+      return "ERROR: Can't parse those arguments to get a valid position"
+    mesg = "Jumping to: %s\n" % ob
+    detevent.current.Jump(ob)
+    if pdome.dome.AutoDome:
+      mesg += "Moving dome."
+      pdome.dome.move(az=pdome.dome.CalcAzi(ob))
+    return mesg
+
+  def reset(self, *args, **kws):
+    """Set the current RA and DEC to the values given.
+       'ra' and 'dec' can be sexagesimal strings (in hours:minutes:seconds for RA and degrees:minutes:seconds
+       for DEC), or numeric values (fractional hours for RA, fractional degrees for DEC). Epoch is in decimal
+       years, and objid is an optional short string with an ID.
+    """
+    ob = utils.Pos(*args, **kws)
+    if ob is None:
+      return "ERROR: Can't parse those arguments to get a valid position"
+    detevent.current.Reset(obj=ob)
+    return "Resetting current position to: %s" % ob
+
+  def offset(self, ora, odec):
+    """Make a tiny slew from the current position, by ora,odec arcseconds.
+    """
+    detevent.current.Offset(ora=ora, odec=odec)
+    return "Moved small offset distance: %4.1f,%4.1f" % ora,odec
+
+  def freeze(self):
+    """Freeze the telescope
+    """
+    motion.motors.Frozen = True
+    return "Telescope frozen"
+
+  def unfreeze(self):
+    """Un-Freeze the telescope
+    """
+    motion.motors.Frozen = False
+    return "Telescope un-frozen"
+
+  def dome(self, arg):
+    """move, open, or close the dome.
+    """
+    if not pdome.dome.AutoDome:
+      return "ERROR: Dome not in automatic mode."
+    if type(arg)==int or type(arg)==float:
+      pdome.dome.move(arg)
+      return "Dome moving to %s" % arg
+    elif type(arg)==str:
+      if arg.upper() in ['O','OPEN']:
+        pdome.dome.open()
+        return "Dome opening"
+      elif arg.upper() in ['C','CLOSE']:
+        pdome.dome.close()
+        return "Dome closing"
+      else:
+        return "ERROR: Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
+    else:
+      return "ERROR: Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
+
+
 
 def InitServer():
   global plat, pyro_thread

@@ -173,37 +173,15 @@ class Errors:
     self.RefError = False       #The refraction code failed (typically due to very low altitude)
     self.AltError = False       #Current altitude below defined threshold
     self.CalError = CP.getboolean('Alarms','OrigPosWarn')      #Current position is unknown
-    self.TimeoutError = False   #Motion control queue handler not running (motion.motors.Timeint)
-    self.watchdog = 0           #Reset to zero every 20ms by motion control queue handler
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
+    self.TimeoutError = False   #Haven't heard from Prosp for a while, not safe to continue
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
-    d = self.__dict__.copy()
-    del d['__setattr__']
+    d = {}
+    for n in ['RefError','AltError','CalError','TimeoutError']:
+      d[n] = self.__dict__[n]
     return d
-
-  def update(self):
-    """Checks the watchdog counter and sets the TimeoutError attribute if the
-       queue handler isn't running. Called by detevent.DetermineEvent.
-    """
-    pass
-#    self.watchdog += 1        #increment watchdog timer
-#    if self.watchdog>100:
-#      self.TimoutError = True
 
   def __repr__(self):
     errs = []
@@ -226,7 +204,7 @@ class Errors:
     if self.AltError:
       errs.append('ALT')
     if self.TimeoutError:
-      errs.append('INT')
+      errs.append('PROSP')
     return "Errors:[%s]" % (','.join(errs))
   
     
@@ -268,26 +246,6 @@ class Prefs:
     self.DomeFlatDomeAzi = CP.getfloat('Presets', 'DomeFlatDomeAzi')
     self.SkyFlatHourAngle = CP.getfloat('Presets', 'SkyFlatHourAngle')
     self.SkyFlatDec = CP.getfloat('Presets', 'SkyFlatDec')
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
-
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
-    """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    return d
 
 
 def sexstring(value=0,sp=':',fixed=False):

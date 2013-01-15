@@ -19,11 +19,14 @@ class TelClient(object):
     self.current = Status()
     self.motors = Status()
     self.prefs = Status()
+    self.info = ''
 
   def update(self):
     self.motors.__dict__.update(self.proxy.GetMotors())
     self.current.__dict__.update(self.proxy.GetCurrent())
     self.dome.__dict__.update(self.proxy.GetDome())
+    self.prefs.__dict__.update(self.proxy.GetPrefs())
+    self.info = self.proxy.GetInfo()
 
 
 def InitClient():
