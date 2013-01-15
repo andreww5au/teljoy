@@ -581,8 +581,6 @@ def CheckTimeout():
     errors.TimeoutError = False
 
 
-
-
 def init():
   global db, eventloop, detthread, paddles, current, LastObj
   logger.debug('Detevent unit init started')

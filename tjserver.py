@@ -53,6 +53,10 @@ class Telescope(object):
         logger.error("Exception in Teljoy Pyro4 server. Restarting in 10 sec: %s" % (traceback.format_exc(),))
         time.sleep(10)
 
+  def Ping(self):
+    detevent.ProspLastTime = time.time()
+    return
+
   def Lock(self):
     self.lock.acquire()
 
