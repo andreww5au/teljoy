@@ -13,7 +13,7 @@ FreezeAction = None
 
 class StatusObj(object):
   def __repr__(self):
-    return str(__dict__)
+    return str(self.__dict__)
 
 
 class DomeStatus(StatusObj):
