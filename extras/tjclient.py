@@ -7,6 +7,7 @@ import Pyro4
 import time
 import datetime
 
+status = None
 
 class DomeStatus(object):
   def __init__(self):
@@ -61,6 +62,7 @@ class MotorsStatus(object):
 class PrefsStatus(object):
   def __init__(self):
     self.EastOfPier = False
+
 
 class TelClient(object):
   """Client object, using a Pyro4 proxy of the remote telescope
@@ -167,8 +169,20 @@ def _background():
   except KeyboardInterrupt:
     logger.error("a keyboard interrupt in tjclient._background()")
   except Pyro4.errors.PyroError:
-    Init()
+    Connect(status)
 
+
+def Connect(s):
+  s.connected = False
+  try:
+    s.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
+    s.connected = True
+  except Pyro4.errors.PyroError:
+    logger.error("Can't connect to Teljoy server - run teljoy.py to start the server")
+  try:
+    s.update()
+  except Pyro4.errors.PyroError:
+    s.connected = False
 
 
 def Init():
@@ -177,15 +191,5 @@ def Init():
   """
   global status
   status = TelClient()
-  status.connected = False
-  try:
-    status.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
-    status.connected = True
-  except Pyro4.errors.PyroError:
-    logger.error("Can't connect to Teljoy server - run teljoy.py to start the server")
-  try:
-    status.update()
-  except Pyro4.errors.PyroError:
-    status.connected = False
-
+  Connect(status)
   return status.connected   #True if we have a valid, working proxy
