@@ -8,6 +8,9 @@ import time
 import datetime
 
 status = None
+ShutterAction = None
+FreezeAction = None
+
 
 class DomeStatus(object):
   def __init__(self):
