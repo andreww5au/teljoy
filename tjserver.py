@@ -5,6 +5,7 @@ import Pyro4
 import threading
 import time
 import traceback
+import socket
 
 from globals import *
 import detevent
@@ -40,7 +41,7 @@ class Telescope(object):
         pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=existing.port)
         # register the object in the daemon with the old objectId
         pyro_daemon.register(self, objectId=existing.object)
-      except Pyro4.errors.PyroError:
+      except (Pyro4.errors.PyroError, socket.error):
         try:
           # just start a new daemon on a random port
           pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'))
