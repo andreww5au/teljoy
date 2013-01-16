@@ -145,8 +145,9 @@ class CalcPosition(Position):        #Position class defined in globals.py
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['Ra','Dec','Epoch','RaA','DecA','RaC','DecC','Alt','Azi','ObjID','TraRA','TraDEC','posviolate','Time','DomePos']:
+    for n in ['Ra','Dec','Epoch','RaA','DecA','RaC','DecC','Alt','Azi','ObjID','TraRA','TraDEC','posviolate','DomePos']:
       d[n] = self.__dict__[n]
+    d['TimeDict'] = self.Time.__getstate__()
     return d
 
   def __repr__(self):

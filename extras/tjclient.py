@@ -82,6 +82,7 @@ class TelClient(object):
   def update(self):
     self.motors.__dict__.update(self.proxy.GetMotors())
     self.current.__dict__.update(self.proxy.GetCurrent())
+    self.current.Time.__dict__.update(self.current.TimeDict)
     self.dome.__dict__.update(self.proxy.GetDome())
     self.prefs.__dict__.update(self.proxy.GetPrefs())
     self.info = self.proxy.GetInfo()
