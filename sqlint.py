@@ -834,7 +834,7 @@ def ReadTJbox(db=None):
   elif other.action == 'jumprd':
     if not (valid.ObjRA and valid.ObjDEC and valid.ObjEpoch):
       print valid.ObjRA,Pos.Ra/15/3600
-      print valid.ObjDec,Pos.Dec/3600
+      print valid.ObjDEC,Pos.Dec/3600
       print valid.ObjEpoch,Pos.Epoch
       verr = True
   elif other.action == 'jumpaa':
