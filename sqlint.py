@@ -795,7 +795,7 @@ def ReadTJbox(db=None):
   Pos.Ra = stringsex(row[2])
   if Pos.Ra is not None:
     Pos.Ra = Pos.Ra*15*3600
-    valid.ObjRa = True
+    valid.ObjRA = True
   else:
     Pos.Ra = 0.0
   Pos.Dec = stringsex(row[3])
