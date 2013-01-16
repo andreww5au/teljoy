@@ -50,6 +50,9 @@ class Dome:
       d[n] = self.__dict__[n]
     return d
 
+  def __repr__(self):
+    return str(self.__getstate__())
+
   def __call__(self, arg):
     """This method is run when an instance of this class is treated like a function, and called.
        Defining it allows the global 'dome' variable containing the current dome state to be

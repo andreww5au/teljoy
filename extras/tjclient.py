@@ -11,8 +11,12 @@ status = None
 ShutterAction = None
 FreezeAction = None
 
+class StatusObj(object):
+  def __repr__(self):
+    return str(__dict__)
 
-class DomeStatus(object):
+
+class DomeStatus(StatusObj):
   def __init__(self):
     self.DomeInUse = False
     self.ShutterInUse = False
@@ -26,14 +30,14 @@ class DomeStatus(object):
     self.NewShutter = ''
 
 
-class TimeStatus(object):
+class TimeStatus(StatusObj):
   def __init__(self):
     self.UT = datetime.datetime.utcnow()    #Current date and time, in UTC
     self.JD = 0.0                           #Fractional Julian Day
     self.LST = 0.0                          #Local Sidereal Time, in hours
 
 
-class CurrentStatus(object):
+class CurrentStatus(StatusObj):
   def __init__(self):
     self.Ra = None
     self.Dec = None
@@ -52,7 +56,7 @@ class CurrentStatus(object):
     self.DomePos = None
 
 
-class MotorsStatus(object):
+class MotorsStatus(StatusObj):
   def __init__(self):
     self.Jumping = False
     self.Paddling = False
@@ -62,12 +66,12 @@ class MotorsStatus(object):
     self.Frozen = False
 
 
-class PrefsStatus(object):
+class PrefsStatus(StatusObj):
   def __init__(self):
     self.EastOfPier = False
 
 
-class TelClient(object):
+class TelClient(StatusObj):
   """Client object, using a Pyro4 proxy of the remote telescope
      object to get status and send commands.
   """
