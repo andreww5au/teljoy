@@ -105,7 +105,7 @@ class Telescope(object):
     """Make a tiny slew from the current position, by ora,odec arcseconds.
     """
     detevent.current.Offset(ora=ora, odec=odec)
-    return "Moved small offset distance: %4.1f,%4.1f" % ora,odec
+    return "Moved small offset distance: %4.1f,%4.1f" % (ora,odec)
 
   def freeze(self):
     """Freeze the telescope
