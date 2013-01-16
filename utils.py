@@ -84,7 +84,10 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
       break
 
   if obj is not None:
-    return pclass(obj=obj, ra=ra, dec=dec, epoch=epoch, objid=objid, domepos=domepos)
+    if isinstance(obj, pclass):
+      return obj
+    else:
+      return pclass(obj=obj, ra=ra, dec=dec, epoch=epoch, objid=objid, domepos=domepos)
 
   if (ra is not None) and (dec is not None):
     if epoch is None:
