@@ -40,13 +40,17 @@ class Telescope(object):
         pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=existing.port)
         # register the object in the daemon with the old objectId
         pyro_daemon.register(self, objectId=existing.object)
-      except Pyro4.errors.NamingError:
-        # just start a new daemon on a random port
-        pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'))
-        # register the object in the daemon and let it get a new objectId
-        # also need to register in name server because it's not there yet.
-        uri =  pyro_daemon.register(self)
-        ns.register("Teljoy", uri)
+      except Pyro4.errors.PyroError:
+        try:
+          # just start a new daemon on a random port
+          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'))
+          # register the object in the daemon and let it get a new objectId
+          # also need to register in name server because it's not there yet.
+          uri =  pyro_daemon.register(self)
+          ns.register("Teljoy", uri)
+        except:
+          logger.error("Exception in Teljoy Pyro4 startup. Retrying in 10 sec: %s" % (traceback.format_exc(),))
+          time.sleep(10)
       try:
         pyro_daemon.requestLoop()
       except:
