@@ -1,8 +1,6 @@
 """Pyro4 RPC client library for Teljoy
 """
 
-from teljoy.globals import *
-
 import Pyro4
 import time
 import datetime
@@ -175,7 +173,7 @@ def _background():
     else:
       status.proxy.Ping()
   except KeyboardInterrupt:
-    logger.error("a keyboard interrupt in tjclient._background()")
+    print "a keyboard interrupt in tjclient._background()"
   except Pyro4.errors.PyroError:
     Connect(status)
 
@@ -186,7 +184,7 @@ def Connect(s):
     s.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
     s.connected = True
   except Pyro4.errors.PyroError:
-    logger.error("Can't connect to Teljoy server - run teljoy.py to start the server")
+    print "Can't connect to Teljoy server - run teljoy.py to start the server"
   try:
     s.update()
   except Pyro4.errors.PyroError:
