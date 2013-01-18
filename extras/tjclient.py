@@ -1,7 +1,7 @@
 """Pyro4 RPC client library for Teljoy
 """
 
-from globals import *
+from teljoy.globals import *
 
 import Pyro4
 import time
