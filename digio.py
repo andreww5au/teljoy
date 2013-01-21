@@ -150,8 +150,8 @@ LastPaddle = ''
 def ReadCoarse(inputs):
   if 'C' in DUMMYPADDLES:
     return CB
-  val = (inputs >> 24) & 0xFF                 #bits 0-7, not inverted for real coarse paddle
-  if (val & 0x0F) not in [0,1,2,4,8]:
+  val = (inputs >> 24) & 0xFF                 #bits 24-28, not inverted for real coarse paddle
+  if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
     return 0    #more than one button pressed, so ignore inputs
   else:
     return val
@@ -160,9 +160,9 @@ def ReadCoarse(inputs):
 def ReadFine(inputs):
   if 'F' in DUMMYPADDLES:
     return FB
-  val = (inputs >> 40) & 0xFF         #bits 16-23, not inverted for real fine paddle
-  if (val & 0x0F) not in [0,1,2,4,8]:
-    return 0    #more than one button pressed, so ignore inputs
+  val = (inputs >> 40) & 0xFF         #bits 40-44, not inverted for real fine paddle
+  if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
+    return 0    #N+S pressed at the same time, or E+W
   else:
     return val
 
