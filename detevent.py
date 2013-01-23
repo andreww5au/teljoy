@@ -23,6 +23,7 @@ import pdome
 import correct
 import motion
 import sqlint
+import weather
 from handpaddles import paddles
 
 TIMEOUT = 0   #Set to the number of seconds you want to wait without any contact from Prosp before closing down.
@@ -605,9 +606,10 @@ def init():
   fastloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
 
+  weather.Init()    #Initialise weather package, including SQL connection
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
-  slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure correction velocities, check for
-                                                           #    altitude too low and set 'AltError' if true
+  slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
+  slowloop.register('Weather', weather._background)
 
   logger.debug('Detevent unit init finished')
   detthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')
