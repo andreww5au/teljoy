@@ -584,7 +584,7 @@ def CheckTimeout():
 
 
 def init():
-  global db, fastloop, slowloop, detthread, paddles, current, LastObj
+  global db, fastloop, slowloop, fastthread, slowthread, paddles, current, LastObj
   logger.debug('Detevent unit init started')
 
   db = sqlint.InitSQL()    #Get a new db object and use it for this detevent thread
@@ -612,13 +612,13 @@ def init():
   slowloop.register('Weather', weather._background)
 
   logger.debug('Detevent unit init finished')
-  detthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')
-  detthread.daemon = True
-  detthread.start()
+  fastthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')
+  fastthread.daemon = True
+  fastthread.start()
   logger.debug('detevent.init: Detevent fast loop thread started.')
-  detthread = threading.Thread(target=slowloop.runloop, name='detevent-slowloop-thread')
-  detthread.daemon = True
-  detthread.start()
+  slowthread = threading.Thread(target=slowloop.runloop, name='detevent-slowloop-thread')
+  slowthread.daemon = True
+  slowthread.start()
   logger.debug('detevent.init: Detevent slow loop thread started.')
 
 

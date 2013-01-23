@@ -84,6 +84,9 @@ def cleanup():
     detevent.fastloop.shutdown()
     detevent.slowloop.shutdown()
     motion.motors.Driver.host.shutdown()
+    detevent.fastthread.join()
+    detevent.slowthread.join()
+    time.sleep(0.2)
     logger.info("Teljoy shut down.")
 
 
