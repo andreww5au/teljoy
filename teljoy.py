@@ -34,6 +34,7 @@ from pdome import dome
 from digio import press, release, cslew, cset
 from utils import *
 import tjserver
+import weather
 
 SIGNAL_HANDLERS = {}
 CLEANUP_FUNCTION = None
@@ -80,7 +81,8 @@ def cleanup():
       logger.info("Waiting for slew and hand paddle motion to finish")
       time.sleep(5)
   finally:
-    detevent.eventloop.shutdown()
+    detevent.fastloop.shutdown()
+    detevent.slowloop.shutdown()
     motion.motors.Driver.host.shutdown()
     logger.info("Teljoy shut down.")
 
