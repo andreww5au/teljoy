@@ -8,7 +8,7 @@
    
    The core of the module is the 'DetermineEvent' function, which runs continuously,
    and never exits once called apart from non-recoverable errors. The init() function
-   in this module will start this function in a seperate thread.
+   in this module will start this function in a separate thread.
 
 """
 
@@ -28,6 +28,8 @@ from handpaddles import paddles
 
 TIMEOUT = 0   #Set to the number of seconds you want to wait without any contact from Prosp before closing down.
 
+FASTLOOP = 0.2     #How often the 'fast event loop' will call each of the registered functions
+SLOWLOOP = 30      #How often the 'slow event loop' will call each of the registered functions
 
 detthread = None     #Contains the thread object running DetermineEvent after the init() function is called
 
@@ -37,8 +39,9 @@ class EventLoop:
      regular intervals. One call to 'run' will iterate through all
      registered functions, catching and logging any errors.
   """
-  def __init__(self):
-    self.looptime = 0.2
+  def __init__(self, name='', looptime=1.0):
+    self.name = name
+    self.looptime = looptime
     self.Functions = {}
     self.Errors = {}
     self.exit = False
@@ -58,9 +61,9 @@ class EventLoop:
         now = time.time()
         error = traceback.format_exc()
         self.Errors[now] = error
-        logger.error("Error in EventLoop function %s: %s" % (name, error))
+        logger.error("Error in EventLoop '%s': function %s: %s" % (self.name, name, error))
         #Later, maybe remove a function here if it throws exceptions too often?
-  def runloop(self, looptime=0.2):
+  def runloop(self):
     """Loop forever iterating over the registered functions. Use time.sleep
        to make sure the loop is run no more often than once every 'looptime'
        seconds. Maintain 'self.runtime' as the measured time, in seconds,
@@ -69,15 +72,14 @@ class EventLoop:
        Set self.exit to True to exit the loop
     """
     self.exit = False
-    self.looptime = looptime
-    logger.info("Event loop started")
+    logger.info("Event loop '%s' started" % self.name)
     while not self.exit:
       self._Tlast = time.time()
       self.runall()
       self.runtime = time.time()-self._Tlast
       if self.runtime < self.looptime:
         time.sleep(self.looptime - self.runtime)
-    logger.info("Event loop exited.")
+    logger.info("Event loop '%s' exited." % self.name)
 
 
 class CurrentPosition(correct.CalcPosition):
@@ -582,7 +584,7 @@ def CheckTimeout():
 
 
 def init():
-  global db, eventloop, detthread, paddles, current, LastObj
+  global db, fastloop, slowloop, detthread, paddles, current, LastObj
   logger.debug('Detevent unit init started')
 
   db = sqlint.InitSQL()    #Get a new db object and use it for this detevent thread
@@ -593,25 +595,30 @@ def init():
   LastObj = correct.CalcPosition()
   current.IniPos()
 
-  eventloop = EventLoop()
-  eventloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'current' object coordinates
-  eventloop.register('RelRef', current.RelRef)                       #calculate refraction+flexure correction velocities, check for
-                                                             #    altitude too low and set 'AltError' if true
-  eventloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
-  eventloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if the PosDirty flag needs to be cleared
-  eventloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
-  eventloop.register('pdome.dome.check', pdome.dome.check)  #Check to see if dome has reached destination azimuth
-  eventloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
-  eventloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
-  eventloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
-  eventloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
+  fastloop = EventLoop(name='FastLoop', looptime=FASTLOOP)
+  fastloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'current' object coordinates
+  fastloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
+  fastloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if the PosDirty flag needs to be cleared
+  fastloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
+  fastloop.register('pdome.dome.check', pdome.dome.check)  #Check to see if dome has reached destination azimuth
+  fastloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
+  fastloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
+  fastloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
+  fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
+
+  slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
+  slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure correction velocities, check for
+                                                           #    altitude too low and set 'AltError' if true
 
   logger.debug('Detevent unit init finished')
-  detthread = threading.Thread(target=eventloop.runloop, name='detevent-thread')
+  detthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')
   detthread.daemon = True
   detthread.start()
-  logger.debug('detevent.init: Detevent thread started.')
-
+  logger.debug('detevent.init: Detevent fast loop thread started.')
+  detthread = threading.Thread(target=slowloop.runloop, name='detevent-slowloop-thread')
+  detthread.daemon = True
+  detthread.start()
+  logger.debug('detevent.init: Detevent slow loop thread started.')
 
 
 current = None
