@@ -77,8 +77,16 @@ class EventLoop:
       self._Tlast = time.time()
       self.runall()
       self.runtime = time.time()-self._Tlast
-      if self.runtime < self.looptime:
+      sleeptime = self.looptime - self.runtime
+      if sleeptime <= 0:
+        pass
+      elif sleeptime < 1.0:
         time.sleep(self.looptime - self.runtime)
+      else:
+        for i in range(int(sleeptime)):
+          time.sleep(1.0)
+          if self.exit:
+            break
     logger.info("Event loop '%s' exited." % self.name)
 
 
