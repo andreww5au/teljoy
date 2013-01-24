@@ -3,6 +3,11 @@
    modules in Teljoy. 
 """
 
+import random
+import threading
+import time
+import traceback
+
 import ConfigParser
 import logging
 
@@ -314,6 +319,83 @@ def stringsex(value="", compressed=False):
     return None
 
 
+class SafetyInterlock(object):
+  """Handles safety interlocks for a system. Any component, either locally or remotely, can
+     call add_tag() on this object to add a safety interlock. The add_tag function returns a
+     unique tag ID, which the calling process must save, and 'stops' the system - this is done by
+     calling all of the functions registered using 'register_stopfunction()', one by one.
+
+     By calling 'remove_tag(<tag>)', and passing the same tag value back, that safety tag can be
+     removed.
+
+     Any number of processes can add tags, but each tag can only be removed by passing back the
+     unique tag ID value returned when that tag was added.
+
+     The system is only re-started when _all_ tags have been removed, and that re-start
+     process is carried out by calling all of the functions registered using the
+     'register_startfunction()' method, one by one.
+
+     There is a single threading.Event() attribute called 'Active', which is 'set' when the
+     system is running/started, and clear when the system is stopped.
+  """
+  def __init__(self):
+    self._lock = threading.Rlock()
+    self.Active = threading.Event()
+    self.Active.set()
+    self._tags = {}
+    self._stopfunctions = {}     #Functions to call when the system is paused
+    self._startfunctions = {}    #Functions to call when the system is un-paused
+
+  def add_tag(self, comment=''):
+    """Adds a safety tag, stops the system if it hasn't already been stopped, and returns
+       a unique, random tag ID. That safety tag can only be removed by calling the
+       remove_tag() method with that tag ID.
+    """
+    tag = random.getrandbits(31)
+    with self._lock:
+      assert tag not in self._tags.keys()
+      self._tags[tag] = (time.time, threading.current_thread(), comment)
+      if self.Active.is_set():
+        self.Active.clear()
+        for name, function in self._stopfunctions.iteritems():
+          try:
+            function()
+          except:
+            now = time.time()
+            error = traceback.format_exc()
+            self.Errors[now] = error
+            logger.error("Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
+
+  def remove_tag(self, tag=None):
+    """Given a tag ID, removes that tag from the current tag set. If there are no tags remaining, and the system hasn't
+       already been restarted, call all the start functions registered using register_startfunction().
+    """
+    with self._lock:
+      if tag not in self._tags.keys():
+        logger.error("Can't remove safety tag - invalid tag")
+        return
+      del self._tags[tag]
+      if (not self._tags) and (not self.Active.is_set()):     #If no more tags, and the system hasn't already been started
+        for name, function in self._startfunctions.iteritems():
+          try:
+            function()
+          except:
+            now = time.time()
+            error = traceback.format_exc()
+            self.Errors[now] = error
+            logger.error(
+              "Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
+        self.Active.set()
+
+  def register_stopfunction(self, name, function):
+    with self._lock:
+      self._stopfunctions[name] = function
+
+  def register_startfunction(self, name, function):
+    with self._lock:
+      self._startfunctions[name] = function
+
+
 def UpdateConfig():
   lCP = ConfigParser.SafeConfigParser(defaults=ConfigDefaults)
   lCPfile = lCP.read(CPPATH)
@@ -336,6 +418,8 @@ CP,CPfile = UpdateConfig()
 
 errors = Errors()
 prefs = Prefs()
+
+safety = SafetyInterlock()   #Create a safety interlock object
 
 DirtyTime = 0
 
