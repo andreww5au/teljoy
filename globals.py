@@ -405,7 +405,9 @@ class SafetyInterlock(object):
     if self._tags:
       mesg.append("Active safety tags:")
       for tme, thr, com in self._tags.values():
-        mesg.append("Tag '%s' added at %s by thread %s" % (com, tme, thr))
+        mesg.append("Tag '%s' added at %s by thread %s" % (com, time.ctime(tme), thr))
+    else:
+      mesg.append('No tags.')
     return '\n'.join(mesg) + '\n'
 
   def __str__(self):

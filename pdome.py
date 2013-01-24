@@ -1,5 +1,28 @@
 
-"""
+"""Arie's dome controller API:
+
+   interface is 1200 baud, 8 bits, two stop bits, no handshaking (HW or SW)
+
+   Send a CR character to the dome. If it's busy, there will be no response.
+   If it's ready for a command, it responds with three characters: CR, LF, '?'.
+
+   Commands:
+        'O',CR - opens the dome.
+        'C',CR - closes the dome
+        an integer azimuth in degrees, followed by a CR character - slews the dome
+        'S',CR - recalibrate the dome encoders by slewing 175 degrees
+        'I',CR - ask for the current dome shutter state. Returns CR,LF,'OD', or
+                 CR,LF,'CD' depending on whether the dome is open (OD) or
+                 closed (CD). This is followed by a return prompt (CR,LF,'?').
+
+    Dome failure:
+      If the dome fails to move when commanded, after 60 seconds, the controller will:
+        -turn off the dome motors
+        -close the shutter
+        -repeat:
+          -wait for 10 seconds
+          -sound the alarm for 12 seconds
+          -send CR, LF, and 'FD'
 """
 
 import math
