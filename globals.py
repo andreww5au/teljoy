@@ -354,7 +354,7 @@ class SafetyInterlock(object):
     tag = random.getrandbits(31)
     with self._lock:
       assert tag not in self._tags.keys()
-      self._tags[tag] = (time.time, threading.current_thread(), comment)
+      self._tags[tag] = (time.time(), threading.current_thread(), comment)
       if self.Active.is_set():
         self.Active.clear()
         for name, function in self._stopfunctions.iteritems():
@@ -365,6 +365,7 @@ class SafetyInterlock(object):
             error = traceback.format_exc()
             self.Errors[now] = error
             logger.error("Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
+    return tag
 
   def remove_tag(self, tag=None):
     """Given a tag ID, removes that tag from the current tag set. If there are no tags remaining, and the system hasn't
@@ -394,6 +395,21 @@ class SafetyInterlock(object):
   def register_startfunction(self, name, function):
     with self._lock:
       self._startfunctions[name] = function
+
+  def __repr__(self):
+    mesg = []
+    if self.Active.is_set():
+      mesg.append("Safety Interlock - system ACTIVE")
+    else:
+      mesg.append("Safety Interlock - system STOPPED")
+    if self._tags:
+      mesg.append("Active safety tags:")
+      for tme, thr, com in self._tags.values():
+        mesg.append("Tag '%s' added at %s by thread %s" % (com, tme, thr))
+    return '\n'.join(mesg) + '\n'
+
+  def __str__(self):
+    return self.__repr__()
 
 
 def UpdateConfig():
