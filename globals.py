@@ -339,7 +339,7 @@ class SafetyInterlock(object):
      system is running/started, and clear when the system is stopped.
   """
   def __init__(self):
-    self._lock = threading.Rlock()
+    self._lock = threading.RLock()
     self.Active = threading.Event()
     self.Active.set()
     self._tags = {}
