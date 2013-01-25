@@ -357,9 +357,11 @@ class SafetyInterlock(object):
       self._tags[tag] = (time.time(), threading.current_thread(), comment)
       if self.Active.is_set():
         self.Active.clear()
-        for name, function in self._stopfunctions.iteritems():
+        for name, action in self._stopfunctions.iteritems():
           try:
-            function()
+            logger.info("Calling safety stop function: %s" % name)
+            function, args, kwargs = action
+            function(*args, **kwargs)
           except:
             now = time.time()
             error = traceback.format_exc()
@@ -377,9 +379,11 @@ class SafetyInterlock(object):
         return
       del self._tags[tag]
       if (not self._tags) and (not self.Active.is_set()):     #If no more tags, and the system hasn't already been started
-        for name, function in self._startfunctions.iteritems():
+        for name, action in self._startfunctions.iteritems():
           try:
-            function()
+            logger.info("Calling safety restart function: %s" % name)
+            function, args, kwargs = action
+            function(*args, **kwargs)
           except:
             now = time.time()
             error = traceback.format_exc()
@@ -388,13 +392,13 @@ class SafetyInterlock(object):
               "Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
         self.Active.set()
 
-  def register_stopfunction(self, name, function):
+  def register_stopfunction(self, name, function, args=[], kwargs={}):
     with self._lock:
-      self._stopfunctions[name] = function
+      self._stopfunctions[name] = (function, args, kwargs)
 
-  def register_startfunction(self, name, function):
+  def register_startfunction(self, name, function, args=[], kwargs={}):
     with self._lock:
-      self._startfunctions[name] = function
+      self._startfunctions[name] = (function, args, kwargs)
 
   def __repr__(self):
     mesg = []

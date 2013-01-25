@@ -90,6 +90,12 @@ def cleanup():
     logger.info("Teljoy shut down.")
 
 
+safety.register_stopfunction('Close Dome', function=dome.close, args=[], kwargs={'force':True})
+safety.register_stopfunction('Freeze', function=freeze)
+
+safety.register_startfunction('Open Dome', function=dome.open, args=[], kwargs={'force': True})
+safety.register_startfunction('Un-Freeze', function=unfreeze)
+
 #Convenience functions for the dummy hand paddle mode - delete once testing is complete.
 def n():
   release('S', paddle='C')

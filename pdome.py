@@ -223,21 +223,30 @@ class Dome:
     else:
       logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not: %s" % az)
       return
-    self.queue.append(str(int(az)))
+    if safety.Active.is_set() or force:
+      self.queue.append(str(int(az)))
+    else:
+      logger.error('System stopped, no dome activity until safety tags cleared.')
 
-  def open(self):
+  def open(self, force=False):
     if not self.AutoDome:
       logger.error('pdome.DomeMove: Dome not in auto mode.')
       return
-    self.queue.append('O')
-    self.queue.append('I')    #Check shutter status after the open command
+    if safety.Active.is_set() or force:
+      self.queue.append('O')
+      self.queue.append('I')    #Check shutter status after the open command
+    else:
+      logger.error('System stopped, no dome activity until safety tags cleared.')
 
-  def close(self):
+  def close(self, force=False):
     if not self.AutoDome:
       logger.error('pdome.DomeMove: Dome not in auto mode.')
       return
-    self.queue.append('C')
-    self.queue.append('I')    #Check shutter status after the close command
+    if safety.Active.is_set() or force:
+      self.queue.append('C')
+      self.queue.append('I')    #Check shutter status after the close command
+    else:
+      logger.error('System stopped, no dome activity until safety tags cleared.')
 
   def CalcAzi(self, Obj):
     """Calculates the dome azimuth for a given telescope position, passed as a
