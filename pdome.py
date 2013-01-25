@@ -47,16 +47,16 @@ class Dome:
   """
   def __init__(self):
     self.DomeInUse = False          #True if the dome is moving
-    self.ShutterInUse = False       #True if the shutter is moving
-    self.DomeMoved = False          #True if the 'move' command has been sent to the dome already
-    self.ShutterOpen = False        #True if the shutter is open
-    self.DomeThere = True           #True if the dome movement has finished
+    self.CommandSent = False        #True if the current command has been sent to the dome controller
+    self.Command = None             #True if the dome movement has finished
+    self.ShutterOpen = False        #True if the shutter is open (set after a successful open or close command)
+    self.IsShutterOpen = False      #True if the shutter is open (set as a response from the actual dome controller)
+    self.DomeFailed = False         #True if the controller has sent a 'Dome Failed' message, because rotation has failed.
     self.AutoDome = True            #True if the dome can be controlled, False if it's in 'Manual only' mode
     self.DomeTracking = False       #True if the dome should dynamically track the current telescope position.
                                     #   if false, the dome will only be moved if AutoDome is True, and detevent.Jump is called.
     self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
-    self.NewDomeAzi = 0             #Desired dome azimuth for move, or current dome azimuth if move has finished
-    self.NewShutter = ''            #Desired shutter state ('O' or 'C') for open/close
+    self.queue = []
     try:
       self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.2, rtscts=False, xonxoff=False, dsrdtr=False)
     except:
@@ -122,6 +122,9 @@ class Dome:
       chars.append(c)
     gots = ''.join(chars)
 
+    if gots:
+      self._parse_response(gots)
+
     if '?' not in gots:
       self.ser.write(chr(13))
       time.sleep(0.2)
@@ -130,16 +133,85 @@ class Dome:
       time.sleep(0.3)
       return True
 
+  def _parse_response(self, gots):
+    """Look at the string returned from the dome controller, and if it's got a 'I' command response (either
+       'OD' or 'CD', save that as the dome shutter state. If it contains 'FD', flag a dome failure error.
+    """
+    if 'OD' in gots:
+      self.IsShutterOpen = True
+    elif 'CD' in gots:
+      self.IsShutterOpen = False
+    elif 'FD' in gots:
+      self.DomeFailed = True
+      self.AutoDome = False
+      self.Command = None
+      self.CommandSent = False
+      self.queue = []
+      self.ShutterOpen = False
+      globals.safety.add_tag('Dome Failed to rotate, dome controller shutdown. Restart Teljoy to clear.')
+
+  def check(self):
+    """Should be called repeatedly (eg by detevent loop) to manage communication
+       with the dome controller.
+    """
+    if not self.AutoDome:
+      return
+    if self.Command:
+      if self.CommandSent:
+        if self._waitprompt():      #The command was sent earlier, and now a prompt has been received
+          if self.Command == 'O':
+            self.ShutterOpen = True
+          elif self.Command == 'C':
+            self.ShutterOpen = False
+          elif self.Command == 'I':
+            if self.IsShutterOpen is None:
+              logger.error("'I' command to dome controller didn't return shutter state.")
+            else:
+              if self.IsShutterOpen <> self.ShutterOpen:
+                logger.error("Shutter state from dome controller doesn't match desired shutter state. Resending command.")
+                self.queue.append(self.Command)
+                self.queue.append('I')
+          else:
+            try:
+              az = int(float(self.Command))
+              if (az < 0) or (az > 360):
+                logger.error('Invalid command in dome.Command: %s' % self.Command)
+              self.DomeAzi = az
+              self.DomeLastTime = time.time()
+            except:
+              logger.error('Invalid command in dome.Command: %s' % self.Command)
+          self.Command = None
+          self.CommandSent = False
+          self.DomeInUse = False
+      else:
+        self.DomeInUse = True       #There is a new command, but it hasn't been sent yet.
+        if self._waitprompt:
+          if self.Command == 'O':
+            self.ShutterOpen = True
+            self.CommandSent = True
+            self.ser.write('O' + chr(13))
+          elif self.Command == 'C':
+            self.ShutterOpen = False
+            self.CommandSent = True
+            self.ser.write('C' + chr(13))
+          elif self.Command == 'I':
+            self.IsShutterOpen = None    #unknown until we receive the result
+            self.CommandSent = True
+            self.ser.write('I' + chr(13))
+          else:
+            try:
+              az = int(self.Command)
+              if (az < 0) or (az > 360):
+                logger.error('Invalid command in dome command queue: %s' % self.Command)
+              self.ser.write(self.Command + chr(13))
+            except:
+              logger.error('Invalid command in dome command queue: %s' % self.Command)
+    else:
+      if self.queue:
+        self.Command = self.queue.pop(0)
+
   def move(self, az=None):
-    """Move dome to the specified azimuth. Return immediately without waiting for the move to
-       finish, or even guarantee that the move command has been sent - this function is likely to
-       do nothing unless self.check is being called repeatedly to actually manage the communications
-       with the dome controller (eg by the detevent.DetermineEvent loop).
-
-       If the dome or shutter is in use, this function exits with an error.
-
-       If the dome controller is busy, and hasn't returned a prompt, set the desired azimuth and
-       let later calls to DomeCheckMove do the actual communication.
+    """Add a 'move' command to the command queue, to be executed as soon as the dome is free.
     """
     if not self.AutoDome:
       logger.error('pdome.DomeMove: Dome not in auto mode.')
@@ -148,106 +220,24 @@ class Dome:
       if az < 0 or az > 360:
         logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not %d" % az)
         return
-    elif az is None:
-      try:
-        val = raw_input("Enter new dome azimuth(0-359): ")
-        az = int(val)
-        if az < 0 or az > 359:
-          assert ValueError
-      except ValueError:
-        print "Must be an integer between 0 and 359, not %d" % az
-        return
-    if abs(az-self.NewDomeAzi) < 2.0:
-      logger.debug('pdome.DomeMove: no dome slew required')
+    else:
+      logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not: %s" % az)
       return
-    if self.DomeInUse or self.ShutterInUse:
-      logger.error("pdome.DomeMove: Dome or shutter active - wait for it to finish...")
-      return
-    self.NewDomeAzi = az
-    self.DomeInUse = True
-    self.DomeThere = False
-    self.DomeMoved = False
-    if self._waitprompt():               #if the controller isn't busy, send the new azimuth
-      self.DomeMoved = True
-      self.ser.write('%d' % az)
-
-  def check(self):
-    """Should be called repeatedly (eg by detevent.DetermineEvent) to manage communication
-       with the dome controller.
-    """
-    if self.DomeInUse:
-      if self.DomeMoved:
-        self.DomeThere = self._waitprompt()
-      else:
-        if self._waitprompt():
-          self.DomeMoved = True
-          self.ser.write('%d\n' % self.NewDomeAzi)
-      if self.DomeThere:
-        self.DomeInUse = False
-        self.DomeLastTime = time.time()
-    if self.ShutterInUse:
-      if self.DomeMoved:
-        self.DomeThere = self._waitprompt()
-      else:
-        if self._waitprompt():
-          self.DomeMoved = True
-          self.ser.write(self.NewShutter+chr(13))
-      if self.DomeThere:
-        self.ShutterInUse = False
+    self.queue.append(str(int(az)))
 
   def open(self):
-    """Open dome shutter. Return immediately without waiting for the shutter to finish opening, or even
-       guarantee that the open command has been sent - this function is likely to
-       do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
-       with the dome controller (eg by the detevent.DetermineEvent loop).
-
-       If the dome or shutter is in use, this function exits with an error.
-
-       If the dome controller is busy, and hasn't returned a prompt, set the desired shutter state and
-       let later calls to DomeCheckMove do the actual communication.
-    """
     if not self.AutoDome:
-      logger.error('pdome.DomeOpen: Dome not in auto mode.')
+      logger.error('pdome.DomeMove: Dome not in auto mode.')
       return
-    if self.DomeInUse or self.ShutterInUse:
-      logger.error('pdome.DomeOpen: Dome or shutter active - wait for it to finish...')
-      return
-
-    self.NewShutter = 'O'
-    self.ShutterOpen = True
-    self.ShutterInUse = True
-    self.DomeThere = False
-    self.DomeMoved = False
-    if self._waitprompt():              #if the controller isn't busy, send the new shutter state
-      self.DomeMoved = True
-      self.ser.write('O'+chr(13))
+    self.queue.append('O')
+    self.queue.append('I')    #Check shutter status after the open command
 
   def close(self):
-    """Close dome shutter. Return immediately without waiting for the shutter to finish closing, or even
-       guarantee that the close command has been sent - this function is likely to
-       do nothing unless DomeCheckMove is being called repeatedly to actually manage the communications
-       with the dome controller (eg by the detevent.DetermineEvent loop).
-
-       If the dome or shutter is in use, this function exits with an error.
-
-       If the dome controller is busy, and hasn't returned a prompt, set the desired shutter state and
-       let later calls to DomeCheckMove do the actual communication.
-    """
     if not self.AutoDome:
-      logger.error('pdome.DomeClose: Dome not in auto mode.')
+      logger.error('pdome.DomeMove: Dome not in auto mode.')
       return
-    if self.DomeInUse or self.ShutterInUse:
-      logger.error('pdome.DomeClose: Dome or shutter active - wait for it to finish...')
-      return
-
-    self.NewShutter = 'C'
-    self.ShutterOpen = False
-    self.ShutterInUse = True
-    self.DomeThere = False
-    self.DomeMoved = False
-    if self._waitprompt():               #if the controller isn't busy, send the new shutter state
-      self.DomeMoved = True
-      self.ser.write('C'+chr(13))
+    self.queue.append('C')
+    self.queue.append('I')    #Check shutter status after the close command
 
   def CalcAzi(self, Obj):
     """Calculates the dome azimuth for a given telescope position, passed as a
