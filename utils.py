@@ -123,15 +123,25 @@ p = Pos
 
 
 def jump(*args, **kws):
+  if 'force' in kws.keys():
+    force = kws['force']
+  else:
+    force = None
   ob = Pos(*args, **kws)
   if ob is None:
     print "Can't parse those arguments to get a valid position"
     return
-  print "Jumping to:", ob
-  detevent.current.Jump(ob)
-  if dome.AutoDome:
-    print "Moving dome."
-    dome.move(az=dome.CalcAzi(ob))
+  if not safety.Active.is_set():
+    if not force:
+      logger.error("safety interlock, can't jump the telescope")
+      return
+    else:
+      logger.info("safety interlock FORCED, jumping telescope")
+    print "Jumping to:", ob
+    detevent.current.Jump(ob)
+    if dome.AutoDome:
+      print "Moving dome."
+      dome.move(az=dome.CalcAzi(ob))
 
 Jump = jump
 
@@ -161,16 +171,22 @@ def offset(ora, odec):
 Offset = offset
 
 
-def freeze():
+def freeze(force=False):
   """Freeze the telescope
   """
   motion.motors.Frozen = True
   logger.info("Telescope frozen")
 
 
-def unfreeze():
+def unfreeze(force=False):
   """Un-Freeze the telescope
   """
+  if not safety.Active.is_set():
+    if not force:
+      logger.error("safety interlock, can't unfreeze the telescope")
+      return
+    else:
+      logger.info("safety interlock FORCED, unfreezing telescope")
   motion.motors.Frozen = False
   logger.info("Telescope un-frozen")
 

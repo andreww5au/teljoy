@@ -83,16 +83,22 @@ class Telescope(object):
   def GetInfo(self):
     return detevent.current.__repr__()
 
+  def Active(self):
+    return safety.Active.is_set()
+
   def jump(self, *args, **kws):
     ob = utils.Pos(*args, **kws)
     if ob is None:
       return "ERROR: Can't parse those arguments to get a valid position"
-    mesg = "Jumping to: %s\n" % ob
-    detevent.current.Jump(ob)
-    if pdome.dome.AutoDome:
-      mesg += "Moving dome."
-      pdome.dome.move(az=pdome.dome.CalcAzi(ob))
-    return mesg
+    if safety.Active.is_set():
+      mesg = "Jumping to: %s\n" % ob
+      detevent.current.Jump(ob)
+      if pdome.dome.AutoDome:
+        mesg += "Moving dome."
+        pdome.dome.move(az=pdome.dome.CalcAzi(ob))
+      return mesg
+    else:
+      return "ERROR: safety interlock set, can't jump telescope"
 
   def reset(self, *args, **kws):
     """Set the current RA and DEC to the values given.
@@ -121,14 +127,19 @@ class Telescope(object):
   def unfreeze(self):
     """Un-Freeze the telescope
     """
-    motion.motors.Frozen = False
-    return "Telescope un-frozen"
+    if safety.Active.is_set():
+      motion.motors.Frozen = False
+      return "Telescope un-frozen"
+    else:
+      return "ERROR: Safety interlock, can't unfreeze telescope!"
 
   def dome(self, arg):
     """move, open, or close the dome.
     """
     if not pdome.dome.AutoDome:
       return "ERROR: Dome not in automatic mode."
+    if not safety.Active.is_set():
+      return "ERROR: safety interlock, can't open, shut, or move dome"
     if type(arg)==int or type(arg)==float:
       pdome.dome.move(arg)
       return "Dome moving to %s" % arg

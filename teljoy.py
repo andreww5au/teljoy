@@ -91,10 +91,10 @@ def cleanup():
 
 
 safety.register_stopfunction('Close Dome', function=dome.close, args=[], kwargs={'force':True})
-safety.register_stopfunction('Freeze', function=freeze)
+safety.register_stopfunction('Freeze', function=freeze, kwargs={'force':True})
 
 safety.register_startfunction('Open Dome', function=dome.open, args=[], kwargs={'force': True})
-safety.register_startfunction('Un-Freeze', function=unfreeze)
+safety.register_startfunction('Un-Freeze', function=unfreeze, kwargs={'force':True})
 
 #Convenience functions for the dummy hand paddle mode - delete once testing is complete.
 def n():
