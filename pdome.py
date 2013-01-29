@@ -46,6 +46,7 @@ class Dome:
      state, as well as some dome control preferences.
   """
   def __init__(self):
+    self.DomeAzi = -10              #Current dome azimuth
     self.DomeInUse = False          #True if the dome is moving
     self.CommandSent = False        #True if the current command has been sent to the dome controller
     self.Command = None             #True if the dome movement has finished

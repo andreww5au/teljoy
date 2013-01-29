@@ -110,7 +110,7 @@ class CurrentPosition(correct.CalcPosition):
                                                                        sexstring(self.Dec/3600, fixed=True))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
-    l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse or pdome.dome.ShutterInUse],
+    l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse],
                                                               {False:" No", True:"Yes"}[pdome.dome.DomeTracking],
                                                               str(errors))
     return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
@@ -318,7 +318,7 @@ class CurrentPosition(correct.CalcPosition):
       self.DecC = prefs.ObsLat*3600
     else:
       errors.CalError = False
-      pdome.dome.ShutterOpen = info.ShutterOpen
+      pdome.dome.IsShutterOpen = info.ShutterOpen
       prefs.EastOfPier = info.EastOfPier
 
     motion.motors.Frozen = False    #Always start out not frozen
@@ -341,7 +341,7 @@ class CurrentPosition(correct.CalcPosition):
     self.AltAziConv()
     logger.debug('detevent.IniPos: New Alt/Azi: %4.1f, %4.1f' % (self.Alt, self.Azi))
 
-    pdome.dome.NewDomeAzi = pdome.dome.CalcAzi(self)
+    pdome.dome.DomeAzi = pdome.dome.CalcAzi(self)
     pdome.dome.DomeLastTime = time.time()
 
   def Reset(self, obj):
@@ -407,10 +407,9 @@ def CheckDirtyDome():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  if ( (abs(pdome.dome.CalcAzi(current)-pdome.dome.NewDomeAzi) > 6) and
+  if ( (abs(pdome.dome.CalcAzi(current)-pdome.dome.DomeAzi) > 6) and
        ((time.time()-pdome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
        (not pdome.dome.DomeInUse) and
-       (not pdome.dome.ShutterInUse) and
        pdome.dome.DomeTracking and
        (not motion.motors.Moving) and
        pdome.dome.AutoDome and
@@ -437,8 +436,8 @@ def CheckDBUpdate():
     foo.EastOfPier = prefs.EastOfPier
     foo.NonSidOn = prefs.NonSidOn
     foo.DomeInUse = pdome.dome.DomeInUse
-    foo.ShutterInUse = pdome.dome.ShutterInUse
-    foo.ShutterOpen = pdome.dome.ShutterOpen
+    foo.ShutterInUse = pdome.dome.DomeInUse
+    foo.ShutterOpen = pdome.dome.IsShutterOpen
     foo.DomeTracking = pdome.dome.DomeTracking
     foo.Frozen = motion.motors.Frozen
     foo.RA_guideAcc = paddles.RA_GuideAcc
@@ -587,7 +586,7 @@ def CheckTJbox():
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
   elif TJboxAction == 'shutter':
-    if not pdome.dome.ShutterInUse:
+    if not pdome.dome.DomeInUse:
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
 
@@ -607,7 +606,7 @@ def CheckTimeout():
   #TODO - make timeout configurable via teljoy.ini and globals.prefs.
   if TIMEOUT == 0:
     errors.TimeoutError = False
-  elif ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
+  elif ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.IsShutterOpen and (not pdome.dome.DomeInUse):
     logger.critical('detevent.CheckTimeout: No communication with Prosp for over %d seconds!\nClosing Shutter, Freezing Telescope.' % TIMEOUT)
     errors.TimeoutError = True
     safety.add_tag('Prosp communications time out - shutting down')  #Discard tag, we don't want to try to recover from this
