@@ -90,11 +90,38 @@ def cleanup():
     logger.info("Teljoy shut down.")
 
 
-safety.register_stopfunction('Close Dome', function=dome.close, args=[], kwargs={'force':True})
-safety.register_stopfunction('Freeze', function=freeze, kwargs={'force':True})
+def _safety_shutdown():
+  """Called when the safety interlock is actived. Save the dome and 'frozen' states, freeze the
+     telescope and close the dome.
+  """
+  global LastDome, LastFrozen
+  if LastDome is not None or LastFrozen is not None:
+    logger.error("safety_shutdown called while the system is already shut down!")
+  LastFrozen = motion.motors.Frozen
+  freeze(force=True)
+  LastDome = dome.IsShutterOpen
+  dome('close', force=True)
 
-safety.register_startfunction('Open Dome', function=dome.open, args=[], kwargs={'force': True})
-safety.register_startfunction('Un-Freeze', function=unfreeze, kwargs={'force':True})
+
+def _safety_startup():
+  """Called when the safety interlock system has the last safety tag removed, to restart the
+     system. If the dome was previously open, then re-open it. If the telescope was previously
+     unfrozen, then unfreese it.
+  """
+  global LastDome, LastFrozen
+  if LastDome is None or LastFrozen is None:
+    logger.error("safety_startup called while the system is not shut down!")
+  if LastDome:
+    dome('open', force=True)
+  LastDome = None
+  if not LastFrozen:
+    unfreeze(force=True)
+  LastFrozen = None
+
+
+safety.register_stopfunction('Safety Shutdown', function=_safety_shutdown, args=[], kwargs={})
+
+safety.register_startfunction('Safety Startup', function=_safety_startup, args=[], kwargs={})
 
 #Convenience functions for the dummy hand paddle mode - delete once testing is complete.
 def n():

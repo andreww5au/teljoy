@@ -263,6 +263,9 @@ class CurrentPosition(correct.CalcPosition):
     elif (self.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
       logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (self.Alt,FObj.Alt))
       return True
+    elif not safety.Active.is_set():
+      logger.error('detevent.Jump: safety interlock - no jumping allowed.')
+      return True
     else:
       DelRA = FObj.RaC - self.RaC
 
@@ -281,20 +284,23 @@ class CurrentPosition(correct.CalcPosition):
           logger.error('detevent.Jump called while telescope in motion!')
           return True
 
-        motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
-        LastObj = copy.deepcopy(self)                    #Save the current position
-        self.RaC, self.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
-        self.RaA, self.DecA = FObj.RaA, FObj.DecA
-        self.Ra, self.Dec = FObj.Ra, FObj.Dec
-        self.Epoch = FObj.Epoch
-        self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
-        self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
-        self.ObjID = FObj.ObjID
-        with motion.motors.RA.lock:
-          motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
-        with motion.motors.DEC.lock:
-          motion.motors.DEC.track = self.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
-        self.posviolate = False    #signal a valid original RA and Dec
+        jumperror = motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
+        if jumperror:
+          return True
+        else:
+          LastObj = copy.deepcopy(self)                    #Save the current position
+          self.RaC, self.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
+          self.RaA, self.DecA = FObj.RaA, FObj.DecA
+          self.Ra, self.Dec = FObj.Ra, FObj.Dec
+          self.Epoch = FObj.Epoch
+          self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
+          self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
+          self.ObjID = FObj.ObjID
+          with motion.motors.RA.lock:
+            motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
+          with motion.motors.DEC.lock:
+            motion.motors.DEC.track = self.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
+          self.posviolate = False    #signal a valid original RA and Dec
 
   def IniPos(self):
     """This function is called on startup to set the 'Current' position
@@ -473,27 +479,37 @@ def DoTJbox():
         if (JObj is not None) and JObj.numfound == 1:
           found = True
       if found and (not motion.limits.HWLimit):
-        AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
-        logger.info("detevent.DoTJbox: Remote control jump to object: %s" % JObj)
-        if pdome.dome.AutoDome and (not AltErr):
-          pdome.dome.move(pdome.dome.CalcAzi(JObj))
-        if AltErr:
-          logger.error("detevent.DoTJBox: Object in TJbox below Alt Limit")
+        if safety.Active.is_set():
+          AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
+          logger.info("detevent.DoTJbox: Remote control jump to object: %s" % JObj)
+          if pdome.dome.AutoDome and (not AltErr):
+            pdome.dome.move(pdome.dome.CalcAzi(JObj))
+          if AltErr:
+            logger.error("detevent.DoTJBox: Object in TJbox below Alt Limit")
+          else:
+            TJboxAction = other.action
         else:
-          TJboxAction = other.action
+          logger.error('detevent.DoTJbox: ERROR - safety interlock, NO jumping')
+          TJboxAction = 'none'
+          sqlint.ClearTJbox(db=db)
       else:
         TJboxAction = 'none'
         sqlint.ClearTJbox(db=db)
 
     elif other.action == 'jumprd':
-      AltErr = current.Jump(BObj, prefs.SlewRate)
-      logger.info("detevent.DoTJbox: Remote control jump to object: %s" % BObj)
-      if pdome.dome.AutoDome and (not AltErr):
-        pdome.dome.move(pdome.dome.CalcAzi(BObj))
-      if AltErr:
-        logger.error('detevent.DoTJbox: Object in TJbox below Alt Limit')
+      if safety.Active.is_set():
+        AltErr = current.Jump(BObj, prefs.SlewRate)
+        logger.info("detevent.DoTJbox: Remote control jump to object: %s" % BObj)
+        if pdome.dome.AutoDome and (not AltErr):
+          pdome.dome.move(pdome.dome.CalcAzi(BObj))
+        if AltErr:
+          logger.error('detevent.DoTJbox: Object in TJbox below Alt Limit')
+        else:
+          TJboxAction = other.action
       else:
-        TJboxAction = other.action
+        logger.error('detevent.DoTJbox: ERROR - safety interlock, NO jumping')
+        TJboxAction = 'none'
+        sqlint.ClearTJbox(db=db)
 
     elif other.action == 'reset':
       current.Reset(BObj)
@@ -523,20 +539,29 @@ def DoTJbox():
 
     elif other.action == 'shutter':
       if other.Shutter:
-        pdome.dome.open()           #True for open}
-        logger.info("detevent.DoTJbox: remote control - shutter opened")
+        if safety.Active.is_set():
+          pdome.dome.open()           #True for open}
+          logger.info("detevent.DoTJbox: remote control - shutter opened")
+          TJboxAction = other.action
+        else:
+          logger.error('detevent.DoTJbox: ERROR - safety interlock, shutter NOT opened')
+          TJboxAction = 'none'
+          sqlint.ClearTJbox(db=db)
       else:
         pdome.dome.close()
         logger.info("detevent.DoTJbox: remote control - shutter closed")
-      TJboxAction = other.action
+        TJboxAction = other.action
 
     elif (other.action == 'freez') or (other.action == 'freeze'):
       if other.Freeze:
         motion.motors.Frozen = True
         logger.info("detevent.DoTJbox: remote control - telescope frozen")
       else:
-        motion.motors.Frozen = False
-        logger.info("detevent.DoTJbox: remote control - telescope un-frozen")
+        if safety.Active.is_set():
+          motion.motors.Frozen = False
+          logger.info("detevent.DoTJbox: remote control - telescope un-frozen")
+        else:
+          logger.error('detevent.DoTJbox: ERROR - safety interlock, telescope NOT un-frozen')
       TJboxAction = 'none'    #Action complete}
       sqlint.ClearTJbox(db=db)
 
@@ -585,8 +610,7 @@ def CheckTimeout():
   elif ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.ShutterOpen and (not pdome.dome.ShutterInUse):
     logger.critical('detevent.CheckTimeout: No communication with Prosp for over %d seconds!\nClosing Shutter, Freezing Telescope.' % TIMEOUT)
     errors.TimeoutError = True
-    pdome.dome.close()
-    motion.motors.Frozen = True
+    safety.add_tag('Prosp communications time out - shutting down')  #Discard tag, we don't want to try to recover from this
   else:
     errors.TimeoutError = False
 

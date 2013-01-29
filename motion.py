@@ -94,13 +94,12 @@ class LimitStatus():
 
   def check(self):
     if (not self.OldLim) and (self.HWLimit):
-      motors.Frozen = True
+      safety.add_tag("Hardware limit reached, closing dome and freezing telescope")  #Discard tag ID
       self.LimitOnTime = time.time()
       self.LimitOffTime = 2147483647    #sys.maxint
       self.OldLim = True
     if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
          (not motors.Moving) and (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
-      motors.Frozen = False
       self.OldLim = False
       self.HWLimit = False
       self.LimOverride = False
@@ -513,11 +512,14 @@ class MotorControl():
     #If slewing (paddle or Jump) exit and return True as an error
     if (self.Jumping or self.Paddling):
       logger.debug('motion.MotorControl.Jump called while telescope is already moving')
-      return False
-
-    self.RA.StartJump(delRA, Rate)
-    self.DEC.StartJump(delDEC, Rate)
-    return True
+      return True
+    if safety.Active.is_set():
+      with self.lock():
+        self.RA.StartJump(delRA, Rate)
+        self.DEC.StartJump(delDEC, Rate)
+        return False
+    else:
+      logger.error('ERROR: motion.motors.Jump called when safety interlock is on')
 
   def getframe(self):
     """
