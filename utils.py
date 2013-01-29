@@ -216,7 +216,7 @@ def shutdown():
     dome.close()
   jump(STOW)
   time.sleep(2)
-  while motion.motors.Moving or dome.DomeInUse or dome.ShutterInUse:
+  while motion.motors.Moving or dome.DomeInUse:
     print "Waiting for telescope to park and shutter to close."
     time.sleep(5)
   sys.exit()

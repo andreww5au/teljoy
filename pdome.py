@@ -70,7 +70,7 @@ class Dome:
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['DomeInUse','ShutterInUse','DomeMoved','ShutterOpen','DomeThere','AutoDome','DomeTracking','DomeLastTime','NewDomeAzi','NewShutter']:
+    for n in ['DomeAzi','DomeInUse','CommandSent','Command','IsShutterOpen','DomeFailed','AutoDome','DomeTracking','DomeLastTime','queue']:
       d[n] = self.__dict__[n]
     return d
 
@@ -149,7 +149,7 @@ class Dome:
       self.CommandSent = False
       self.queue = []
       self.ShutterOpen = False
-      globals.safety.add_tag('Dome Failed to rotate, dome controller shutdown. Restart Teljoy to clear.')
+      safety.add_tag('Dome Failed to rotate, dome controller shutdown. Restart Teljoy to clear.')
 
   def check(self):
     """Should be called repeatedly (eg by detevent loop) to manage communication
@@ -211,7 +211,7 @@ class Dome:
       if self.queue:
         self.Command = self.queue.pop(0)
 
-  def move(self, az=None):
+  def move(self, az=None, force=False):
     """Add a 'move' command to the command queue, to be executed as soon as the dome is free.
     """
     if not self.AutoDome:
