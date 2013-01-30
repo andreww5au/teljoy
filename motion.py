@@ -454,8 +454,6 @@ class MotorControl(object):
     self.lock = threading.RLock()
     self.Driver = usbcon.Driver(getframe=self.getframe)
     logger.debug('motion.MotorControl.__init__: finished global vars')
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -483,17 +481,6 @@ class MotorControl(object):
     mesg += "Dec:\n%s" % self.DEC
     mesg += '>\n'
     return mesg
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
 
   def Jump(self, delRA, delDEC, Rate, force=False):
     """This procedure calculates the profile parameters for a telescope jump.
