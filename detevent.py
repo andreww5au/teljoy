@@ -191,9 +191,9 @@ class CurrentPosition(correct.CalcPosition):
 
        This function is called at regular intervals by the DetermineEvent loop.
     """
-    WINDOW = 30            #Window time in seconds. Calculate refraction and
-                           # flexure at T-WINDOW and T+WINDOW, then use the
-                           #(difference/(2*WINDOW) as the velocity
+    WINDOW = 30.0            #Window time in seconds. Calculate refraction and
+                             # flexure at T-WINDOW and T+WINDOW, then use the
+                             #(difference/(2*WINDOW) as the velocity
 
     if (not prefs.RealTimeOn) or (not prefs.RefractionOn and not prefs.FlexureOn):
       #**Stop the refraction correction**
@@ -209,7 +209,6 @@ class CurrentPosition(correct.CalcPosition):
     #Calculate the values WINDOW seconds ago:
     curpos.Time.update()        #Get current time now
     curpos.Time.LST -= WINDOW/3600   #Calculate values WINDOW seconds in the past
-    print "Old time: ",curpos.Time.LST
     curpos.AltAziConv()              #Calculate Alt/Az
 
     if prefs.RefractionOn:
@@ -226,7 +225,6 @@ class CurrentPosition(correct.CalcPosition):
 
     #Calculate the values WINDOW seconds in the future:
     curpos.Time.LST += 2*WINDOW/3600   #Calculate values WINDOW seconds in the future
-    print "New time: ",curpos.Time.LST
     curpos.AltAziConv()             #Calculate the alt/az at that future LST
 
     if prefs.RefractionOn:
@@ -247,8 +245,6 @@ class CurrentPosition(correct.CalcPosition):
     #Calculate refraction/flexure correction velocities in steps/50ms
     RA_ref = 20.0*(deltaRA/(2*WINDOW*20))       #The difference in arcsec is divided by the total time (2*WINDOW) in ticks (*20)
     DEC_ref = 20.0*(deltaDEC/(2*WINDOW*20))     #   and then multiplied by 20 to convert it to arcseconds per tick.
-
-    print deltaRA,deltaDEC,RA_ref,DEC_ref
 
     #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
     #and flag RefError if we've reached that cap.
