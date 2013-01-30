@@ -177,6 +177,13 @@ class CurrentPosition(correct.CalcPosition):
     if self.RaC < 0:
       self.RaC += (24*60*60*15)
 
+    self.Time.update()
+    self.AltAziConv()           #Calculate Alt/Az now
+    if self.Alt < prefs.AltWarning:
+      errors.AltError = True
+    else:
+      errors.AltError = False
+
   def RelRef(self):
     """Calculates real time refraction and flexure correction velocities for the current position.
        These velocities are mixed into the telescope motion by the low-level control loop
@@ -184,77 +191,75 @@ class CurrentPosition(correct.CalcPosition):
 
        This function is called at regular intervals by the DetermineEvent loop.
     """
-    NUM_REF = 600                  # no of interrupts in time_inc time.
-    SIDCORRECT = 30.08213727/3600  #number of siderial hours in update time
+    WINDOW = 30            #Window time in seconds. Calculate refraction and
+                           # flexure at T-WINDOW and T+WINDOW, then use the
+                           #(difference/(2*WINDOW) as the velocity
 
-    #**Begin refraction correction**
-    self.Time.update()
-    self.AltAziConv()           #Calculate Alt/Az now
-
-    errors.AltError = False
-    if self.Alt < prefs.AltWarning:
-      errors.AltError = True
-
-    if prefs.RefractionOn:
-      oldRAref,oldDECref = self.Refrac()   #Calculate and save refraction correction now
-    else:
-      oldRAref = 0
-      oldDECref = 0
-
-    if prefs.FlexureOn:
-      oldRAflex,oldDECflex = self.Flex()   #Calculate and save flexure correction now
-    else:
-      oldRAflex = 0
-      oldDECflex = 0
-
-    if prefs.RealTimeOn:
-      self.Time.LST += SIDCORRECT   #advance sidereal time by 30 solar seconds
-      self.AltAziConv()             #Calculate the alt/az at that future LST
-
-      if prefs.RefractionOn:
-        newRAref,newDECref = self.Refrac()  #Calculate refraction for future time
-      else:
-        newRAref = 0.0
-        newDECref = 0.0
-
-      if prefs.FlexureOn:
-        newRAflex,newDECflex = self.Flex()  #Calculate flexure for new time
-      else:
-        newRAflex = 0.0
-        newDECflex = 0.0
-
-      self.Time.update()     #Return to the current time
-      self.AltAziConv()      #Recalculate Alt/Az for now
-
-      deltaRA = (newRAref-oldRAref) + (newRAflex-oldRAflex)
-      deltaDEC = (newDECref-oldDECref) + (newDECflex-oldDECflex)
-
-      #Calculate refraction/flexure correction velocities in steps/50ms
-      RA_ref = 20.0*(deltaRA/NUM_REF)
-      DEC_ref = 20.0*(deltaDEC/NUM_REF)
-
-      #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
-      #and flag RefError if we've reached that cap.
-      errors.RefError = False
-      if abs(RA_ref) > 200:
-        RA_ref = 200*(RA_ref/abs(RA_ref))
-        errors.RefError = True
-      if abs(DEC_ref) > 200:
-        DEC_ref = 200*(DEC_ref/abs(DEC_ref))
-        errors.RefError = True
-
-      #Set the actual refraction/flexure correction velocities in steps/50ms
-      with motion.motors.RA.lock:
-        motion.motors.RA.refraction = RA_ref
-      with motion.motors.DEC.lock:
-        motion.motors.DEC.refraction = DEC_ref
-    else:
+    if (not prefs.RealTimeOn) or (not prefs.RefractionOn and not prefs.FlexureOn):
       #**Stop the refraction correction**
       with motion.motors.RA.lock:
         motion.motors.RA.refraction = 0.0
       with motion.motors.DEC.lock:
         motion.motors.DEC.refraction = 0.0
       errors.RefError = False
+      return
+
+    curpos = copy.deepcopy(self)   #Take a copy of the object to avoid corrupting internal attributes.
+    #Calculate the values WINDOW seconds ago:
+    curpos.Time.update()        #Get current time now
+    curpos.Time.LST -= WINDOW   #Calculate values WINDOW seconds in the past
+    curpos.AltAziConv()           #Calculate Alt/Az
+
+    if prefs.RefractionOn:
+      oldRAref,oldDECref = curpos.Refrac()   #Calculate and save refraction correction now
+    else:
+      oldRAref = 0
+      oldDECref = 0
+
+    if prefs.FlexureOn:
+      oldRAflex,oldDECflex = curpos.Flex()   #Calculate and save flexure correction now
+    else:
+      oldRAflex = 0
+      oldDECflex = 0
+
+    #Calculate the values WINDOW seconds in the future:
+    curpos.Time.LST += 2*WINDOW   #Calculate values WINDOW seconds in the future
+    curpos.AltAziConv()             #Calculate the alt/az at that future LST
+
+    if prefs.RefractionOn:
+      newRAref,newDECref = curpos.Refrac()  #Calculate refraction for future time
+    else:
+      newRAref = 0.0
+      newDECref = 0.0
+
+    if prefs.FlexureOn:
+      newRAflex,newDECflex = curpos.Flex()  #Calculate flexure for new time
+    else:
+      newRAflex = 0.0
+      newDECflex = 0.0
+
+    deltaRA = (newRAref-oldRAref) + (newRAflex-oldRAflex)
+    deltaDEC = (newDECref-oldDECref) + (newDECflex-oldDECflex)
+
+    #Calculate refraction/flexure correction velocities in steps/50ms
+    RA_ref = 20.0*(deltaRA/(2*WINDOW*20))       #The difference in arcsec is divided by the total time (2*WINDOW) in ticks (*20)
+    DEC_ref = 20.0*(deltaDEC/(2*WINDOW*20))     #   and then multiplied by 20 to convert it to arcseconds per tick.
+
+    #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
+    #and flag RefError if we've reached that cap.
+    errors.RefError = False
+    if abs(RA_ref) > 200:
+      RA_ref = 200*(RA_ref/abs(RA_ref))
+      errors.RefError = True
+    if abs(DEC_ref) > 200:
+      DEC_ref = 200*(DEC_ref/abs(DEC_ref))
+      errors.RefError = True
+
+    #Set the actual refraction/flexure correction velocities in steps/50ms
+    with motion.motors.RA.lock:
+      motion.motors.RA.refraction = RA_ref
+    with motion.motors.DEC.lock:
+      motion.motors.DEC.refraction = DEC_ref
 
   def Jump(self, FObj, Rate=None, force=False):
     """Jump to new position.
@@ -660,8 +665,8 @@ def Init():
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
 
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
-  slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
   slowloop.register('Weather', weather._background)
+  slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
 
   logger.debug('Detevent unit init finished')
   fastthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')
