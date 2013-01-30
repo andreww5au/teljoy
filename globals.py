@@ -35,7 +35,7 @@ DFGUIDERATE = 100                       #Default guide rate 5arcsec/sec
 DFTEMP = 0                              #default (high altitude) air temp in deg C, for refraction calculation
 DFPRESS = 1015.92                       #default atm. press. in mb, for refraction calculation
 
-CLASSDEBUG = True    #If true, trap all classes to catch attributes created outside __init__ method
+DEBUG = True    #If true, print extra debugging info - eg motion control activity
 
 #DTABLE = 'ncurrent'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
 DTABLE = 'current'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
@@ -86,7 +86,7 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 
-class Position:
+class Position(object):
   """Base class used to store astronomical coordinates. Attributes are '.Ra' and
      '.Dec' in arcseconds, and '.Epoch', a decimal year containing the equinox
      for which that RA and DEC refer. The 'ObjID' attribute contains an optional short
@@ -138,19 +138,6 @@ class Position:
       self.Dec = dec * 3600.0
     self.Epoch = epoch                     #Equinox for apparent Ra & Dec
     self.DomePos = domepos
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -171,7 +158,7 @@ class Position:
                                             self.Epoch )
 
 
-class Errors:
+class Errors(object):
   """An instance of this class is created to store all internal software error states.
   """
   def __init__(self):
@@ -214,7 +201,7 @@ class Errors:
   
     
     
-class Prefs:
+class Prefs(object):
   """An instance of this class is created to store global preferences
      (from the .ini file) and operating modes.
   """
@@ -342,6 +329,7 @@ class SafetyInterlock(object):
     self._lock = threading.RLock()
     self.Active = threading.Event()
     self.Active.set()
+    self.Errors = {}
     self._tags = {}
     self._stopfunctions = {}     #Functions to call when the system is paused
     self._startfunctions = {}    #Functions to call when the system is un-paused
@@ -365,7 +353,7 @@ class SafetyInterlock(object):
           except:
             now = time.time()
             error = traceback.format_exc()
-            self.Errors[now] = error
+            self.Errors[name][now] = error
             logger.error("Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
     return tag
 
@@ -387,18 +375,28 @@ class SafetyInterlock(object):
           except:
             now = time.time()
             error = traceback.format_exc()
-            self.Errors[now] = error
+            self.Errors[name][now] = error
             logger.error(
               "Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
         self.Active.set()
 
-  def register_stopfunction(self, name, function, args=[], kwargs={}):
+  def register_stopfunction(self, name, function, args=None, kwargs=None):
+    if args is None:
+      args = []
+    if kwargs is None:
+      kwargs = {}
     with self._lock:
       self._stopfunctions[name] = (function, args, kwargs)
+      self.Errors[name] = {}
 
-  def register_startfunction(self, name, function, args=[], kwargs={}):
+  def register_startfunction(self, name, function, args=None, kwargs=None):
+    if args is None:
+      args = []
+    if kwargs is None:
+      kwargs = {}
     with self._lock:
       self._startfunctions[name] = (function, args, kwargs)
+      self.Errors[name] = {}
 
   def __repr__(self):
     mesg = []

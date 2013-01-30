@@ -31,7 +31,7 @@ import usbcon
 import motion
 import detevent
 from pdome import dome
-from digio import press, release, cslew, cset
+#from digio import press, release, cslew, cset
 from utils import *
 import tjserver
 import weather
@@ -132,17 +132,17 @@ safety.register_stopfunction('Safety Shutdown', function=_safety_shutdown, args=
 safety.register_startfunction('Safety Startup', function=_safety_startup, args=[], kwargs={})
 
 #Convenience functions for the dummy hand paddle mode - delete once testing is complete.
-def n():
-  release('S', paddle='C')
-  press('N', paddle='C')
+#def n():
+#  release('S', paddle='C')
+#  press('N', paddle='C')
 
-def s():
-  release('N', paddle='C')
-  press('S', paddle='C')
+#def s():
+#  release('N', paddle='C')
+#  press('S', paddle='C')
 
-def r():
-  release('N', paddle='C')
-  release('S', paddle='C')
+#def r():
+#  release('N', paddle='C')
+#  release('S', paddle='C')
 
 m = motion.motors
 d = m.Driver
@@ -152,6 +152,7 @@ def i():
 
 if __name__ == '__main__':
   RegisterCleanup(cleanup)
+  weather.Init()    #Initialise weather package, including SQL connection
   motion.KickStart()
   detevent.init()
   current = detevent.current

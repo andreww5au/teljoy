@@ -1,6 +1,6 @@
-#! /usr/bin/python
 
-import time
+"""Low level interface to the USB motion controller code.
+"""
 
 import controller
 from globals import *
@@ -13,8 +13,9 @@ def binstring(v):
                                          bs[32:40], bs[40:48], bs[48:56], bs[56:64])
 
 class Driver(controller.Driver):
-  # To use the controller, a driver class with callbacks must be
-  # defined to handle the asynchronous events:
+  """To use the controller, a driver class with callbacks must be
+     defined to handle the asynchronous events:
+  """
   def __init__(self, getframe=None):
     # (Keep some values to generate test steps)
     self._getframe = getframe
@@ -22,10 +23,15 @@ class Driver(controller.Driver):
     self.inputs = 0L
 
   def get_expected_controller_version(self):
+    """This code needs controller version 0.5
+    """
     return (0, 5)
 
   def initialise(self, state_details):
-    # Print out controller version details:
+    """Initialise the controller, reset the queue so it starts
+       the motion system and calling for more data,
+       and print out controller version details.
+    """
     logger.info("* Initialising %s" % (self.host.mcu_version,))
     logger.info("    MCU Firmware Version: %s" % (self.host.mcu_version,))
     logger.info("FPGA Firmware Version: %s" % (self.host.fpga_version,))
@@ -45,10 +51,10 @@ class Driver(controller.Driver):
     return d
 
   def _initialise_queue_reset(self, _):
+    """Set all the configuration data for the controller (pin
+       assignments, etc).
+    """
     # Create a configuration for the controller:
-    """
-
-    """
     configuration = controller.ControllerConfiguration(self.host)
 
     # The motor controller will start once 8 frames are enqueued:
@@ -170,25 +176,34 @@ class Driver(controller.Driver):
     return d
 
   def _initialise_configuration_written(self, configuration):
+    """Called when the configuration data has been successfully written
+       to the controller. We can now set any outputs on startup.
+
+       Initialise a couple of outputs to define the motor power state
+       as 'ON'.
+    """
     # Set the shutdown pin values:
     d = self.host.set_outputs((1 << 52) | (1 << 58))
     d.addCallback(self._initialise_outputs_set)
     d.addErrback(self._initialise_error_occurred)
 
   def _initialise_outputs_set(self, _):
+    """Called when the configuration is saved and the output pins have
+       been set.
+    """
     logger.info("* Successfully Configured")
-
-    # Schedule the first call of a timer that will toggle the output every second:
-#    self.host.add_timer(1.0, self._turn_output_on)
-
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
 
   def initialisation_error(self, failure):
-      logger.error("* Initialisation Error: %s" % failure.getErrorMessage())
-      logger.error(failure.getTraceback())
+    """Called by the controller.Controller object, not sure exactly when...
+    """
+    logger.error("* Initialisation Error: %s" % failure.getErrorMessage())
+    logger.error(failure.getTraceback())
 
   def _initialise_error_occurred(self, failure):
+    """Called when the initialisation/configuration functions defined above generate an error.
+    """
     logger.error("* Configuration Failed:")
     logger.error(failure.getTraceback())
     self.host.stop()
@@ -206,11 +221,22 @@ class Driver(controller.Driver):
 #    self.host.add_timer(1.0, self._turn_output_on)
 
   def _check_counters(self):
+    """Grab the counter data, and call _complete_check_counters when the
+       data becomes available.
+
+       Called every 60 seconds, using a timer set up for the first time in
+       _initialise_outputs_set above, and re-called by _complete_check_counters
+       below.
+    """
     d = self.host.get_counters()
     d.addCallback(self._complete_check_counters)
 
   def _complete_check_counters(self, counters):
-    logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
+    """Update the counter log data using the values returned from the controller.
+       Set up another call to update the counters in 60 seconds.
+    """
+    if DEBUG:
+      logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
                   (counters.reference_frame_number,
                    counters.a_total_steps,
                    counters.b_total_steps,
@@ -230,18 +256,22 @@ class Driver(controller.Driver):
        to enqueue another.
     """
     if details.frames_in_queue < 12:
-      # Ramp the velocity up and down:
+      #Get the next velocity value pair from the motion control system
       va,vb = self._getframe()
-
+      #And add those values to the hardware queue.
       self.frame_number = self.host.enqueue_frame(va, vb)
   
       # Every "frame" of step data has a unique number, starting with
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
-      if self.frame_number % 1200 == 0:
+      if DEBUG and (self.frame_number % 1200 == 0):
         print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
 
   def state_changed(self, details):
+    """Called when the controller run state changes. This is usually either on
+       startup when the queue processing starts, or on shutdown when we've told
+       it to stop.
+    """
     logger.info("* Run State Change:")
     logger.info(`details`)
 
@@ -250,11 +280,16 @@ class Driver(controller.Driver):
       d.addCallback(self._get_axis_exception_details_completed)
 
   def _get_axis_exception_details_completed(self, details):
+    """Called when we have any exception details after a state change.
+    """
     logger.error("Exception Details: %s" % details)
     self.host.stop()
 
   def inputs_changed(self, inputs):
-    logger.info("* %s" % binstring(inputs))
+    """Called whenever any of the 'notifiable' binary inputs have changed state.
+    """
+    if DEBUG:
+      logger.info("* %s" % binstring(inputs))
     self.inputs = inputs
 
   def run(self):

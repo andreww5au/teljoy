@@ -29,12 +29,11 @@ def KickStart():
   intthread.start()
 
 
-class LimitStatus():
+class LimitStatus(object):
   """Class to represent the hardware limit state/s. 
      
      Only used for New Zealand telescopes, no limit state can be read in Perth. This code largely
-     ported as-is, and has never actually been used on the NZ telescope. It seems to have a few
-     problems...
+     ported as-is, and has never actually been used on the NZ telescope.
   """
   _reprf = ( '<LimitStatus: On: %(LimitOnTime)d, Off: %(LimitOffTime)d - ' +
              '%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
@@ -65,19 +64,6 @@ class LimitStatus():
     self.EastLim = False          #RA axis eastward limit reached
     self.WestLim = False          #RA axis westward limit reached
     self.LimOverride = False      #True if the 'Limit Override' button on the telescope is pressed
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
-      
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -87,12 +73,21 @@ class LimitStatus():
     return d
 
   def CanEast(self):
+    """Returns True if there is no limit set, or the West limit is set but
+       we can still move East to escape the limit.
+    """
     return (not self.HWLimit) or (self.LimOverride and self.WestLim)
 
   def CanWest(self):
+    """Returns True if there is no limit set, or the East limit is set but
+       we can still move West to escape the limit.
+    """
     return (not self.HWLimit) or (self.LimOverride and self.EastLim)
 
   def check(self):
+    """Test the limit states, handle any new limit conditions (set or cleared) since the
+       last check, and update the flags.
+    """
     if (not self.OldLim) and (self.HWLimit):
       safety.add_tag("Hardware limit reached, closing dome and freezing telescope")  #Discard tag ID
       self.LimitOnTime = time.time()
@@ -106,7 +101,7 @@ class LimitStatus():
 
 
 
-class Axis():
+class Axis(object):
   """Represents the motor control flags and variables controlling motion on
      a single axis. Replaces RA_variable and DEC_variable type attributes of the
      MotorControl class.
@@ -441,7 +436,7 @@ class Axis():
       return int_send
 
 
-class MotorControl():
+class MotorControl(object):
   """An instance of this class handles all low-level motion control, with one background thread running
      self.Driver.run to keep the controller queue full. This thread is started when the 'KickStart()' function
      is called by the main program.

@@ -1,7 +1,7 @@
 #! /usr/local/bin/python2.7
 # coding=latin1
 
-# Copyright Â© Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
+# Copyright © Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
 # This file is internal, confidential source code and is protected by
 # trade secret and copyright laws.
 
@@ -1052,7 +1052,7 @@ class Driver(object):
 	def internal_attach_host(self, host):
 		self.host = host
 
-	def initialise(self):
+	def initialise(self, state_details):
 		"""Called when the controller first starts the event loop.
 
 		During initialisation, the driver can check the current state of the controller,

@@ -5,7 +5,7 @@ from globals import *
 import motion
 import digio
 
-class Paddles:
+class Paddles(object):
   """An instance of this class is used to store the state of the hand paddle
      buttons, current motion, and speed settings.
 
@@ -48,7 +48,7 @@ class Paddles:
     fb = digio.ReadFine(motion.motors.Driver.inputs)
 
     #check the Fine paddle speed switches and set appropriate mode and velocity
-    if ((fb & digio.FGuideMsk)==digio.FGuideMsk):
+    if (fb & digio.FGuideMsk) == digio.FGuideMsk:
       self.FineMode = 'FGuide'
       FinePaddleRate = prefs.GuideRate
     else:
@@ -56,7 +56,7 @@ class Paddles:
       FinePaddleRate = prefs.FineSetRate
 
     #* Check the fine paddle by comparing fb to a set of masks}
-    if ((fb & digio.FNorth)==digio.FNorth):        #Compare with the north mask}
+    if (fb & digio.FNorth) == digio.FNorth:        #Compare with the north mask}
       if not self.ButtonPressedDEC:          #The button has just been pressed}
         self.ButtonPressedDEC = True
         self.DECdir = 'fineNorth'
@@ -67,7 +67,7 @@ class Paddles:
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
-    if ((fb & digio.FSouth)==digio.FSouth):            #Check with South Mask}
+    if (fb & digio.FSouth) == digio.FSouth:            #Check with South Mask}
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'fineSouth'
@@ -78,7 +78,7 @@ class Paddles:
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
-    if ((fb & digio.FEast)==digio.FEast):              #Check the Eastmask}
+    if (fb & digio.FEast) == digio.FEast:              #Check the Eastmask}
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
         self.RAdir = 'fineEast'
@@ -89,7 +89,7 @@ class Paddles:
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 
-    if ((fb & digio.FWest)==digio.FWest):               #Check the West mask}
+    if (fb & digio.FWest) == digio.FWest:               #Check the West mask}
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True
         self.RAdir = 'fineWest'
@@ -113,7 +113,7 @@ class Paddles:
     #        self.CoarseMode = 'CSlew'
     #        CoarsePaddleRate = prefs.SlewRate
     #$ELSE}
-    if ((cb & digio.CSlewMsk)==digio.CSlewMsk):
+    if (cb & digio.CSlewMsk) == digio.CSlewMsk:
       self.CoarseMode = 'CSlew'
 #      logger.info('SLEW')
       CoarsePaddleRate = prefs.SlewRate
@@ -123,7 +123,7 @@ class Paddles:
     #$ENDIF}
 
     #**Check the Coarse paddle by comparing cb to a set of masks}
-    if ((cb & digio.CNorth)==digio.CNorth):
+    if (cb & digio.CNorth) == digio.CNorth:
 #      logger.info('N')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
@@ -135,7 +135,7 @@ class Paddles:
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
-    if ((cb & digio.CSouth)==digio.CSouth):
+    if (cb & digio.CSouth) == digio.CSouth:
 #      logger.info('S')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
@@ -147,7 +147,7 @@ class Paddles:
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
-    if ((cb & digio.CEast)==digio.CEast):
+    if (cb & digio.CEast) == digio.CEast:
 #      logger.info('E')
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
@@ -159,7 +159,7 @@ class Paddles:
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 
-    if ((cb & digio.CWest)==digio.CWest):
+    if (cb & digio.CWest) == digio.CWest:
 #      logger.info('W')
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True

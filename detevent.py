@@ -33,36 +33,59 @@ SLOWLOOP = 30      #How often the 'slow event loop' will call each of the regist
 
 detthread = None     #Contains the thread object running DetermineEvent after the init() function is called
 
+fastloop = None
+slowloop = None
+fastthread = None
+slowthread = None
 
-class EventLoop:
+
+class EventLoop(object):
   """Allows a set of functions to be registered that must be called at
-     regular intervals. One call to 'run' will iterate through all
-     registered functions, catching and logging any errors.
+     regular intervals. One call to 'runall' will iterate through all
+     registered functions, catching and logging any errors. Calling
+     'runloop' will loop forever at the specified loop interval, until
+     shutdown() is called. It may take some time, up to the specified
+     loop interval or 1 second, whichever is longer, to exit.
   """
   def __init__(self, name='', looptime=1.0):
+    """Create a new eventloop object.
+    """
     self.name = name
     self.looptime = looptime
     self.Functions = {}
     self.Errors = {}
     self.exit = False
+
   def register(self, name, function):
+    """Register a new function to be called in the loop.
+    """
     self.Functions[name] = function
     self.Errors[name] = {}
+
   def remove(self,name):
+    """Remove a function from the call list.
+    """
     if name in self.Functions:
       del self.Functions[name]
+
   def shutdown(self):
+    """Flag an exit at the next available opportunity (at most around 1 second delay).
+    """
     self.exit = True
+
   def runall(self):
+    """Run all functions once, catching any errors.
+    """
     for name,function in self.Functions.iteritems():
       try:
         function()
       except:
         now = time.time()
         error = traceback.format_exc()
-        self.Errors[now] = error
+        self.Errors[name][now] = error
         logger.error("Error in EventLoop '%s': function %s: %s" % (self.name, name, error))
         #Later, maybe remove a function here if it throws exceptions too often?
+
   def runloop(self):
     """Loop forever iterating over the registered functions. Use time.sleep
        to make sure the loop is run no more often than once every 'looptime'
@@ -455,7 +478,6 @@ def DoTJbox():
 
      This function is called by CheckTJBox.
   """
-  #TODO - add an RPC interface for external commands
   global db, ProspLastTime, TJboxAction
   BObj, other = sqlint.ReadTJbox(db=db)
   if BObj is None or other is None:
@@ -574,7 +596,6 @@ def CheckTJbox():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  #TODO - add an RPC interface for external commands
   global db, TJboxAction
   if TJboxAction == 'none':
     if sqlint.ExistsTJbox(db=db):
@@ -605,7 +626,6 @@ def CheckTimeout():
      
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  #TODO - make timeout configurable via teljoy.ini and globals.prefs.
   if TIMEOUT == 0:
     errors.TimeoutError = False
   elif ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.IsShutterOpen and (not pdome.dome.DomeInUse):
@@ -639,7 +659,6 @@ def init():
   fastloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
 
-  weather.Init()    #Initialise weather package, including SQL connection
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
   slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
   slowloop.register('Weather', weather._background)

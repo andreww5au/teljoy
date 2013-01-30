@@ -30,14 +30,7 @@
    a decent net connection.
 """
 
-INTERFACE = 'mysqldb'
-#INTERFACE = 'pgdb'
-
-if INTERFACE == 'mysqldb':
-  import MySQLdb as dblib
-elif INTERFACE == 'pgdb':
-  import pgdb as dblib
-
+import MySQLdb as dblib
 
 from globals import *
 import correct
@@ -52,14 +45,10 @@ def getdb(user=None, password=None, host=None, database=None):
   """Return a database connection object given user, password, host and database
      arguments.
   """
-  if INTERFACE == 'mysqldb':
-    dbob = dblib.connect(user=user, passwd=password, host=host)
-  elif INTERFACE == 'pgdb':
-    dbob = dblib.connect(user=user, password=password, host=host, database=database)
-  return dbob
+  return dblib.connect(user=user, passwd=password, host=host)
 
 
-class Info:
+class Info(object):
   """Used to pass miscellaneous state information to and from the database function/s.
      Names reflect the original attribute names in correct.CalcPosition, 
      motors.MotorControl, globals.Prefs, pdome.Dome as well as the detevent.LastError
@@ -103,7 +92,7 @@ class Info:
     return d
 
 
-class TJboxrec:
+class TJboxrec(object):
   """Stores the extra information in the TJbox table, that can't be stored in a 
      correct.CalcPosition object.
      
@@ -118,19 +107,6 @@ class TJboxrec:
     self.Shutter = False      #New shutter state, to open or close shutter
     self.Freeze = False       #new state for motion.motors.Frozen
     self.LastMod = 0          #time since last modification time for command record in database
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -715,7 +691,7 @@ def ClearTJbox(db=None):
     return None
 
 
-class _ValidClass:
+class _ValidClass(object):
   """Store validity booleans for each table column, so we can
      check that each of the possible commands is accompanied by
      the arguments needed for that command.

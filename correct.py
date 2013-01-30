@@ -16,7 +16,7 @@ R2 = -0.0668
 
 
 
-class TimeRec:
+class TimeRec(object):
   """Class to store a date and time, in standard Python format (a datetime.datetime object,
      in the UTC timezone), a decimal Julian Day number, and the Local Sidereal Time associated
      with that JD and datetime for the current position (defined in the .ini file).
@@ -28,8 +28,6 @@ class TimeRec:
     self.JD = 0.0                           #Fractional Julian Day
     self.LST = 0.0                          #Local Sidereal Time, in hours
     self.update()                        #Calculate JD and LST values
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -38,17 +36,6 @@ class TimeRec:
     for n in ['UT','JD','LST']:
       d[n] = self.__dict__[n]
     return d
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
 
   def __repr__(self):
     return "<TimeRec: UT='%s', JD=%f, LST=%s >" % (self.UT.ctime(), self.JD, sexstring(self.LST))
@@ -451,7 +438,7 @@ class HADecPosition(CalcPosition):
     CalcPosition.update(self)
 
 
-class FlexureProfile:
+class FlexureProfile(object):
   """Class to load and store the TPOINT flexure terms from the .ini file
   """
   def __init__(self):

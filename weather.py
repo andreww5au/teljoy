@@ -1,4 +1,10 @@
 
+"""Weather station interface module.
+
+   Reads current weather data from misc.weather table in database, and keeps status object
+   up to date.
+"""
+
 import MySQLdb
 
 weather = None
@@ -29,7 +35,7 @@ def _yn(arg=0):
     return "No"
 
 
-def render(v,dig,dp):
+def render(v, dig=4, dp=1):
   """If v is None, return 'NULL' as a string. Otherwise return
      the value in v formatted nicely as a number, with the given
      number of digits in total, and after the decimal point.
@@ -40,11 +46,12 @@ def render(v,dig,dp):
     return ('%'+`dig`+'.'+`dp`+'f') % v
 
 
-class Weather:
-  "Cloud and rain detector status"
-
+class Weather(object):
+  """Cloud and rain detector status
+  """
   def empty(self):
-    "called by __init__ or manually to clear status"
+    """called by __init__ or manually to clear status
+    """
     self.lastmod = -1
     self.skytemp = 0.0
     self.cloudf, self.windf, self.rainf, self.dayf = 0,0,0,0
@@ -78,7 +85,8 @@ class Weather:
     return d
 
   def __str__(self):
-    "Tells the status object to display itself"
+    """Tells the status object to display itself
+    """
     mesg = []
     mesg.append("Sky Temp:  %s" % self.skytemp)
     mesg.append("Cloudy:    %s" % _unyv(self.cloudf))
@@ -108,7 +116,8 @@ class Weather:
     return self.__str__()
 
   def checkweather(self):
-    "Monitor Cloud and Rain data, and take action if necessary"
+    """Monitor Cloud and Rain data, and take action if necessary
+    """
     if self.rainf <> 1:  #0 is unknown, 1 is not raining, 2 is 'wet', 3 is raining.
       self.rain = True
     else:
@@ -134,7 +143,8 @@ class Weather:
           self.OKforsec = 0
 
   def update(self, u_curs=None):
-    "Connect to the database to update fields"
+    """Connect to the database to update fields
+    """
     self.weathererror = ""
 
     if not u_curs:
@@ -182,6 +192,8 @@ def _background():
 
 
 def Init():
+  """Set up the database connection to access the weather data.
+  """
   global db, b_db, status
   db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
   b_db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')

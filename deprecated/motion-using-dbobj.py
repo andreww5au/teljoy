@@ -6,9 +6,9 @@ import math
 import threading
 import sys
 import time
+from deprecated import dummycon
 
 from globals import *
-import dummycon
 import dbobj
 import sqlint
 

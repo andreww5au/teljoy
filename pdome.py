@@ -41,9 +41,10 @@ DOMEPORT = 0     #Python serial ports numbered 0,1,2,..., Pascal ports numbered 
 
 
 
-class Dome:
+class Dome(object):
   """An instance of this class is used to store the current dome motion 
-     state, as well as some dome control preferences.
+     state, as well as some dome control preferences. Methods (open, close,
+     move) allow control.
   """
   def __init__(self):
     self.DomeAzi = -10              #Current dome azimuth
@@ -63,8 +64,6 @@ class Dome:
     except:
       self.ser = None
       print "Error opening serial port, no dome communication"
-    if CLASSDEBUG:
-      self.__setattr__ = self.debug
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -97,17 +96,6 @@ class Dome:
         print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
     else:
       print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
-
-  def debug(self,name,value):
-    """Trap all attribute writes, and raise an error if the attribute
-       wasn't defined in the __init__ method. Debugging code to catch all
-       the identifier mismatches due to the fact that Pascal isn't case
-       sensitive for identifier names.
-    """
-    if name in self.__dict__.keys():
-      self.__dict__[name] = value
-    else:
-      raise AssertionError, "Setting attribute %s=%s for the first time."
 
   def _waitprompt(self):
     """If not busy, the dome controller will return a '?' prompt in response to a CR character.
@@ -179,7 +167,7 @@ class Dome:
                 logger.error('Invalid command in dome.Command: %s' % self.Command)
               self.DomeAzi = az
               self.DomeLastTime = time.time()
-            except:
+            except ValueError:
               logger.error('Invalid command in dome.Command: %s' % self.Command)
           self.Command = None
           self.CommandSent = False
@@ -205,14 +193,19 @@ class Dome:
               if (az < 0) or (az > 360):
                 logger.error('Invalid command in dome command queue: %s' % self.Command)
               self.ser.write(self.Command + chr(13))
-            except:
+            except ValueError:
               logger.error('Invalid command in dome command queue: %s' % self.Command)
     else:
       if self.queue:
         self.Command = self.queue.pop(0)
 
   def move(self, az=None, force=False):
-    """Add a 'move' command to the command queue, to be executed as soon as the dome is free.
+    """Add a 'move' command to the dome command queue, to be executed as soon as the dome is free.
+       If a safety interlock is active, exit with an error unless the 'force' argument is
+       True.
+
+       The 'az' parameter defines the dome azimuth to move to - 0-360, where 0=North and
+       90 is due East.
     """
     if not self.AutoDome:
       logger.error('pdome.Dome.move: Dome not in auto mode.')
@@ -230,6 +223,9 @@ class Dome:
       logger.error('pdome.Dome.move: no dome activity until safety tags cleared.')
 
   def open(self, force=False):
+    """If the safety interlock is not active, or the 'force' argument is true,
+       add an 'open shutter' command to the dome command queue.
+    """
     if not self.AutoDome:
       logger.error('pdome.Dome.move: Dome not in auto mode.')
       return
@@ -240,6 +236,9 @@ class Dome:
       logger.error('pdome.Dome.move: no dome activity until safety tags cleared.')
 
   def close(self, force=False):
+    """If the safety interlock is not active, or the 'force' argument is true,
+       add an 'close shutter' command to the dome command queue.
+    """
     if not self.AutoDome:
       logger.error('pdome.Dome.move: Dome not in auto mode.')
       return
@@ -306,9 +305,13 @@ class Dome:
 
 
 def DegToRad(r):    #Originally in MATHS.PAS
+  """Given an argument in degrees, return the value converted to radians.
+  """
   return (float(r)/180)*math.pi
 
 def RadToDeg(r):    #Originally in MATHS.PAS
+  """Given an argument in radians, return the value converted to degrees.
+  """
   return (r/math.pi)*180
 
 
