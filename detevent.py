@@ -205,6 +205,7 @@ class CurrentPosition(correct.CalcPosition):
       return
 
     curpos = copy.deepcopy(self)   #Take a copy of the object to avoid corrupting internal attributes.
+    curpos.Time = copy.deepcopy(self.Time)
     #Calculate the values WINDOW seconds ago:
     curpos.Time.update()        #Get current time now
     curpos.Time.LST -= WINDOW   #Calculate values WINDOW seconds in the past
