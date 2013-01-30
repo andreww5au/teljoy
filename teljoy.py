@@ -151,10 +151,10 @@ def i():
   print usbcon.binstring(d.inputs)
 
 if __name__ == '__main__':
-  RegisterCleanup(cleanup)
   weather.Init()    #Initialise weather package, including SQL connection
   motion.KickStart()
-  detevent.init()
+  detevent.Init()
+  RegisterCleanup(cleanup)
   current = detevent.current
   c = current
   tjserver.InitServer()
