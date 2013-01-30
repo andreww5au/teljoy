@@ -156,8 +156,6 @@ if __name__ == '__main__':
   detevent.Init()
   RegisterCleanup(cleanup)
   current = detevent.current
-  print current
   c = current
-  print c
   tjserver.InitServer()
 
