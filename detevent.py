@@ -208,33 +208,40 @@ class CurrentPosition(correct.CalcPosition):
     curpos.Time = copy.deepcopy(self.Time)
     #Calculate the values WINDOW seconds ago:
     curpos.Time.update()        #Get current time now
+    print curpos
     curpos.Time.LST -= WINDOW/3600   #Calculate values WINDOW seconds in the past
+    print "Old time: ",curpos.Time.LST
     curpos.AltAziConv()              #Calculate Alt/Az
 
     if prefs.RefractionOn:
       oldRAref,oldDECref = curpos.Refrac()   #Calculate and save refraction correction now
+      print "Old refraction: ", oldRAref,oldDECref
     else:
       oldRAref = 0
       oldDECref = 0
 
     if prefs.FlexureOn:
       oldRAflex,oldDECflex = curpos.Flex()   #Calculate and save flexure correction now
+      print "Old flexure: ", oldRAflex,oldDECflex
     else:
       oldRAflex = 0
       oldDECflex = 0
 
     #Calculate the values WINDOW seconds in the future:
     curpos.Time.LST += 2*WINDOW/3600   #Calculate values WINDOW seconds in the future
+    print "New time: ",curpos.Time.LST
     curpos.AltAziConv()             #Calculate the alt/az at that future LST
 
     if prefs.RefractionOn:
       newRAref,newDECref = curpos.Refrac()  #Calculate refraction for future time
+      print "New refraction: ", newRAref, newDECref
     else:
       newRAref = 0.0
       newDECref = 0.0
 
     if prefs.FlexureOn:
       newRAflex,newDECflex = curpos.Flex()  #Calculate flexure for new time
+      print "New flexure: ", newRAflex, newDECflex
     else:
       newRAflex = 0.0
       newDECflex = 0.0
