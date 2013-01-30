@@ -246,6 +246,8 @@ class CurrentPosition(correct.CalcPosition):
     RA_ref = 20.0*(deltaRA/(2*WINDOW*20))       #The difference in arcsec is divided by the total time (2*WINDOW) in ticks (*20)
     DEC_ref = 20.0*(deltaDEC/(2*WINDOW*20))     #   and then multiplied by 20 to convert it to arcseconds per tick.
 
+    print deltaRA,deltaDEC,RA_ref,DEC_ref
+
     #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
     #and flag RefError if we've reached that cap.
     errors.RefError = False
