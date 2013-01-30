@@ -215,33 +215,33 @@ class Dome:
     """Add a 'move' command to the command queue, to be executed as soon as the dome is free.
     """
     if not self.AutoDome:
-      logger.error('pdome.DomeMove: Dome not in auto mode.')
+      logger.error('pdome.Dome.move: Dome not in auto mode.')
       return
     if type(az) == float or type(az) == int:
       if az < 0 or az > 360:
-        logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not %d" % az)
+        logger.error("pdome.Dome.move: argument must be an integer between 0 and 359, not %d" % az)
         return
     else:
-      logger.error("pdome.DomeMove: argument must be an integer between 0 and 359, not: %s" % az)
+      logger.error("pdome.Dome.move: argument must be an integer between 0 and 359, not: %s" % az)
       return
     if safety.Active.is_set() or force:
       self.queue.append(str(int(az)))
     else:
-      logger.error('System stopped, no dome activity until safety tags cleared.')
+      logger.error('pdome.Dome.move: no dome activity until safety tags cleared.')
 
   def open(self, force=False):
     if not self.AutoDome:
-      logger.error('pdome.DomeMove: Dome not in auto mode.')
+      logger.error('pdome.Dome.move: Dome not in auto mode.')
       return
     if safety.Active.is_set() or force:
       self.queue.append('O')
       self.queue.append('I')    #Check shutter status after the open command
     else:
-      logger.error('System stopped, no dome activity until safety tags cleared.')
+      logger.error('pdome.Dome.move: no dome activity until safety tags cleared.')
 
   def close(self, force=False):
     if not self.AutoDome:
-      logger.error('pdome.DomeMove: Dome not in auto mode.')
+      logger.error('pdome.Dome.move: Dome not in auto mode.')
       return
     if safety.Active.is_set() or force:
       self.queue.append('C')

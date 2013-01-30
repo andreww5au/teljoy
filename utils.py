@@ -138,7 +138,7 @@ def jump(*args, **kws):
     else:
       logger.info("safety interlock FORCED, jumping telescope")
     print "Jumping to:", ob
-    detevent.current.Jump(ob)
+    detevent.current.Jump(ob, force=force)
     if dome.AutoDome:
       print "Moving dome."
       dome.move(az=dome.CalcAzi(ob))
@@ -205,7 +205,7 @@ def shutdown():
     return
   if not dome.AutoDome:
     print "Dome not in automatic mode - can't park dome or close shutter"
-  jump(CAP)
+  jump(CAP, force=True)
   print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
   ans = raw_input()
   if dome.AutoDome:
@@ -213,8 +213,8 @@ def shutdown():
       print "Waiting for dome to finish moving..."
       time.sleep(2)
     print "Closing dome."
-    dome.close()
-  jump(STOW)
+    dome.close(force=True)
+  jump(STOW, force=True)
   time.sleep(2)
   while motion.motors.Moving or dome.DomeInUse:
     print "Waiting for telescope to park and shutter to close."

@@ -97,8 +97,10 @@ def _safety_shutdown():
   global LastDome, LastFrozen
   if LastDome is not None or LastFrozen is not None:
     logger.error("safety_shutdown called while the system is already shut down!")
+  logger.info('Safety shutdown - freezing telescope')
   LastFrozen = motion.motors.Frozen
   freeze(force=True)
+  logger.info('Safety shutdown - closing dome shutter')
   LastDome = dome.IsShutterOpen
   dome('close', force=True)
 
@@ -112,10 +114,16 @@ def _safety_startup():
   if LastDome is None or LastFrozen is None:
     logger.error("safety_startup called while the system is not shut down!")
   if LastDome:
+    logger.info('Safety startup - re-opening dome shutter')
     dome('open', force=True)
+  else:
+    logger.info('Safety startup - dome  already closed when shut down, not re-opening')
   LastDome = None
   if not LastFrozen:
+    logger.info('Safety startup - un-freezing telescope')
     unfreeze(force=True)
+  else:
+    logger.info('Safety startup - telescope already frozen when shut down, not un-freezing')
   LastFrozen = None
 
 

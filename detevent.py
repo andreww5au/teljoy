@@ -233,7 +233,7 @@ class CurrentPosition(correct.CalcPosition):
         motion.motors.DEC.refraction = 0.0
       errors.RefError = False
 
-  def Jump(self, FObj, Rate=None):
+  def Jump(self, FObj, Rate=None, force=False):
     """Jump to new position.
 
        Inputs:
@@ -263,10 +263,12 @@ class CurrentPosition(correct.CalcPosition):
     elif (self.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
       logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (self.Alt,FObj.Alt))
       return True
-    elif not safety.Active.is_set():
+    elif (not safety.Active.is_set()) and (not force):
       logger.error('detevent.Jump: safety interlock - no jumping allowed.')
       return True
     else:
+      if force:
+        logger.info('detevent.Jump: safety interlock forced - jumping anyway')
       DelRA = FObj.RaC - self.RaC
 
       if abs(DelRA) > (3600*15*12):
@@ -284,7 +286,7 @@ class CurrentPosition(correct.CalcPosition):
           logger.error('detevent.Jump called while telescope in motion!')
           return True
 
-        jumperror = motion.motors.Jump(DelRA,DelDEC,Rate)  #Calculate the profile and start the actual slew
+        jumperror = motion.motors.Jump(DelRA,DelDEC,Rate, force=force)  #Calculate the profile and start the actual slew
         if jumperror:
           return True
         else:

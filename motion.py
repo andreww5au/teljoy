@@ -500,7 +500,7 @@ class MotorControl():
     else:
       raise AssertionError, "Setting attribute %s=%s for the first time."
 
-  def Jump(self, delRA, delDEC, Rate):
+  def Jump(self, delRA, delDEC, Rate, force=False):
     """This procedure calculates the profile parameters for a telescope jump.
     
        Inputs are delRA and delDEC, the (signed) offsets in steps, and
@@ -513,7 +513,7 @@ class MotorControl():
     if (self.Jumping or self.Paddling):
       logger.debug('motion.MotorControl.Jump called while telescope is already moving')
       return True
-    if safety.Active.is_set():
+    if safety.Active.is_set() or force:
       with self.lock():
         self.RA.StartJump(delRA, Rate)
         self.DEC.StartJump(delDEC, Rate)
