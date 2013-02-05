@@ -85,13 +85,31 @@ class TelClient(StatusObj):
     self.info = ''
 
   def update(self):
-    self.motors.__dict__.update(self.proxy.GetMotors())
-    self.current.__dict__.update(self.proxy.GetCurrent())
-    self.current.Time.__dict__.update(self.current.TimeDict)
-    self.dome.__dict__.update(self.proxy.GetDome())
-    self.prefs.__dict__.update(self.proxy.GetPrefs())
-    self.info = self.proxy.GetInfo()
+    with self.proxy:
+      self.motors.__dict__.update(self.proxy.GetMotors())
+      self.current.__dict__.update(self.proxy.GetCurrent())
+      self.current.Time.__dict__.update(self.current.TimeDict)
+      self.dome.__dict__.update(self.proxy.GetDome())
+      self.prefs.__dict__.update(self.proxy.GetPrefs())
+      self.info = self.proxy.GetInfo()
 
+  def connect(self):
+    self.connected = False
+    ok = False
+    if self.proxy is not None:
+      self.proxy._pyroRelease()
+    try:
+      self.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
+      ok = True
+    except Pyro4.errors.PyroError:
+      self.proxy = None
+      return "Can't find Teljoy service in nameserver"
+    if ok:
+      try:
+        self.update()
+        self.connected = True
+      except Pyro4.errors.PyroError:
+        return "Can't connect to Teljoy Pyro4 service - is Teljoy running?"
 
 
 def jump(*args, **kwargs):
@@ -100,7 +118,8 @@ def jump(*args, **kwargs):
     eg: jump('frog','12:34:56','-32:00:00',1998.5)
         jump(id='plref', ra='17:47:28', dec='-27:49:49', epoch=1998.5)
   """
-  status.proxy.jump(*args, **kwargs)
+  with status.proxy:
+    status.proxy.jump(*args, **kwargs)
 
 
 def offset(offra=0, offdec=0):
@@ -108,7 +127,8 @@ def offset(offra=0, offdec=0):
     Silently fails if Teljoy isn't ready to be remote-controlled.
     eg: jumpoff(2.45,-12.13)
   """
-  status.proxy.offset(offra, offdec)
+  with status.proxy:
+    status.proxy.offset(offra, offdec)
 
 jumpoff = offset
 
@@ -125,7 +145,8 @@ def dome(arg=90):
       ShutterAction = True
     elif arg.upper() in ['C','CLOSE']:
       ShutterAction = False
-  status.proxy.dome(arg)
+  with status.proxy:
+    status.proxy.dome(arg)
 
 
 def freeze(action=True):
@@ -139,18 +160,19 @@ def freeze(action=True):
             freeze(0)
   """
   global FreezeAction
-  if action:
-    status.proxy.freeze()
-    FreezeAction = True
-  else:
-    status.proxy.unfreeze()
-    FreezeAction = False
+  with status.proxy:
+    if action:
+      status.proxy.freeze()
+      FreezeAction = True
+    else:
+      status.proxy.unfreeze()
+      FreezeAction = False
 
 
 def unfreeze():
- """Unfreezes the telescope - utility function to match calls in new RPC protocol.
- """
- freeze(False)
+  """Unfreezes the telescope - utility function to match calls in new RPC protocol.
+  """
+  freeze(False)
 
 
 def _background():
@@ -171,24 +193,15 @@ def _background():
       else:
         FreezeAction = None
     else:
-      status.proxy.Ping()
+      with status.proxy:
+        status.proxy.Ping()
   except KeyboardInterrupt:
     print "a keyboard interrupt in tjclient._background()"
   except Pyro4.errors.PyroError:
-    Connect(status)
+    msg = status.connect()
+    if msg:
+      print msg
 
-
-def Connect(s):
-  s.connected = False
-  try:
-    s.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
-    s.connected = True
-  except Pyro4.errors.PyroError:
-    print "Can't connect to Teljoy server - run teljoy.py to start the server"
-  try:
-    s.update()
-  except Pyro4.errors.PyroError:
-    s.connected = False
 
 
 def Init():
@@ -197,5 +210,4 @@ def Init():
   """
   global status
   status = TelClient()
-  Connect(status)
-  return status.connected   #True if we have a valid, working proxy
+  return status.connect()   #Returns None for no errors, or an error message
