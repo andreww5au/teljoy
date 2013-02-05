@@ -76,23 +76,16 @@ def cleanup():
      Waits for any hand paddle motion or slews to finish before exiting.
   """
   logger.info("Exiting teljoy.py program - here's why: %s" % traceback.print_exc())
-  print 1
   try:
     while motion.motors.Moving or motion.motors.Paddling:
       logger.info("Waiting for slew and hand paddle motion to finish")
       time.sleep(5)
   finally:
-    print 2; time.sleep(1)
     detevent.fastloop.shutdown()
-    print 3; time.sleep(1)
     detevent.slowloop.shutdown()
-    print 4; time.sleep(1)
     motion.motors.Driver.host.shutdown()
-    print 5; time.sleep(1)
     detevent.fastthread.join()
-    print 6; time.sleep(1)
     detevent.slowthread.join()
-    print 7; time.sleep(1)
     time.sleep(1)
     logger.info("Teljoy shut down.")
 
