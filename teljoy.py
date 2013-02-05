@@ -91,7 +91,7 @@ def cleanup():
 
 
 def _safety_shutdown():
-  """Called when the safety interlock is actived. Save the dome and 'frozen' states, freeze the
+  """Called when the safety interlock is active. Save the dome and 'frozen' states, freeze the
      telescope and close the dome.
   """
   global LastDome, LastFrozen
