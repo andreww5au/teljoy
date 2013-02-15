@@ -1,5 +1,4 @@
-
-"""Constants, classes and utility functions used by most of the other 
+"""Constants, classes and utility functions used by most of the other
    modules in Teljoy. 
 """
 
@@ -11,7 +10,7 @@ import traceback
 import ConfigParser
 import logging
 
-INIF = 'teljoy.ini'   
+INIF = 'teljoy.ini'
 
 #$IFDEF NZ}
   #DOBSLAT = -43.9866666667               #Lat: -43 59.2}
@@ -60,7 +59,7 @@ DUMMYPADDLES = []
 TESTPADDLE = None
 #TESTPADDLE = 'C'
 
-FILTERS = ['Clear','Red','NCN','Blue','Visual','Infrared','Empty','Hole']
+FILTERS = ['Clear', 'Red', 'NCN', 'Blue', 'Visual', 'Infrared', 'Empty', 'Hole']
 
 CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini']    #Initialisation file path
 
@@ -112,6 +111,7 @@ class Position(object):
      attribute. Strictly speaking, 'Epoch' refers to the time an observation or measurement
      was made, and NOT the coordinate reference frame used.
   """
+
   def __init__(self, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
     """Accepts optional 'ra', 'dec' and 'objid' arguments. 'ra' and 'dec' can be sexagesimal 
        strings (in hours:minutes:seconds for RA and degrees:minutes:seconds for DEC), or
@@ -126,13 +126,13 @@ class Position(object):
     self.ObjID = objid                     #Object ID
     if type(ra) == str:
       ra = stringsex(ra)
-    if (ra is None) or (type(ra)<>int and type(ra)<>float):
+    if (ra is None) or (type(ra) != int and type(ra) != float):
       self.Ra = 0.0                        #mean RA in arcesc
     else:
       self.Ra = ra * 15.0 * 3600.0
     if type(dec) == str:
       dec = stringsex(dec)
-    if (dec is None) or (type(dec)<>int and type(dec)<>float):
+    if (dec is None) or (type(dec) != int and type(dec) != float):
       self.Dec = 0.0                       #mean DEC in arcesc
     else:
       self.Dec = dec * 3600.0
@@ -143,14 +143,14 @@ class Position(object):
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['Ra','Dec','Epoch','ObjID','DomePos']:
+    for n in ['Ra', 'Dec', 'Epoch', 'ObjID', 'DomePos']:
       d[n] = self.__dict__[n]
     return d
 
   def __repr__(self):
-    s  = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra/15.0/3600,fixed=True), sexstring(self.Dec/3600,fixed=True), self.Epoch)
+    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra/15.0/3600,fixed=True), sexstring(self.Dec/3600,fixed=True), self.Epoch)
     return s
-    
+
   def __str__(self):
     return "{%s}: Org=[%s, %s EQ %6.1f]" % (self.ObjID,
                                             sexstring(self.Ra/15.0/3600,fixed=True),
@@ -161,17 +161,18 @@ class Position(object):
 class Errors(object):
   """An instance of this class is created to store all internal software error states.
   """
+
   def __init__(self):
     self.RefError = False       #The refraction code failed (typically due to very low altitude)
     self.AltError = False       #Current altitude below defined threshold
-    self.CalError = CP.getboolean('Alarms','OrigPosWarn')      #Current position is unknown
+    self.CalError = CP.getboolean('Alarms', 'OrigPosWarn')      #Current position is unknown
     self.TimeoutError = False   #Haven't heard from Prosp for a while, not safe to continue
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['RefError','AltError','CalError','TimeoutError']:
+    for n in ['RefError', 'AltError', 'CalError', 'TimeoutError']:
       d[n] = self.__dict__[n]
     return d
 
@@ -184,7 +185,7 @@ class Errors(object):
     if self.AltError:
       errs.append('**Object too LOW**')
     if self.TimeoutError:
-      errs.append('**Interrupt lost**')
+      errs.append('**No contact with Prosp**')
     return '\n'.join(errs) + '\n'
 
   def __str__(self):
@@ -198,36 +199,36 @@ class Errors(object):
     if self.TimeoutError:
       errs.append('PROSP')
     return "Errors:[%s]" % (','.join(errs))
-  
-    
-    
+
+
 class Prefs(object):
   """An instance of this class is created to store global preferences
      (from the .ini file) and operating modes.
   """
+
   def __init__(self):
-    self.EastOfPier = CP.getboolean('Toggles','EastOfPier')
-    self.RAsid = DRASID * CP.getfloat('Rates','SidFudge')
-    self.FlexureOn = CP.getboolean('Toggles','FlexureOn')          #flexure corrections on?
-    self.HighHorizonOn = CP.getboolean('Toggles','HighHorizonOn')  #whether to use AltCutoffHi or AltCutoffLo
-    self.RefractionOn = CP.getboolean('Toggles','RefractionOn')    #refraction corr. on?
-    self.RealTimeOn = CP.getboolean('Toggles','RealTimeOn')      #real-time refraction and/or flexure corrections if on
-    self.AltWarning = CP.getint('Alarms','AltWarning')
-    self.AltCutoffFrom = CP.getint('Alarms','AltCutoffFrom')
-    self.AltCutoffHi = CP.getint('Alarms','AltCutoffHi')
-    self.AltCutoffLo = CP.getint('Alarms','AltCutoffLo')
-    self.ObsLat = CP.getfloat('Environment','ObsLat')
-    self.ObsLong = CP.getfloat('Environment','ObsLong')
-    self.SlewRate = CP.getfloat('Rates','Slew')*20
-    self.CoarseSetRate = CP.getfloat('Rates','CoarseSet')*20
-    self.FineSetRate = CP.getfloat('Rates','FineSet')*20
-    self.GuideRate = CP.getfloat('Rates','Guide')*20
-    self.Temp = CP.getfloat('Environment','Temp')
-    self.Press = CP.getfloat('Environment','Pressure')
+    self.EastOfPier = CP.getboolean('Toggles', 'EastOfPier')
+    self.RAsid = DRASID * CP.getfloat('Rates', 'SidFudge')
+    self.FlexureOn = CP.getboolean('Toggles', 'FlexureOn')          #flexure corrections on?
+    self.HighHorizonOn = CP.getboolean('Toggles', 'HighHorizonOn')  #whether to use AltCutoffHi or AltCutoffLo
+    self.RefractionOn = CP.getboolean('Toggles', 'RefractionOn')    #refraction corr. on?
+    self.RealTimeOn = CP.getboolean('Toggles', 'RealTimeOn')      #real-time refraction and/or flexure corrections if on
+    self.AltWarning = CP.getint('Alarms', 'AltWarning')
+    self.AltCutoffFrom = CP.getint('Alarms', 'AltCutoffFrom')
+    self.AltCutoffHi = CP.getint('Alarms', 'AltCutoffHi')
+    self.AltCutoffLo = CP.getint('Alarms', 'AltCutoffLo')
+    self.ObsLat = CP.getfloat('Environment', 'ObsLat')
+    self.ObsLong = CP.getfloat('Environment', 'ObsLong')
+    self.SlewRate = CP.getfloat('Rates', 'Slew') * 20
+    self.CoarseSetRate = CP.getfloat('Rates', 'CoarseSet') * 20
+    self.FineSetRate = CP.getfloat('Rates', 'FineSet') * 20
+    self.GuideRate = CP.getfloat('Rates', 'Guide') * 20
+    self.Temp = CP.getfloat('Environment', 'Temp')
+    self.Press = CP.getfloat('Environment', 'Pressure')
     self.NonSidOn = False
-    self.WaitBeforePosUpdate = CP.getfloat('Dome','WaitTime')
-    self.MinWaitBetweenDomeMoves = CP.getfloat('Dome','MinBetween')
-    self.LogDirName = CP.get('Paths','LogDirName')
+    self.WaitBeforePosUpdate = CP.getfloat('Dome', 'WaitTime')
+    self.MinWaitBetweenDomeMoves = CP.getfloat('Dome', 'MinBetween')
+    self.LogDirName = CP.get('Paths', 'LogDirName')
     self.CapHourAngle = CP.getfloat('Presets', 'CapHourAngle')
     self.CapDec = CP.getfloat('Presets', 'CapDec')
     self.StowHourAngle = CP.getfloat('Presets', 'StowHourAngle')
@@ -240,7 +241,7 @@ class Prefs(object):
     self.SkyFlatDec = CP.getfloat('Presets', 'SkyFlatDec')
 
 
-def sexstring(value=0,sp=':',fixed=False):
+def sexstring(value=0, sp=':', fixed=False):
   """Convert the floating point 'value' into a sexagecimal string.
      The character in 'sp' is used as a spacer between components. Useful for
      within functions, not on its own.
@@ -257,12 +258,12 @@ def sexstring(value=0,sp=':',fixed=False):
   else:
     outs = ''
   D = int(aval)
-  M = int((aval-float(D))*60)
-  S = float(int((aval-float(D)-float(M)/60)*36000))/10
+  M = int((aval - float(D)) * 60)
+  S = float(int((aval - float(D) - float(M) / 60) * 36000)) / 10
   if fixed:
-    outs += '%02i%s%02i%s%02i' % (D,sp,M,sp,S)
+    outs += '%02i%s%02i%s%02i' % (D, sp, M, sp, S)
   else:
-    outs += '%02i%s%02i%s%4.1f' % (D,sp,M,sp,S)
+    outs += '%02i%s%02i%s%4.1f' % (D, sp, M, sp, S)
   if error:
     return ''
   else:
@@ -281,11 +282,11 @@ def stringsex(value="", compressed=False):
     value = value.strip()
     if not compressed:
       components = value.split(':')
-      if len(components) <> 3:
+      if len(components) != 3:
         components = value.split(' ')
-      if len(components) <> 3:
+      if len(components) != 3:
         return None
-      h,m,s = [c.strip() for c in components]
+      h, m, s = [c.strip() for c in components]
       sign = 1
       if h[0] == "-":
         sign = -1
@@ -325,6 +326,7 @@ class SafetyInterlock(object):
      There is a single threading.Event() attribute called 'Active', which is 'set' when the
      system is running/started, and clear when the system is stopped.
   """
+
   def __init__(self):
     self._lock = threading.RLock()
     self.Active = threading.Event()
@@ -354,7 +356,8 @@ class SafetyInterlock(object):
             now = time.time()
             error = traceback.format_exc()
             self.Errors[name][now] = error
-            logger.error("Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
+            logger.error(
+              "Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
     return tag
 
   def remove_tag(self, tag=None):
@@ -421,7 +424,7 @@ def UpdateConfig():
   lCPfile = lCP.read(CPPATH)
   if not lCPfile:
     logger.error("None of the specified configuration files found by globals.py: %s" % (CPPATH,))
-  return lCP,lCPfile
+  return lCP, lCPfile
 
 
 ConfigDefaults = {'OrigPosWarn':'True', 'FlexureOn':'True', 'HighHorizonOn':'False', 'RefractionOn':'True',
@@ -430,11 +433,10 @@ ConfigDefaults = {'OrigPosWarn':'True', 'FlexureOn':'True', 'HighHorizonOn':'Fal
                   'SidFudge':'-15.04106868', 'EastOfPier':'False', 'Slew':`DFSLEWRATE/20`,
                   'CoarseSet':`DFCOARSESETRATE/20`, 'FineSet':`DFFINESETRATE/20`, 'GUIDE':`DFGUIDERATE/20`,
                   'Temp':`DFTEMP`,'Press':`DFPRESS`}
-                  
+
 ConfigDefaults.update( {'WaitTime':'0.5', 'MinBetween':'5', 'LogDirName':'/tmp'} )
 
-
-CP,CPfile = UpdateConfig()
+CP, CPfile = UpdateConfig()
 
 errors = Errors()
 prefs = Prefs()

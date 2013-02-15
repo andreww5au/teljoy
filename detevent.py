@@ -420,7 +420,7 @@ def CheckDirtyPos():
   if motion.motors.PosDirty and (DirtyTime==0):
     DirtyTime = time.time()                 #just finished move}
 
-  if ( (DirtyTime<>0) and
+  if ( (DirtyTime != 0) and
        (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and
        not motion.motors.Moving and
        not errors.CalError):
@@ -445,7 +445,7 @@ def CheckDirtyDome():
        (not motion.motors.Moving) and
        pdome.dome.AutoDome and
        (not motion.motors.PosDirty) and
-       not errors.CalError ):
+       not errors.CalError):
     pdome.dome.move(pdome.dome.CalcAzi(current))
 
 
