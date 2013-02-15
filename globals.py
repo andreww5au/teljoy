@@ -165,7 +165,9 @@ class Errors(object):
   def __init__(self):
     self.RefError = False       #The refraction code failed (typically due to very low altitude)
     self.AltError = False       #Current altitude below defined threshold
+    self.AltErrorTag = None     #Save the 'AltErr' safety interlock tag, if there is one
     self.CalError = CP.getboolean('Alarms', 'OrigPosWarn')      #Current position is unknown
+    self.CalErrorTag = None     #Save the 'CalErr' safety interlock tag, if there is one
     self.TimeoutError = False   #Haven't heard from Prosp for a while, not safe to continue
 
   def __getstate__(self):

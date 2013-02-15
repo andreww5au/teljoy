@@ -642,6 +642,32 @@ def CheckTimeout():
     errors.TimeoutError = False
 
 
+def CheckErrors():
+  """This function checks the current state of errors.AltError and errors.CalError.
+
+     When the error state changes from 'False' to 'True', register and save a safety interlock
+     for that error, to freeze the telescope and close the dome.
+
+     When the error state changes from 'True' to False', remove the safety interlock for
+     that error (which will cause the telescope to unfreeze and the dome to open, provided
+     there are no other active safety interlocks registered).
+  """
+  if errors.AltError:
+    if (errors.AltErrorTag is None):
+      errors.AltErrorTag = safety.add_tag("AltError - current position is below a safe altitude\nClosing Shutter, Freezing Telescope.")
+  elif errors.AltErrorTag is not None:
+    logger.info("Current position now above safe altitude, removing safety interlock tag.")
+    safety.remove_tag(errors.AltErrorTag)
+
+  if errors.CalError:
+    if (errors.CalErrorTag is None):
+      errors.CalErrorTag = safety.add_tag(
+        "CalError - current telescope position unknown, do a 'reset()' position.\nClosing Shutter, Freezing Telescope.")
+  elif errors.CalErrorTag is not None:
+    logger.info("Current position now calibrated, removing safety interlock tag.")
+    safety.remove_tag(errors.CalErrorTag)
+
+
 def Init():
   global db, fastloop, slowloop, fastthread, slowthread, paddles, current, LastObj
   logger.debug('Detevent unit init started')
@@ -668,6 +694,7 @@ def Init():
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
   slowloop.register('Weather', weather._background)
   slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
+  slowloop.register("CheckErrors", CheckErrors)
 
   logger.debug('Detevent unit init finished')
   fastthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')
