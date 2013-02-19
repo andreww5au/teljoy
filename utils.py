@@ -67,7 +67,7 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
   for n in ['epoch','Epoch','EPOCH','ep','Ep','equinox','Equinox','eq','Eq']:
     if n in kws.keys():
       epoch = kws[n]
-  for n in ['objid','Objid','ObjId','ObjID','objId','objID','id','Id','ID']:
+  for n in ['objid','Objid','ObjId','ObjID','objId','objID','id','Id','ID','name','Name']:
     if n in kws.keys():
       objid = kws[n]
   for n in ['domepos','Domepos','DomePos','domePos','DOMEPOS']:
