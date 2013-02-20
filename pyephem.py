@@ -84,7 +84,7 @@ class EphemPos(correct.CalcPosition):
     self.RaC = self.body.ra*180*3600/ephem.pi       #radians to arcsec
     self.DecC = self.body.dec*180*3600/ephem.pi     #radians to arcsec
     self.Alt = self.body.alt*180/ephem.pi           #radians to degrees
-    self.Azi = self.body.azi*180/ephem.pi           #radians to degrees
+    self.Azi = self.body.az*180/ephem.pi           #radians to degrees
     self.updatePM()
     self.posviolate = False               #False if RaC/DecC matches Ra/Dec/Epoch, True if moved since value calculated
 
