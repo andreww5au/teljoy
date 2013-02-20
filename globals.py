@@ -243,12 +243,20 @@ class Prefs(object):
     self.SkyFlatDec = CP.getfloat('Presets', 'SkyFlatDec')
 
 
-def sexstring(value=0, sp=':', fixed=False):
+def sexstring(value=0, sp=':', fixed=False, dp=None):
   """Convert the floating point 'value' into a sexagecimal string.
      The character in 'sp' is used as a spacer between components. Useful for
      within functions, not on its own.
      eg: sexstring(status.TJ.ObjRA,' ')
   """
+  if fixed:
+    dp = 0
+  if dp is None:
+    dp = 1
+  else:
+    if dp is None:
+      dp = 1
+    dp = int(dp)
   try:
     aval = abs(value)
     error = 0
@@ -262,10 +270,20 @@ def sexstring(value=0, sp=':', fixed=False):
   D = int(aval)
   M = int((aval - float(D)) * 60)
   S = float(int((aval - float(D) - float(M) / 60) * 36000)) / 10
-  if fixed:
-    outs += '%02i%s%02i%s%02i' % (D, sp, M, sp, S)
-  else:
-    outs += '%02i%s%02i%s%4.1f' % (D, sp, M, sp, S)
+  Si = int(S)
+  Sf = round(S-Si,dp)
+  if Sf == 1.0:
+    Si += 1
+    if Si == 60:
+      Si = 0
+      M += 1
+      if M == 60:
+        M = 0
+        D += 1
+    Sf = 0.0
+  outs += '%02i%s%02i%s%02i' % (D, sp, M, sp, Si)
+  if dp > 0:
+    outs += '.%i' % int(Sf*(10**dp))
   if error:
     return ''
   else:

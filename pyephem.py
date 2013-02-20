@@ -13,8 +13,12 @@ def herenow():
   c = ephem.Observer()
   c.lat = prefs.ObsLat*ephem.pi/180
   c.long = -prefs.ObsLong*ephem.pi/180
-  c.pressure = 1013.0
-  c.temp = 20.0
+  if prefs.RefractionOn:
+    c.pressure = prefs.Press
+    c.temp = prefs.Temp
+  else:
+    c.pressure = 0.0    #Set pressure to zero to disable PyEphem refraction
+    c.temp = 20.0
   c.epoch = ephem.J2000
   return c
 
@@ -85,6 +89,10 @@ class EphemPos(correct.CalcPosition):
     self.DecC = self.body.dec*180*3600/ephem.pi     #radians to arcsec
     self.Alt = self.body.alt*180/ephem.pi           #radians to degrees
     self.Azi = self.body.az*180/ephem.pi           #radians to degrees
+    if prefs.FlexureOn:
+      dRA,dDEC = self.Flex()
+      self.RaC += dRA
+      self.DecC += dDEC
     self.updatePM()
     self.posviolate = False               #False if RaC/DecC matches Ra/Dec/Epoch, True if moved since value calculated
 
