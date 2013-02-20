@@ -12,7 +12,7 @@ import ephem
 def herenow():
   c = ephem.Observer()
   c.lat = prefs.ObsLat*ephem.pi/180
-  c.long = prefs.ObsLong*ephem.pi/180
+  c.long = -prefs.ObsLong*ephem.pi/180
   c.pressure = 1013.0
   c.temp = 20.0
   c.epoch = ephem.J2000
@@ -38,7 +38,7 @@ class EphemTime(correct.TimeRec):
 
 class EphemPos(correct.CalcPosition):
   def __init__(self, obj=None, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
-    globals.Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
+    Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     self.Time = EphemTime()
     self.observer = self.Time.observer
     if isinstance(obj,ephem.Body):
