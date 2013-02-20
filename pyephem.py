@@ -60,8 +60,8 @@ class EphemPos(correct.CalcPosition):
        Use copies of body and observer objects, to avoid corrupting real ones. Will still work
        if self.observ
     """
-    b = copy(self.body)
-    o = copy(self.observer)
+    b = copy.copy(self.body)
+    o = copy.copy(self.observer)
     o.pressure = 0.0     #Don't include refraction in proper motion, we account for that elsewhere
     o.date -= 1.0/48   #Half an hour before the current date/time
     b.compute(o)
