@@ -141,9 +141,9 @@ class CalcPosition(Position):        #Position class defined in globals.py
     if self.posviolate:
       s  = "<Position %s: Org=(INVALID , INVALID , INVALID),\n" % self.ObjID
     else:
-      s  = "<Position %s: Org=(%s, %s, %6.1f),\n" % (self.ObjID, sexstring(self.Ra/15.0/3600,fixed=True), sexstring(self.Dec/3600,fixed=True), self.Epoch)
-    s += "            App=(%s, %s),\n"  % (sexstring(self.RaA/15.0/3600,fixed=True), sexstring(self.DecA/3600,fixed=True) )
-    s += "            Cor=(%s, %s),\n" % (sexstring(self.RaC/15.0/3600,fixed=True), sexstring(self.DecC/3600,fixed=True) )
+      s  = "<Position %s: Org=(%s, %s, %6.1f),\n" % (self.ObjID, sexstring(self.Ra/15.0/3600,dp=3), sexstring(self.Dec/3600,dp=2), self.Epoch)
+    s += "            App=(%s, %s),\n"  % (sexstring(self.RaA/15.0/3600,dp=3), sexstring(self.DecA/3600,dp=2) )
+    s += "            Cor=(%s, %s),\n" % (sexstring(self.RaC/15.0/3600,dp=3), sexstring(self.DecC/3600,dp=2) )
     s += "            HA=%5.2f, Alt=%5.2f, Azi=%5.2f\n" % (self.RaC/54000-self.Time.LST, self.Alt, self.Azi)
     s += "      Time: %s >" % self.Time
     return s
@@ -151,14 +151,14 @@ class CalcPosition(Position):        #Position class defined in globals.py
   def __str__(self):
     if self.posviolate:
       return "{%s}: Time=%s, Pos=[INVALID,INVALID -> (%s,%s)]" % (self.ObjID,str(self.Time),
-                                                                  sexstring(self.RaC/15.0/3600,fixed=True),
-                                                                  sexstring(self.DecC/3600,fixed=True))
+                                                                  sexstring(self.RaC/15.0/3600,dp=1),
+                                                                  sexstring(self.DecC/3600,dp=0))
     else:
       return "{%s}: Time=%s, Pos=[%s,%s -> (%s,%s)]" % (self.ObjID,str(self.Time),
-                                                  sexstring(self.Ra/15.0/3600,fixed=True),
-                                                  sexstring(self.Dec/3600,fixed=True),
-                                                  sexstring(self.RaC/15.0/3600,fixed=True),
-                                                  sexstring(self.DecC/3600,fixed=True) )
+                                                  sexstring(self.Ra/15.0/3600,dp=1),
+                                                  sexstring(self.Dec/3600,dp=0),
+                                                  sexstring(self.RaC/15.0/3600,dp=1),
+                                                  sexstring(self.DecC/3600,dp=0) )
 
   def AltAziConv(self):     #Originally in CORRECT.PAS
     """Calculate Altitude and Azimuth from .RaA, .DecA, and .Time.LST

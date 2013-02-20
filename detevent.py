@@ -119,18 +119,18 @@ class CurrentPosition(correct.CalcPosition):
   """
   def __repr__(self):
     if self.posviolate:
-      l1 = "Top RA:  %s      LST: %s         ObjID:   --" % (sexstring(self.RaC/15.0/3600,fixed=True), sexstring(self.Time.LST, fixed=True))
-      l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,fixed=True), self.Time.UT.time().isoformat()[:-4])
-      l3 = "Alt:     %s      HA:  %s        ObjRA:   --" %  (sexstring(self.Alt, fixed=True), sexstring(self.RaC/15/3600-self.Time.LST, fixed=True))
+      l1 = "Top RA:  %s      LST: %s         ObjID:   --" % (sexstring(self.RaC/15.0/3600,dp=1), sexstring(self.Time.LST, dp=0))
+      l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,dp=0), self.Time.UT.time().isoformat()[:-4])
+      l3 = "Alt:     %s      HA:  %s        ObjRA:   --" %  (sexstring(self.Alt, dp=0), sexstring(self.RaC/15/3600-self.Time.LST, dp=0))
       l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  --" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn])
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch: --" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen])
     else:
-      l1 = "Top RA:  %s      LST: %s         ObjID:   %s" % (sexstring(self.RaC/15.0/3600,fixed=True), sexstring(self.Time.LST, fixed=True), self.ObjID)
-      l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,fixed=True), self.Time.UT.time().isoformat()[:-4])
-      l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, fixed=True), sexstring(self.RaC/15/3600-self.Time.LST, fixed=True),
-                                                            sexstring(self.Ra/15/3600, fixed=True))
+      l1 = "Top RA:  %s      LST: %s         ObjID:   %s" % (sexstring(self.RaC/15.0/3600,dp=1), sexstring(self.Time.LST, dp=0), self.ObjID)
+      l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,dp=0), self.Time.UT.time().isoformat()[:-4])
+      l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, dp=0), sexstring(self.RaC/15/3600-self.Time.LST, dp=0),
+                                                            sexstring(self.Ra/15/3600, dp=1))
       l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  %s" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn],
-                                                                       sexstring(self.Dec/3600, fixed=True))
+                                                                       sexstring(self.Dec/3600, dp=0))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
     l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse],
