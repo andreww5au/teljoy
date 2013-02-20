@@ -47,9 +47,9 @@ class EphemPos(correct.CalcPosition):
         self.ObjID = self.body.name
     else:
       self.body = ephem.FixedBody()
-      self.body.a_ra = self.Ra*ephem.pi/(180*3600)
-      self.body.a_dec = self.Dec*ephem.pi/(180*3600)
-      self.body.a_epoch = (self.Epoch-2000.0)*365.246 + ephem.J2000
+      self.body._ra = self.Ra*ephem.pi/(180*3600)
+      self.body._dec = self.Dec*ephem.pi/(180*3600)
+      self.body._epoch = (self.Epoch-2000.0)*365.246 + ephem.J2000
     self.body.compute(self.observer)
     self.update()
 
