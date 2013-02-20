@@ -11,8 +11,8 @@ import ephem
 
 def herenow():
   c = ephem.Observer()
-  c.lat = prefs.ObsLat
-  c.long = prefs.ObsLong
+  c.lat = prefs.ObsLat*ephem.pi/180
+  c.long = prefs.ObsLong*ephem.pi/180
   c.pressure = 1013.0
   c.temp = 20.0
   c.epoch = ephem.J2000
