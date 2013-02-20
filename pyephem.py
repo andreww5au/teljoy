@@ -2,6 +2,8 @@
 
 """
 
+import copy
+
 from globals import *
 import correct
 import ephem
@@ -36,25 +38,53 @@ class EphemTime(correct.TimeRec):
 
 class EphemPos(correct.CalcPosition):
   def __init__(self, obj=None, ra=None, dec=None, epoch=2000.0, domepos=None, objid=''):
+    globals.Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
+    self.Time = EphemTime()
+    self.observer = self.Time.observer
     if isinstance(obj,ephem.Body):
       self.body = obj
       if self.body.name:
-        objid = self.body.name
-    #TODO - all the rest of the setup
-    self.Time = EphemTime()
-    self.observer = self.Time.observer
+        self.ObjID = self.body.name
+    else:
+      self.body = ephem.FixedBody()
+      self.body.a_ra = self.Ra*ephem.pi/(180*3600)
+      self.body.a_dec = self.Dec*ephem.pi/(180*3600)
+      self.body.a_epoch = (self.Epoch-2000.0)*365.246 + ephem.J2000
+    self.body.compute(self.observer)
+    self.update()
+
+  def updatePM(self):
+    """Sets TraRA and TraDEC: Non-sidereal track rates for moving objects, in arcsec/second
+       (which is identical to steps/50ms)
+
+       Use copies of body and observer objects, to avoid corrupting real ones. Will still work
+       if self.observ
+    """
+    b = copy(self.body)
+    o = copy(self.observer)
+    o.pressure = 0.0     #Don't include refraction in proper motion, we account for that elsewhere
+    o.date -= 1.0/48   #Half an hour before the current date/time
+    b.compute(o)
+    ra1,dec1 = b.ra,b.dec
+    o.date += 1.0/24    #Half an hour _after_ the current date/time
+    b.compute(o)
+    ra2,dec2 = b.ra,b.dec
+    self.TraRA = (ra2-ra1)*3600*180*3600/ephem.pi     #_radians_ per _hour_ to _arcsec_ per _second_ = *3600*180*3600
+    self.TraDEC = (dec2-dec1)*3600*180*3600/ephem.pi
+    return self.TraRA, self.TraDEC
 
   def update(self, now=True):
     self.Time.update(now=now)
     self.body.compute(self.observer)
-    self.Ra = self.body.a_ra*180/(15*ephem.pi)       #radians to hours
-    self.Dec = self.body.a_dec*180/ephem.pi          #radians to degrees
+    self.Ra = self.body.a_ra*180*3600/ephem.pi      #radians to arcsec
+    self.Dec = self.body.a_dec*180*3600/ephem.pi    #radians to arcsec
     self.Epoch = 2000.0 + (self.body.a_epoch-ephem.J2000)/365.246
-    self.RaA = self.body.g_ra*180/(15*ephem.pi)       #radians to hours
-    self.DecA = self.body.g_dec*180/ephem.pi          #radians to degrees
-    self.RaC = self.body.ra*180/(15*ephem.pi)       #radians to hours
-    self.DecC = self.body.dec*180/ephem.pi          #radians to degrees
-    self.Alt = float(self.body.alt)
-    self.Azi = float(self.body.azi)
-    self.TraRA,self.TraDEC = (0.0,0.0)         #Non-sidereal track rate for moving objects, in arcsec/second (which is identical to steps/50ms)
+    self.RaA = self.body.g_ra*180*3600/ephem.pi     #radians to arcsec
+    self.DecA = self.body.g_dec*180*3600/ephem.pi   #radians to arcsec
+    self.RaC = self.body.ra*180*3600/ephem.pi       #radians to arcsec
+    self.DecC = self.body.dec*180*3600/ephem.pi     #radians to arcsec
+    self.Alt = self.body.alt*180/ephem.pi           #radians to degrees
+    self.Azi = self.body.azi*180/ephem.pi           #radians to degrees
+    self.updatePM()
     self.posviolate = False               #False if RaC/DecC matches Ra/Dec/Epoch, True if moved since value calculated
+
