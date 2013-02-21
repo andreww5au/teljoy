@@ -140,11 +140,11 @@ def jump(*args, **kws):
       return
     else:
       logger.info("safety interlock FORCED, jumping telescope")
-    print "Jumping to:", ob
-    detevent.current.Jump(ob, force=force)
-    if dome.AutoDome:
-      print "Moving dome."
-      dome.move(az=dome.CalcAzi(ob))
+  print "Jumping to:", ob
+  detevent.current.Jump(ob, force=force)
+  if dome.AutoDome:
+    print "Moving dome."
+    dome.move(az=dome.CalcAzi(ob))
 
 Jump = jump
 
