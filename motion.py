@@ -496,7 +496,7 @@ class MotorControl(object):
       logger.debug('motion.MotorControl.Jump called while telescope is already moving')
       return True
     if safety.Active.is_set() or force:
-      with self.lock():
+      with self.lock:
         self.RA.StartJump(delRA, Rate)
         self.DEC.StartJump(delDEC, Rate)
         return False
