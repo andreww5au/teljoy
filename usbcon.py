@@ -298,6 +298,7 @@ class Driver(controller.Driver):
 
        This function doesn't exit.
     """
+    logger.info('usbcon.Driver.run reached.')
     controller.run(driver=self)
 
 
