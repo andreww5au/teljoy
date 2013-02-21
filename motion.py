@@ -22,7 +22,7 @@ def KickStart():
   """Start the motion control thread to keep the motor queue full.
   """
   global intthread
-
+  print "Kickstarting motion control thread"
   #Start the queue handler thread to keep the queue full
   intthread = threading.Thread(target=motors.Driver.run, name='USB-controller-thread')
   intthread.daemon = True
