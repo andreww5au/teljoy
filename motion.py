@@ -411,9 +411,8 @@ class Axis(object):
         if not Frozen:
           send += self.refraction         #Add in refraction correction velocity
           self.reflog += self.refraction     #Log refraction correction motion
-          if prefs.NonSidOn:
-            send += self.track            #Add in non-sidereal motion for moving targets
-            self.padlog += self.track     #Log non-sidereal motion as paddle movement
+          send += self.track            #Add in non-sidereal motion for moving targets
+          self.padlog += self.track     #Log non-sidereal motion as paddle movement
 
       #TODO - handle autoguider log here, using counter data?
 

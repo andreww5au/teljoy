@@ -61,7 +61,6 @@ class Info(object):
     self.posviolate = False
     self.moving = False
     self.EastOfPier = False
-    self.NonSidOn = False
     self.DomeInUse = False
     self.ShutterInUse = False
     self.ShutterOpen = False
@@ -507,7 +506,7 @@ def ReadSQLCurrent(Here, db=None):
   try:
     curs.execute('select name,ObjRA,ObjDec,ObjEpoch,RawRA,RawDec,'+
                  'RawHourAngle,Alt,Azi,LST,UTDec,posviolate,moving,'+
-                 'EastOfPier,NonSidOn,DomeInUse,ShutterInUse,'+
+                 'EastOfPier,DomeInUse,ShutterInUse,'+
                  'ShutterOpen,DomeTracking,Frozen,'+
                  'RA_GuideAcc,DEC_GuideAcc,LastError,'+
                  'unix_timestamp(now())-unix_timestamp(LastMod) '+
@@ -551,16 +550,15 @@ def ReadSQLCurrent(Here, db=None):
   CurrentInfo.posviolate = bool(process('posviolate',row[11]))
   CurrentInfo.moving = bool(process('moving',row[12]))
   CurrentInfo.EastOfPier = bool(process('EastOfPier',row[13]))
-  CurrentInfo.NonSidOn = bool(process('NonSidOn',row[14]))
-  CurrentInfo.DomeInUse = bool(process('DomeInUse',row[15]))
-  CurrentInfo.ShutterInUse = bool(process('ShutterInUse',row[16]))
-  CurrentInfo.ShutterOpen = bool(process('ShutterOpen',row[17]))
-  CurrentInfo.DomeTracking = bool(process('DomeTracking',row[18]))
-  CurrentInfo.Frozen = bool(process('Frozen',row[19]))
-  CurrentInfo.RA_GuideAcc = process('RA_GuideAcc',row[20])
-  CurrentInfo.DEC_GuideAcc = process('DEC_GuideAcc',row[21])
-  CurrentInfo.LastError = row[22]
-  LastMod = process('LastMod',row[23])
+  CurrentInfo.DomeInUse = bool(process('DomeInUse',row[14]))
+  CurrentInfo.ShutterInUse = bool(process('ShutterInUse',row[15]))
+  CurrentInfo.ShutterOpen = bool(process('ShutterOpen',row[16]))
+  CurrentInfo.DomeTracking = bool(process('DomeTracking',row[17]))
+  CurrentInfo.Frozen = bool(process('Frozen',row[18]))
+  CurrentInfo.RA_GuideAcc = process('RA_GuideAcc',row[19])
+  CurrentInfo.DEC_GuideAcc = process('DEC_GuideAcc',row[20])
+  CurrentInfo.LastError = row[21]
+  LastMod = process('LastMod',row[22])
   return CurrentInfo, HA, LastMod
 
 
@@ -604,13 +602,12 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
              tmpd,
              Here.Alt,
              Here.Azi)
-  qstr2 += "LST='%g', UTDec='%g', posviolate='%d', moving='%d', EastOfPier='%d', NonSidOn='%d', " % (
+  qstr2 += "LST='%g', UTDec='%g', posviolate='%d', moving='%d', EastOfPier='%d', " % (
              Here.Time.LST,
              Here.Time.UT.hour + Here.Time.UT.minute/60.0 + Here.Time.UT.second/3600.0 + Here.Time.UT.microsecond/3.6e9,
              int(CurrentInfo.posviolate),
              int(CurrentInfo.moving),
-             int(CurrentInfo.EastOfPier),
-             int(CurrentInfo.NonSidOn) )
+             int(CurrentInfo.EastOfPier) )
   qstr3 = "DomeInUse='%d', ShutterInUse='%d', ShutterOpen='%d', DomeTracking='%d', Frozen='%d', " % (
              int(CurrentInfo.DomeInUse),
              int(CurrentInfo.ShutterInUse),

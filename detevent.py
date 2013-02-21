@@ -122,14 +122,14 @@ class CurrentPosition(correct.CalcPosition):
       l1 = "Top RA:  %s    LST: %s         ObjID:   --" % (sexstring(self.RaC/15.0/3600,dp=1), sexstring(self.Time.LST, dp=0))
       l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,dp=0), self.Time.UT.time().isoformat()[:-4])
       l3 = "Alt:     %s      HA:  %s        ObjRA:   --" %  (sexstring(self.Alt, dp=0), sexstring(self.RaC/15/3600-self.Time.LST, dp=0))
-      l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  --" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn])
+      l4 = "Airmass: %6.4f                              ObjDec:  --" % (1/math.cos((90-self.Alt)/180*math.pi) )
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch: --" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen])
     else:
       l1 = "Top RA:  %s    LST: %s         ObjID:   %s" % (sexstring(self.RaC/15.0/3600,dp=1), sexstring(self.Time.LST, dp=0), self.ObjID)
       l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,dp=0), self.Time.UT.time().isoformat()[:-4])
       l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, dp=0), sexstring(self.RaC/15/3600-self.Time.LST, dp=0),
                                                             sexstring(self.Ra/15/3600, dp=1))
-      l4 = "Airmass: %6.4f        NonSidereal: %s      ObjDec:  %s" % (1/math.cos((90-self.Alt)/180*math.pi), {False:"OFF", True:" ON"}[prefs.NonSidOn],
+      l4 = "Airmass: %6.4f                              ObjDec:  %s" % (1/math.cos((90-self.Alt)/180*math.pi),
                                                                        sexstring(self.Dec/3600, dp=0))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
@@ -330,7 +330,7 @@ class CurrentPosition(correct.CalcPosition):
           with motion.motors.RA.lock:
             motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
           with motion.motors.DEC.lock:
-            motion.motors.DEC.track = self.TraDEC            #   Non-sidereal tracking will only happen if prefs.NonSidOn is True
+            motion.motors.DEC.track = self.TraDEC
           self.posviolate = False    #signal a valid original RA and Dec
 
   def IniPos(self):

@@ -227,7 +227,6 @@ class Prefs(object):
     self.GuideRate = CP.getfloat('Rates', 'Guide') * 20
     self.Temp = CP.getfloat('Environment', 'Temp')
     self.Press = CP.getfloat('Environment', 'Pressure')
-    self.NonSidOn = False
     self.WaitBeforePosUpdate = CP.getfloat('Dome', 'WaitTime')
     self.MinWaitBetweenDomeMoves = CP.getfloat('Dome', 'MinBetween')
     self.LogDirName = CP.get('Paths', 'LogDirName')

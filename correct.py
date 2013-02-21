@@ -427,6 +427,7 @@ class HADecPosition(CalcPosition):
     if ra > 24.0:
       ra -= 24.0
     CalcPosition.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
+    self.TraRA = -prefs.RAsid    #fixed objects have a 'track rate' that counteracts sidereal motion
     self.update()
 
   def update(self, now=True):
