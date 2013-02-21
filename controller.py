@@ -635,7 +635,7 @@ class Controller(object):
 
       else:
         self.stop()
-
+        print "Runtime error in controller._complete_interrupt_read"
         self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
           "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
     finally:
@@ -736,6 +736,7 @@ class Controller(object):
     return configuration
 
   def _handle_initialise_error(self, failure):
+    print "controller.Controller._handle_initialise_error"
     self.stop()
 
     self._driver.initialisation_error(failure)
@@ -873,6 +874,7 @@ class Controller(object):
 
   def stop(self):
     """Called in event handlers or timers to stop the event loop."""
+    print "controller.Controller.stop called"
     self._running = False
 
   def set_outputs(self, outputs):
@@ -897,7 +899,7 @@ class Controller(object):
 
   def _handle_error(self, failure):
     failure.printTraceback()
-
+    print "Handling error in controller.Controller._handle_error"
     return failure
 
   def enqueue_frame(self, a_steps, b_steps):
