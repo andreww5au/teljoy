@@ -35,6 +35,7 @@ from pdome import dome
 from utils import *
 import tjserver
 import weather
+import pyephem
 
 SIGNAL_HANDLERS = {}
 CLEANUP_FUNCTION = None

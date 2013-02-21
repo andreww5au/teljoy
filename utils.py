@@ -8,6 +8,7 @@ import correct
 import detevent
 import motion
 import sqlint
+import pyephem
 
 STOW = correct.HADecPosition(ha=prefs.StowHourAngle,
                              dec=prefs.StowDec,
@@ -45,6 +46,8 @@ def Lookup(objid=''):
     obj = sqlint.GetRC3(gid=objid)
   if obj is None:
     obj = sqlint.GetRC3(gid=objid.upper())
+  if obj is None:
+    obj = pyephem.getObject(name=objid)
   return obj
 
 

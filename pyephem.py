@@ -62,7 +62,9 @@ class EphemPos(correct.CalcPosition):
        (which is identical to steps/50ms)
 
        Use copies of body and observer objects, to avoid corrupting real ones. Will still work
-       if self.observ
+       if self.observer has a time in the past or future.
+
+       If TraRA or TraDEC is less than 0.0001 arcsec/sec, return exactly zero instead
     """
     b = copy.copy(self.body)
     o = copy.copy(self.observer)
@@ -73,8 +75,12 @@ class EphemPos(correct.CalcPosition):
     o.date += 1.0/24    #Half an hour _after_ the current date/time
     b.compute(o)
     ra2,dec2 = b.ra,b.dec
-    self.TraRA = (ra2-ra1)*3600*180*3600/ephem.pi     #_radians_ per _hour_ to _arcsec_ per _second_ = *3600*180*3600
-    self.TraDEC = (dec2-dec1)*3600*180*3600/ephem.pi
+    self.TraRA = (ra2-ra1)*180/ephem.pi     #_radians_ to degrees, then degrees per _hour_ to _arcsec_ per _second_ (*3600/3600)
+    if self.TraRA < 1e-4:
+      self.TraRA = 0.0
+    self.TraDEC = (dec2-dec1)*180/ephem.pi
+    if self.TraDEC < 1e-4:
+      self.TraDEC = 0.0
     return self.TraRA, self.TraDEC
 
   def update(self, now=True):
@@ -95,4 +101,26 @@ class EphemPos(correct.CalcPosition):
       self.DecC += dDEC
     self.updatePM()
     self.posviolate = False               #False if RaC/DecC matches Ra/Dec/Epoch, True if moved since value calculated
+
+
+def isdark():
+  h = herenow()
+  sun = ephem.Sun()
+  sun.compute(h)
+  if (float(sun.alt) * 180 / pi) > -12:
+    return False
+  else:
+    return True
+
+
+def getObject(name):
+  """If name is in the set of predefined objects in PyEphem, return an EphemPos object for that name,
+     otherwise return nothing.
+  """
+  byname = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
+            'ariel', 'callisto', 'deimos', 'dione', 'enceladus', 'europa', 'ganymede','hyperion', 'iapetus',
+            'io', 'mimas', 'miranda', 'oberon', 'phobos', 'rhea', 'tethys', 'titan', 'titania', 'umbriel']
+  if name.strip().lower() in byname:
+    obj = ephem.__dict__[name.title()]()
+    return EphemPos(obj)
 
