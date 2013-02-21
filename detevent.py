@@ -465,7 +465,6 @@ def CheckDBUpdate():
     foo.posviolate = current.posviolate
     foo.moving = motion.motors.Moving
     foo.EastOfPier = prefs.EastOfPier
-    foo.NonSidOn = prefs.NonSidOn
     foo.DomeInUse = pdome.dome.DomeInUse
     foo.ShutterInUse = pdome.dome.DomeInUse
     foo.ShutterOpen = pdome.dome.IsShutterOpen
