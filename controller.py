@@ -598,7 +598,8 @@ class Controller(object):
 
   def _complete_interrupt_read(self, transfer):
     try:
-      if transfer.getStatus() == libusb1.LIBUSB_TRANSFER_COMPLETED:
+      result = transfer.getStatus()
+      if result == libusb1.LIBUSB_TRANSFER_COMPLETED:
         buffer = transfer.getBuffer()
 
         changed, state, flags, exception, inputs, \
@@ -635,7 +636,7 @@ class Controller(object):
 
       else:
         self.stop()
-        print "Runtime error in controller._complete_interrupt_read"
+        print "Runtime error in controller._complete_interrupt_read: %s" % result
         self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
           "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
     finally:
