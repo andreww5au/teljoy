@@ -174,7 +174,7 @@ class Dome(object):
           self.DomeInUse = False
       else:
         self.DomeInUse = True       #There is a new command, but it hasn't been sent yet.
-        if self._waitprompt:
+        if self._waitprompt():
           if self.Command == 'O':
             self.ShutterOpen = True
             self.CommandSent = True
@@ -193,6 +193,7 @@ class Dome(object):
               if (az < 0) or (az > 360):
                 logger.error('Invalid command in dome command queue: %s' % self.Command)
               self.ser.write(self.Command + chr(13))
+              self.CommandSent = True
             except ValueError:
               logger.error('Invalid command in dome command queue: %s' % self.Command)
     else:
