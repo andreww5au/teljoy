@@ -34,7 +34,7 @@ DFGUIDERATE = 100                       #Default guide rate 5arcsec/sec
 DFTEMP = 0                              #default (high altitude) air temp in deg C, for refraction calculation
 DFPRESS = 1015.92                       #default atm. press. in mb, for refraction calculation
 
-DEBUG = True    #If true, print extra debugging info - eg motion control activity
+DEBUG = False    #If true, print extra debugging info - eg motion control activity
 
 #DTABLE = 'ncurrent'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
 DTABLE = 'current'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
