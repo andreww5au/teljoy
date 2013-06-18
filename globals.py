@@ -268,7 +268,7 @@ def sexstring(value=0, sp=':', fixed=False, dp=None):
     outs = ''
   D = int(aval)
   M = int((aval - float(D)) * 60)
-  S = float(int((aval - float(D) - float(M) / 60) * 36000)) / 10
+  S = (aval - float(D) - float(M)/60) * 3600
   Si = int(S)
   Sf = round(S-Si,dp)
   if Sf == 1.0:
@@ -282,7 +282,8 @@ def sexstring(value=0, sp=':', fixed=False, dp=None):
     Sf = 0.0
   outs += '%02i%s%02i%s%02i' % (D, sp, M, sp, Si)
   if dp > 0:
-    outs += '.%i' % int(Sf*(10**dp))
+    fstr = ".%%0%id" % dp
+    outs += fstr % int(Sf*(10**dp))
   if error:
     return ''
   else:
