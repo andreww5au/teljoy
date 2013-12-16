@@ -5,12 +5,18 @@
 import controller
 from globals import *
 
+
 def binstring(v):
   """Convert a longint into a human readable binary string.
   """
   bs = bin(v)[2:].rjust(64,'0')
   return "%s %s %s %s | %s %s %s %s" % ( bs[0:8], bs[8:16], bs[16:24], bs[24:32],
                                          bs[32:40], bs[40:48], bs[48:56], bs[56:64])
+
+
+class DriverException(Exception):
+  pass
+
 
 class Driver(controller.Driver):
   """To use the controller, a driver class with callbacks must be
@@ -25,7 +31,7 @@ class Driver(controller.Driver):
   def get_expected_controller_version(self):
     """This code needs controller version 0.5
     """
-    return (0, 5)
+    return (0, 6)
 
   def initialise(self, state_details):
     """Initialise the controller, reset the queue so it starts
@@ -41,16 +47,44 @@ class Driver(controller.Driver):
     logger.info("* Initial Run State:")
     logger.info(`state_details`)
 
-    # First, reset the queue. If the controller was previously running this
-    # will set the expected frame number back to zero:
-    d = self.host.reset_queue()
+    if state_details.state == controller.TC_STATE_EXCEPTION:
+      d = self.host.get_exception()
+      d.addCallback(self._initialisation_get_exception_details_completed)
+      return d
 
-    d.addCallback(self._initialise_queue_reset)
-    d.addErrback(self._initialise_error_occurred)
+    return self._initialise_configure(None)
 
+  def _initialisation_exception_wait_completed(self):
+    # Now that the exception state has been reached, get the details:
+    d = self._initialisation_get_next_exception_to_clear()
     return d
 
-  def _initialise_queue_reset(self, _):
+  def _initialisation_get_next_exception_to_clear(self, _ = None):
+    # Now that the exception state has been reached, get the details:
+    d = self.host.get_exception()
+    d.addCallback(self._initialisation_get_exception_details_completed)
+    return d
+
+  def _initialisation_get_exception_details_completed(self, details):
+    if details is not None:
+      if details.exception in controller.clearable_exceptions:
+        logger.info("* Clearing Exception:")
+        logger.info(`details`)
+
+        # Exceptions should never be cleared without user interaction; in this
+        # example, however, they are cleared on initialisation:
+        d = self.host.clear_exception(details.exception)
+
+        d.addCallback(self._initialisation_get_next_exception_to_clear)
+
+        return d
+      else:
+        raise DriverException( \
+          "The exception %s is a serious unexpected error and can not be cleared." % details)
+    else:
+      self._initialise_configure(None)
+
+  def _initialise_configure(self, _):
     """Set all the configuration data for the controller (pin
        assignments, etc).
     """
@@ -260,7 +294,7 @@ class Driver(controller.Driver):
       va,vb = self._getframe()
       #And add those values to the hardware queue.
       self.frame_number = self.host.enqueue_frame(va, vb)
-  
+
       # Every "frame" of step data has a unique number, starting with
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
@@ -275,11 +309,13 @@ class Driver(controller.Driver):
     logger.info("* Run State Change:")
     logger.info(`details`)
 
-    if details.state == controller.TC_STATE_EXCEPTION:
-      d = self.host.get_axis_exception_details()
-      d.addCallback(self._get_axis_exception_details_completed)
+    if details.state == controller.TC_STATE_STOPPING:
+      logger.critical('Hardware shutdown in progress, telescope decelerating.')
+    elif details.state == controller.TC_STATE_EXCEPTION:
+      d = self.host.get_exception()
+      d.addCallback(self._get_exception_completed)
 
-  def _get_axis_exception_details_completed(self, details):
+  def _get_exception_completed(self, details):
     """Called when we have any exception details after a state change.
     """
     logger.error("Exception Details: %s" % details)

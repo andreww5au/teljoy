@@ -1,7 +1,7 @@
 #! /usr/local/bin/python2.7
 # coding=latin1
 
-# Copyright © Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
+# Copyright Â© Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
 # This file is internal, confidential source code and is protected by
 # trade secret and copyright laws.
 
@@ -11,7 +11,7 @@ import usb1, libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 5)
+module_version = (0, 6)
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
@@ -38,16 +38,18 @@ TC_ISSUE_STATE_COMMAND = 0x00
 TC_GET_VERSION = 0x01
 TC_MC_CONFIGURE = 0x02
 TC_GPIO_CONFIGURE = 0x03
-TC_WRITE_OUTPUTS = 0x04
-TC_ENQUEUE = 0x05
-TC_GET_COUNTERS = 0x06
-TC_GET_DEBUG_REGISTERS = 0x07
-TC_SET_GUIDER_VALUES = 0x08
-TC_GET_GUIDER_RESULT = 0x09
-TC_GET_EXCEPTION_DETAILS_LENGTH = 0x0a
-TC_GET_EXCEPTION_DETAILS = 0x0b
+TC_SAFETY_CONFIGURE = 0x04
+TC_WRITE_OUTPUTS = 0x05
+TC_ENQUEUE = 0x06
+TC_GET_COUNTERS = 0x07
+TC_GET_DEBUG_REGISTERS = 0x08
+TC_SET_GUIDER_VALUES = 0x09
+TC_GET_GUIDER_RESULT = 0x0a
+TC_GET_EXCEPTION_DETAILS_LENGTH = 0x0b
+TC_GET_EXCEPTION_DETAILS = 0x0c
+TC_GET_EXCEPTION = 0x0d
+TC_CLEAR_EXCEPTION = 0x0e
 
-TC_STATE_COMMAND_RESET_QUEUE = 0x00
 TC_STATE_COMMAND_SHUTDOWN = 0x01
 TC_STATE_COMMAND_RESET_IO = 0x02
 TC_STATE_COMMAND_ENABLE_GUIDER = 0x03
@@ -56,7 +58,8 @@ TC_STATE_COMMAND_FORCE_INTERRUPT = 0x05
 
 TC_STATE_IDLE = 0x00
 TC_STATE_RUNNING = 0x01
-TC_STATE_EXCEPTION = 0x02
+TC_STATE_STOPPING = 0x02
+TC_STATE_EXCEPTION = 0x03
 
 TC_EXCEPTION_NONE = 0x00000000
 TC_EXCEPTION_QUEUE_UNDERFLOW = 0x00000001
@@ -76,6 +79,23 @@ TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED = 0x0000000e
 TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP = 0x0000000f
 TC_EXCEPTION_IO_SUPPLY_ERROR = 0x00000010
 TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW = 0x00000011
+TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED = 0x00000012
+TC_EXCEPTION_UNEXPECTED_FPGA_RESET = 0x00000013
+TC_EXCEPTION_FPGA_READBACK_ERROR = 0x00000014
+TC_EXCEPTION_UNEXPECTED_STEPPER_STOP = 0x00000015
+TC_EXCEPTION_CLEARING_EXCEPTION_FAILED = 0x00000016
+
+clearable_exceptions = [ \
+  TC_EXCEPTION_QUEUE_UNDERFLOW,
+  TC_EXCEPTION_SHUTDOWN_REQUESTED,
+  TC_EXCEPTION_MCA_POSITIVE_LIMITED,
+  TC_EXCEPTION_MCA_NEGATIVE_LIMITED,
+  TC_EXCEPTION_MCB_POSITIVE_LIMITED,
+  TC_EXCEPTION_MCB_NEGATIVE_LIMITED,
+  TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED]
+
+TC_DETAIL_KIND_AXIS_TRACE = 0x00000001
+TC_DETAIL_KIND_FPGA_ERRORS = 0x00000002
 
 PIN_GPIO_0 = 0
 PIN_GPIO_1 = 1
@@ -205,6 +225,9 @@ fpga_error_bit_descriptions = [ \
   "ERROR_BIT_MCA_NEGATIVE_LIMITED", \
   "ERROR_BIT_MCB_POSITIVE_LIMITED", \
   "ERROR_BIT_MCB_NEGATIVE_LIMITED", \
+  "ERROR_BIT_ISOLATOR_ERROR", \
+  "ERROR_BIT_CONFIGURATION_LOCK_ERROR", \
+  "ERROR_BIT_SHUTDOWN_INPUT_TRIGGERED", \
   "ERROR_BIT_LAST"]
 
 exception_descriptions = [ \
@@ -225,7 +248,9 @@ exception_descriptions = [ \
   "TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED", \
   "TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP", \
   "TC_EXCEPTION_IO_SUPPLY_ERROR", \
-  "TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW"]
+  "TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW", \
+  "TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED", \
+  "TC_EXCEPTION_UNEXPECTED_FPGA_RESET"]
 
 CONTROLLER_PIN_INPUT = 0
 CONTROLLER_PIN_OUTPUT = 1
@@ -268,8 +293,8 @@ class ControllerConfiguration(object):
 
     self.mc_prefill_frames = 8
     self.mc_pin_flags = 0
-    self.mc_a_shutdown_acceleration = 1
-    self.mc_b_shutdown_acceleration = 1
+    self.mc_a_shutdown_acceleration = 0
+    self.mc_b_shutdown_acceleration = 0
     self.mc_a_acceleration_limit = 500
     self.mc_b_acceleration_limit = 500
     self.mc_a_velocity_limit = 7600
@@ -293,6 +318,11 @@ class ControllerConfiguration(object):
     self.mc_guider_b_numerator = 1
     self.mc_guider_b_denominator = 10
     self.mc_guider_b_limit = 20
+
+    self.shutdown_0_input = None
+    self.shutdown_1_input = None
+    self.shutdown_2_input = None
+    self.shutdown_3_input = None
 
     self.pins = []
 
@@ -365,6 +395,15 @@ class ControllerConfiguration(object):
       invert_input, \
       report_input)
 
+  def encode_safety(self):
+    self._validate()
+
+    return struct.pack("<BBBB", \
+      self._encode_input(self.shutdown_0_input),
+      self._encode_input(self.shutdown_1_input),
+      self._encode_input(self.shutdown_2_input),
+      self._encode_input(self.shutdown_3_input))
+
   def _encode_input(self, value):
     if value is None:
       return TC_MC_UNUSED_INPUT
@@ -405,8 +444,13 @@ class ControllerConfiguration(object):
       self.mc_guider_b_limit)
 
 class UsbTransferError(object):
-  def __init__(self, status):
+  def __init__(self, command, status):
+    self.command = command
     self.status = status
+
+  def __repr__(self):
+    return "<UsbTransferError %s (%s), command %s>" % \
+      (libusb1.libusb_transfer_status(self.status), self.status, self.command)
 
 class EnqueueDetails(object):
   def __init__(self, controller):
@@ -417,6 +461,19 @@ class EnqueueDetails(object):
     self.frames_in_queue = \
       (self.last_transmitted_frame - self.last_dequeued_frame) % 0x100000000L
     self.frames_queue_capacity = controller.mc_frames_capacity
+
+class ExceptionDetails(object):
+  def __init__(self, exception, properties):
+    self.exception = exception
+    self.properties = properties
+
+  def __repr__(self):
+    if 0 <= self.exception <= len(exception_descriptions):
+      description = exception_descriptions[self.exception]
+    else:
+      description = "(Unknown Exception Code)"
+
+    return "<ExceptionDetails %s %s>" % (description, self.properties)
 
 class StateDetails(object):
   def __init__(self, controller, state, exception):
@@ -436,6 +493,8 @@ class StateDetails(object):
       return "TC_STATE_IDLE"
     elif self.state == TC_STATE_RUNNING:
       return "TC_STATE_RUNNING"
+    elif self.state == TC_STATE_STOPPING:
+      return "TC_STATE_STOPPING"
     elif self.state == TC_STATE_EXCEPTION:
       return "TC_STATE_EXCEPTION"
     else:
@@ -540,13 +599,13 @@ class Controller(object):
       libusb1.LIBUSB_TYPE_VENDOR | \
       libusb1.LIBUSB_ENDPOINT_OUT | \
       libusb1.LIBUSB_RECIPIENT_DEVICE, \
-      command, 0, 0, data, self._complete_control_write, d)
+      command, 0, 0, data, self._complete_control_write, (d, command))
     transfer.submit()
 
     return d
 
   def _complete_control_write(self, transfer):
-    deferred = transfer.getUserData()
+    deferred, command = transfer.getUserData()
 
     status = transfer.getStatus()
 
@@ -559,7 +618,7 @@ class Controller(object):
     else:
       transfer.close()
 
-      deferred.errback(UsbTransferError(status))
+      deferred.errback(UsbTransferError(command, status))
 
   def _control_read(self, command, data_length = 0):
     d = defer.Deferred()
@@ -569,13 +628,13 @@ class Controller(object):
       libusb1.LIBUSB_TYPE_VENDOR | \
       libusb1.LIBUSB_ENDPOINT_IN | \
       libusb1.LIBUSB_RECIPIENT_DEVICE, \
-      command, 0, 0, data_length, self._complete_control_read, d)
+      command, 0, 0, data_length, self._complete_control_read, (d, command))
     transfer.submit()
 
     return d
 
   def _complete_control_read(self, transfer):
-    deferred = transfer.getUserData()
+    deferred, command = transfer.getUserData()
 
     status = transfer.getStatus()
 
@@ -588,7 +647,7 @@ class Controller(object):
     else:
       transfer.close()
 
-      deferred.errback(UsbTransferError(status))
+      deferred.errback(UsbTransferError(command, status))
 
   def _initiate_interrupt_read(self):
     transfer = self._device_handle.getTransfer()
@@ -598,8 +657,7 @@ class Controller(object):
 
   def _complete_interrupt_read(self, transfer):
     try:
-      result = transfer.getStatus()
-      if result == libusb1.LIBUSB_TRANSFER_COMPLETED:
+      if transfer.getStatus() == libusb1.LIBUSB_TRANSFER_COMPLETED:
         buffer = transfer.getBuffer()
 
         changed, state, flags, exception, inputs, \
@@ -636,34 +694,11 @@ class Controller(object):
 
       else:
         self.stop()
-        print "Runtime error in controller._complete_interrupt_read: %s" % result
+
         self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
           "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
     finally:
       transfer.close()
-
-  def reset_queue(self):
-    """Resets the queue while leaving the controller configured.
-
-    Resetting the queue:
-
-    - Returns the controller to idle,
-    - Resets the frame numbering so that the next expected frame number is zero.
-    - Clears the step counters.
-
-    The configuration and output states are unchanged.
-
-    Resetting the queue while the motor control outputs are active will fail.
-
-    The returned deferred completes when the controller has been successfully
-    reset.
-    """
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_RESET_QUEUE))
-
-    d.addCallback(self._state_command_completed)
-
-    return d
 
   def shutdown(self):
     """Raises a controller exception that causes the controller to start a ramped shutdown.
@@ -682,6 +717,26 @@ class Controller(object):
     d.addCallback(self._state_command_completed)
 
     return d
+
+  def clear_exception(self, exception):
+    """Clears the specified controller exception. The exception must be the current reported exception.
+
+    Once the command returns the next exception should be available through the (synchronous) get
+    exception control request.
+
+    The returned deferred completes when the command has been issued; a state change exception to
+    idle may be delivered before or after the deferred callbacks are run.
+    """
+
+    d = self._control_write(TC_CLEAR_EXCEPTION, \
+      struct.pack("<L", exception))
+
+    d.addCallback(self._state_command_completed)
+
+    return d
+
+  def _clear_exception_completed(self, bytes_written):
+    return None
 
   def enable_guider(self):
     """Starts adding guider steps to the motor control frames.
@@ -729,15 +784,22 @@ class Controller(object):
     d = self._control_write(TC_GPIO_CONFIGURE, \
       configuration.encode_gpio())
 
-    d.addCallback(self._configure_both_completed, configuration)
+    d.addCallback(self._configure_gpio_completed, configuration)
 
     return d
 
-  def _configure_both_completed(self, bytes_written, configuration):
+  def _configure_gpio_completed(self, bytes_written, configuration):
+    d = self._control_write(TC_SAFETY_CONFIGURE, \
+      configuration.encode_safety())
+
+    d.addCallback(self._configure_safety_completed, configuration)
+
+    return d
+
+  def _configure_safety_completed(self, bytes_written, configuration):
     return configuration
 
   def _handle_initialise_error(self, failure):
-    print "controller.Controller._handle_initialise_error"
     self.stop()
 
     self._driver.initialisation_error(failure)
@@ -792,6 +854,24 @@ class Controller(object):
       self._last_state_callback = self._initialise_start_driver_initialise
 
   def _initialise_start_driver_initialise(self):
+    if self._last_state == TC_STATE_RUNNING:
+      d = self.shutdown()
+
+      d.addCallback(self._initialise_wait_for_stop)
+      d.addErrback(self._handle_initialise_error)
+    elif self._last_state_details.state == TC_STATE_STOPPING:
+      self._initialise_wait_for_stop()
+    else:
+      self._initialise_call_driver_initialise()
+
+  def _initialise_wait_for_stop(self, _ = None):
+    # Wait for the state to change to an exception:
+    if self._last_state != TC_STATE_EXCEPTION:
+      self._last_state_callback = self._initialise_wait_for_stop
+    else:
+      self._initialise_call_driver_initialise()
+
+  def _initialise_call_driver_initialise(self):
     d = self._driver.initialise(self._last_state_details)
 
     if not isinstance(d, defer.Deferred):
@@ -842,16 +922,12 @@ class Controller(object):
     Driver event handlers and timers are handled by the event loop. Optionally, a
     user supplied poller can be passed in. The poller must implement the interface
     described in the python-libusb1 library."""
-    print "controller.Controller.run 1 reached"
     poller = usb1.USBPoller(self._context, system_poller)
 
-    print "controller.Controller.run 2 reached"
     self._initiate_interrupt_read()
 
-    print "controller.Controller.run 3 reached"
     self._initialise_internals()
 
-    print "controller.Controller.run 4 reached"
     self._running = True
 
     while self._running:
@@ -870,12 +946,10 @@ class Controller(object):
         # No timers, just wait for file events:
         poller.poll()
 
-    print "controller.Controller.run exiting"
     self._close()
 
   def stop(self):
     """Called in event handlers or timers to stop the event loop."""
-    print "controller.Controller.stop called"
     self._running = False
 
   def set_outputs(self, outputs):
@@ -898,9 +972,17 @@ class Controller(object):
 
     d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
 
+  def force_outputs(self, outputs):
+    """Sets all GPIO bits to the specified value on the controller card.
+
+    The outputs should be specified as a 64 bit long bitmask."""
+    self._last_outputs = outputs
+
+    d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
+
   def _handle_error(self, failure):
     failure.printTraceback()
-    print "Handling error in controller.Controller._handle_error"
+
     return failure
 
   def enqueue_frame(self, a_steps, b_steps):
@@ -1012,7 +1094,7 @@ class Controller(object):
 
     return result
 
-  def get_exception_details(self):
+  def get_raw_exception_details(self):
     d = self._control_read(TC_GET_EXCEPTION_DETAILS_LENGTH, 4)
     d.addCallback(self._handle_get_exception_details_got_length)
     d.addErrback(self._handle_error)
@@ -1030,31 +1112,69 @@ class Controller(object):
     else:
       return None
 
-  def get_axis_exception_details(self):
-    d = self.get_exception_details()
-    d.addCallback(self._handle_get_axis_exception_details_completed)
+  def get_exception(self):
+    d = self._control_read(TC_GET_EXCEPTION, 4)
+
+    d.addCallback(self._handle_get_exception_completed)
     d.addErrback(self._handle_error)
 
     return d
 
-  def _handle_get_axis_exception_details_completed(self, buffer):
-    if buffer is None:
-      return {}
+  def _handle_get_exception_completed(self, buffer):
+    (exception,) = struct.unpack("<L", buffer)
 
-    axis_index, steps, guider_steps, previous_remainder_steps, current_remainder_steps, \
-      previous_negative_direction, current_negative_direction, \
-      reserved_a, reserved_b = struct.unpack("<LiiiiBBBB", buffer)
+    if exception == TC_EXCEPTION_NONE:
+      return None
+    else:
+      d = self.get_raw_exception_details()
+      d.addCallback(self._handle_get_exception_details_completed, exception)
+      d.addErrback(self._handle_error)
 
-    details = {}
-    details["axis_index"] = axis_index
-    details["steps"] = steps
-    details["guider_steps"] = guider_steps
-    details["previous_remainder_steps"] = previous_remainder_steps
-    details["current_remainder_steps"] = current_remainder_steps
-    details["previous_negative_direction"] = previous_negative_direction
-    details["current_negative_direction"] = current_negative_direction
+      return d
 
-    return details
+  def _handle_get_exception_details_completed(self, details_buffer, exception):
+    properties = {}
+
+    if details_buffer is not None:
+      detail_kind = struct.unpack("<L", details_buffer[:4])[0]
+
+      properties = {}
+
+      properties["kind"] = detail_kind
+
+      if detail_kind == TC_DETAIL_KIND_AXIS_TRACE:
+        properties["kind_description"] = "TC_DETAIL_KIND_AXIS_TRACE"
+
+        detail_kind, axis_index, steps, guider_steps, \
+          previous_remainder_steps, current_remainder_steps, \
+          previous_negative_direction, current_negative_direction, \
+          reserved_a, reserved_b = struct.unpack("<LLiiiiBBBB", details_buffer)
+
+        properties["axis_index"] = axis_index
+        properties["steps"] = steps
+        properties["guider_steps"] = guider_steps
+        properties["previous_remainder_steps"] = previous_remainder_steps
+        properties["current_remainder_steps"] = current_remainder_steps
+        properties["previous_negative_direction"] = previous_negative_direction
+        properties["current_negative_direction"] = current_negative_direction
+      elif detail_kind == TC_DETAIL_KIND_FPGA_ERRORS:
+        properties["kind_description"] = "TC_DETAIL_KIND_FPGA_ERRORS"
+
+        detail_kind, fpga_error_bits = struct.unpack("<LL", details_buffer)
+
+        properties["fpga_error_bits"] = fpga_error_bits
+
+        descriptions = []
+
+        for i in range(len(fpga_error_bit_descriptions)):
+          if fpga_error_bits & (1 << i):
+            descriptions.append(fpga_error_bit_descriptions[i])
+
+        properties["fpga_error_bit_descriptions"] = descriptions
+      else:
+        properties["kind_description"] = "TC_DETAIL_KIND_UNKNOWN"
+
+    return ExceptionDetails(exception, properties)
 
 class Driver(object):
   def internal_attach_host(self, host):
@@ -1066,6 +1186,9 @@ class Driver(object):
     During initialisation, the driver can check the current state of the controller,
     read counters from previous runs, and reset the queue or hardware. A deferred must be
     returned. When the deferred completes, state and input events start being forwarded.
+
+    The host ensures the controller will either be in TC_STATE_IDLE or TC_STATE_EXCEPTION
+    on initialisation.
     """
     pass
 
@@ -1120,6 +1243,7 @@ class Driver(object):
 
     - controller.TC_STATE_IDLE
     - controller.TC_STATE_RUNNING
+    - controller.TC_STATE_STOPPING
     - controller.TC_STATE_EXCEPTION
 
     And the exception field, which is one of the following values:
@@ -1137,6 +1261,12 @@ class Driver(object):
     - controller.TC_EXCEPTION_MCA_NEGATIVE_LIMITED
     - controller.TC_EXCEPTION_MCB_POSITIVE_LIMITED
     - controller.TC_EXCEPTION_MCB_NEGATIVE_LIMITED
+    - controller.TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED
+    - controller.TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP
+    - controller.TC_EXCEPTION_IO_SUPPLY_ERROR
+    - controller.TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW
+    - controller.TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED
+    - controller.TC_EXCEPTION_UNEXPECTED_FPGA_RESET
 
     For printing state details, use the state_description and exception_description properties.
     """
@@ -1150,16 +1280,12 @@ class Driver(object):
     pass
 
 def run(driver, system_poller = None):
-  print 'controller.run 1 reached.'
   instance = Controller(driver)
 
-  print 'controller.run 2 reached.'
   driver.internal_attach_host(instance)
 
-  print 'controller.run 3 reached.'
   if system_poller is None:
     system_poller = _patched_Poller(select.poll())
 
-  print 'controller.run 4 reached.'
   instance.run(system_poller)
 

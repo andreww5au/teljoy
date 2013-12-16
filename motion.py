@@ -414,9 +414,9 @@ class Axis(object):
           send += self.track            #Add in non-sidereal motion for moving targets
           self.padlog += self.track     #Log non-sidereal motion as paddle movement
 
-      #TODO - handle autoguider log here, using counter data?
+      # TODO - handle autoguider log here, using counter data?
 
-      send = send / DIVIDER     #TODO - remove this hack for use on the actual telescope, only needed for test motors.
+      send = send / DIVIDER     # TODO - remove this hack for use on the actual telescope, only needed for test motors.
 
       #Add any 'held' values for this axis, containing small offsets that can bypass the ramp calculations
       if self.hold <> 0:
