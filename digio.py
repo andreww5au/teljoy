@@ -45,19 +45,19 @@ FGuideMsk = 0x10                        #This bit is set if the fine paddle is s
 
 
 #Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
-#IFDEF NZ
-#LeftMsk =  1   #Masks for left and right dome output bits
-#RightMsk = 2
-#CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
-#CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
+LeftMsk =  1   #Masks for left and right dome output bits
+RightMsk = 2
+CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
+CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
 #
-# #Bit masks for limit switches on the New Zealand telescope. No limit switches
+#Bit masks for limit switches on the New Zealand telescope. No limit switches
 #currently readable for Perth telescope.
-#POWERMSK = 0x01
-#HORIZMSK = 0x02
-#MESHMSK  = 0x04
-#EASTMSK  = 0x08
-#WESTMSK  = 0x10
+# TODO - current values relate only to the output from the ReadLimit() function below.
+POWERMSK = 0x01
+HORIZMSK = 0x02
+MESHMSK  = 0x04
+EASTMSK  = 0x08
+WESTMSK  = 0x10
 
 
 #$IFDEF NZ}

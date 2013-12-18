@@ -328,6 +328,16 @@ class Driver(controller.Driver):
       logger.info("* %s" % binstring(inputs))
     self.inputs = inputs
 
+  def set_outputs(self, bitfield):
+    """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
+    """
+    self.host.set_outputs(bitfield)
+
+  def clear_outputs(self, bitfield):
+    """Given a 64-bit number, turn OFF the output bit corresponding to every bit equal to '1' in 'bitfield'.
+    """
+    self.host.clear_outputs(bitfield)
+
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
        also be replaced with any object implementing the methods required by libusb1:
