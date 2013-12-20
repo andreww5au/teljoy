@@ -145,6 +145,9 @@ class Weather(object):
   def update(self, u_curs=None):
     """Connect to the database to update fields
     """
+    if db is None:
+      return
+
     self.weathererror = ""
 
     if not u_curs:
@@ -184,7 +187,10 @@ class Weather(object):
 def _background():
   """Function to be run in the background, updates the status object.
   """
-  b_curs=b_db.cursor()
+  if b_db is None:
+    return
+
+  b_curs = b_db.cursor()
   try:
     status.update(b_curs)
   except:
@@ -195,8 +201,13 @@ def Init():
   """Set up the database connection to access the weather data.
   """
   global db, b_db, status
-  db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
-  b_db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
+  db = None
+  b_db = None
+  try:
+    db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
+    b_db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
+  except:
+    print "DANGER - no weather sensor available, disabling weather monitoring"
   status = Weather()
   status.update()
 
