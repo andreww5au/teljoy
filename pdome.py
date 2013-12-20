@@ -76,7 +76,7 @@ class Dome(object):
   def __repr__(self):
     return str(self.__getstate__())
 
-  def __call__(self, arg):
+  def __call__(self, arg, **kwargs):
     """This method is run when an instance of this class is treated like a function, and called.
        Defining it allows the global 'dome' variable containing the current dome state to be
        treated like a function, so dome(123) would move the dome to Azi=123 degrees, and
@@ -86,12 +86,12 @@ class Dome(object):
        also simply call dome.move(123), dome.open() or dome.close().
     """
     if type(arg)==int or type(arg)==float:
-      self.move(arg)
+      self.move(arg, **kwargs)
     elif type(arg)==str:
       if arg.upper() in ['O','OPEN']:
-        self.open()
+        self.open(**kwargs)
       elif arg.upper() in ['C','CLOSE']:
-        self.close()
+        self.close(**kwargs)
       else:
         print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
     else:
