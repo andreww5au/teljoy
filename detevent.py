@@ -661,6 +661,7 @@ def CheckErrors():
   elif errors.AltErrorTag is not None:
     logger.info("Current position now above safe altitude, removing safety interlock tag.")
     safety.remove_tag(errors.AltErrorTag)
+    errors.AltErrorTag = None
 
   if errors.CalError:
     if (errors.CalErrorTag is None):
@@ -669,6 +670,7 @@ def CheckErrors():
   elif errors.CalErrorTag is not None:
     logger.info("Current position now calibrated, removing safety interlock tag.")
     safety.remove_tag(errors.CalErrorTag)
+    errors.CalErrorTag = None
 
 
 def Init():
