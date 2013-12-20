@@ -460,7 +460,7 @@ def CheckDBUpdate():
      This function is called at regular intervals by the DetermineEvent loop.
   """
   global db, DBLastTime
-  if (time.time()-DBLastTime) > 1.0:
+  if sqlint.SQLActive and ( (time.time()-DBLastTime) > 1.0):
     foo = sqlint.Info() 
     foo.posviolate = current.posviolate
     foo.moving = motion.motors.Moving
@@ -484,6 +484,8 @@ def DoTJbox():
      This function is called by CheckTJBox.
   """
   global db, ProspLastTime, TJboxAction
+  if not sqlint.SQLActive:
+    return
   BObj, other = sqlint.ReadTJbox(db=db)
   if BObj is None or other is None:
     return
@@ -602,6 +604,8 @@ def CheckTJbox():
      This function is called at regular intervals by the DetermineEvent loop.
   """
   global db, TJboxAction
+  if not sqlint.SQLActive:
+    return
   if TJboxAction == 'none':
     if sqlint.ExistsTJbox(db=db):
       DoTJbox()
