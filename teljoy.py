@@ -152,6 +152,8 @@ def i():
   print usbcon.binstring(d.inputs)
 
 if __name__ == '__main__':
+  LastDome = None    # State of the dome.IsShutterOpen boolean, saved during safety shutdowns
+  LastFrozen = None  # State of the motion.motors.Frozen boolean, saved during safety shutdowns
   weather.Init()    #Initialise weather package, including SQL connection
   motion.KickStart()
   detevent.Init()

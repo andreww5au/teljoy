@@ -16,6 +16,8 @@ import utils
 #hmac = "ShiverMeTimbers"
 #Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
+PYROPORT = 9696
+
 class Telescope(object):
   """Class representing RPC access to the internals of an active telescope control object.
   """
@@ -29,11 +31,11 @@ class Telescope(object):
       try:
         ns = Pyro4.locateNS()
       except:
-        logger.error("Can't locate Pyro nameserver - waiting 10 sec to retry")
-        time.sleep(10)
-        break
+        logger.info("Can't locate Pyro nameserver - continuing on port %d" % PYROPORT)
+        ns = None
 
       try:
+        assert ns is not None      # Skip this bit if there's no nameserver found
         existing = ns.lookup("Teljoy")
         logger.info("Teljoy still exists in Pyro nameserver with id: %s" % existing.object)
         logger.info("Previous Pyro daemon socket port: %d" % existing.port)
@@ -41,14 +43,15 @@ class Telescope(object):
         pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=existing.port)
         # register the object in the daemon with the old objectId
         pyro_daemon.register(self, objectId=existing.object)
-      except (Pyro4.errors.PyroError, socket.error):
+      except (AssertionError, Pyro4.errors.PyroError, socket.error):
         try:
           # just start a new daemon on a random port
-          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'))
+          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=PYROPORT)
           # register the object in the daemon and let it get a new objectId
           # also need to register in name server because it's not there yet.
           uri =  pyro_daemon.register(self)
-          ns.register("Teljoy", uri)
+          if ns is not None:
+            ns.register("Teljoy", uri)
         except:
           logger.error("Exception in Teljoy Pyro4 startup. Retrying in 10 sec: %s" % (traceback.format_exc(),))
           time.sleep(10)
