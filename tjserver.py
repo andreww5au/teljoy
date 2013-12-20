@@ -39,14 +39,20 @@ class Telescope(object):
         existing = ns.lookup("Teljoy")
         logger.info("Teljoy still exists in Pyro nameserver with id: %s" % existing.object)
         logger.info("Previous Pyro daemon socket port: %d" % existing.port)
-        # start the daemon on the previous port
-        pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=existing.port)
+        # start the daemon on the previous port, and try to detect the IP address of an external interface.
+        try:
+          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('google.com.au'), port=existing.port)
+        except:   # Fails if the above DNS name isn't found, eg no internet connection
+          pyro_daemon = Pyro4.Daemon(port=existing.port)   # Bind to the loopback address if we can't find an external interface
         # register the object in the daemon with the old objectId
         pyro_daemon.register(self, objectId=existing.object)
       except (AssertionError, Pyro4.errors.PyroError, socket.error):
         try:
-          # just start a new daemon on a random port
-          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('chef'), port=PYROPORT)
+          # just start a new daemon on a random port, and try to detect the IP address of an external interface.
+          try:
+            pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('google.com.au'), port=PYROPORT)
+          except:     # Fails if the above DNS name isn't found, eg no internet connection
+            pyro_daemon = Pyro4.Daemon(port=PYROPORT)     # Bind to the loopback address if we can't find an external interface
           # register the object in the daemon and let it get a new objectId
           # also need to register in name server because it's not there yet.
           uri =  pyro_daemon.register(self)
