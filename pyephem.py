@@ -11,8 +11,8 @@ import ephem
 
 def herenow():
   c = ephem.Observer()
-  c.lat = prefs.ObsLat*ephem.pi/180
-  c.long = -prefs.ObsLong*ephem.pi/180
+  c.lat = prefs.ObsLat * ephem.pi / 180
+  c.long = -prefs.ObsLong * ephem.pi / 180
   if prefs.RefractionOn:
     c.pressure = prefs.Press
     c.temp = prefs.Temp
@@ -45,21 +45,21 @@ class EphemPos(correct.CalcPosition):
     Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     self.Time = EphemTime()
     self.observer = self.Time.observer
-    if ( isinstance(obj,ephem.Body) or
-         isinstance(obj,ephem.Planet) or
-         isinstance(obj,ephem.PlanetMoon) or
-         isinstance(obj,ephem.EllipticalBody) or
-         isinstance(obj,ephem.ParabolicBody) or
-         isinstance(obj,ephem.HyperbolicBody) or
-         isinstance(obj,ephem.EarthSatellite) ):
+    if ( isinstance(obj, ephem.Body) or
+           isinstance(obj, ephem.Planet) or
+           isinstance(obj, ephem.PlanetMoon) or
+           isinstance(obj, ephem.EllipticalBody) or
+           isinstance(obj, ephem.ParabolicBody) or
+           isinstance(obj, ephem.HyperbolicBody) or
+           isinstance(obj, ephem.EarthSatellite) ):
       self.body = obj
       if self.body.name:
         self.ObjID = self.body.name
     else:
       self.body = ephem.FixedBody()
-      self.body._ra = self.Ra*ephem.pi/(180*3600)
-      self.body._dec = self.Dec*ephem.pi/(180*3600)
-      self.body._epoch = (self.Epoch-2000.0)*365.246 + ephem.J2000
+      self.body._ra = self.Ra * ephem.pi / (180 * 3600)
+      self.body._dec = self.Dec * ephem.pi / (180 * 3600)
+      self.body._epoch = (self.Epoch - 2000.0) * 365.246 + ephem.J2000
     self.body.compute(self.observer)
     self.update()
 
@@ -75,16 +75,17 @@ class EphemPos(correct.CalcPosition):
     b = copy.copy(self.body)
     o = copy.copy(self.observer)
     o.pressure = 0.0     #Don't include refraction in proper motion, we account for that elsewhere
-    o.date -= 1.0/48   #Half an hour before the current date/time
+    o.date -= 1.0 / 48   #Half an hour before the current date/time
     b.compute(o)
-    ra1,dec1 = b.ra,b.dec
-    o.date += 1.0/24    #Half an hour _after_ the current date/time
+    ra1, dec1 = b.ra, b.dec
+    o.date += 1.0 / 24    #Half an hour _after_ the current date/time
     b.compute(o)
-    ra2,dec2 = b.ra,b.dec
-    self.TraRA = (ra2-ra1)*180/ephem.pi     #_radians_ to degrees, then degrees per _hour_ to _arcsec_ per _second_ (*3600/3600)
+    ra2, dec2 = b.ra, b.dec
+    self.TraRA = (
+                   ra2 - ra1) * 180 / ephem.pi     #_radians_ to degrees, then degrees per _hour_ to _arcsec_ per _second_ (*3600/3600)
     if self.TraRA < 1e-4:
       self.TraRA = 0.0
-    self.TraDEC = (dec2-dec1)*180/ephem.pi
+    self.TraDEC = (dec2 - dec1) * 180 / ephem.pi
     if self.TraDEC < 1e-4:
       self.TraDEC = 0.0
     return self.TraRA, self.TraDEC
@@ -92,17 +93,20 @@ class EphemPos(correct.CalcPosition):
   def update(self, now=True):
     self.Time.update(now=now)
     self.body.compute(self.observer)
-    self.Ra = self.body.a_ra*180*3600/ephem.pi      #radians to arcsec
-    self.Dec = self.body.a_dec*180*3600/ephem.pi    #radians to arcsec
-    self.Epoch = 2000.0 + (self.body.a_epoch-ephem.J2000)/365.246
-    self.RaA = self.body.g_ra*180*3600/ephem.pi     #radians to arcsec
-    self.DecA = self.body.g_dec*180*3600/ephem.pi   #radians to arcsec
-    self.RaC = self.body.ra*180*3600/ephem.pi       #radians to arcsec
-    self.DecC = self.body.dec*180*3600/ephem.pi     #radians to arcsec
-    self.Alt = self.body.alt*180/ephem.pi           #radians to degrees
-    self.Azi = self.body.az*180/ephem.pi           #radians to degrees
+    self.Ra = self.body.a_ra * 180 * 3600 / ephem.pi      #radians to arcsec
+    self.Dec = self.body.a_dec * 180 * 3600 / ephem.pi    #radians to arcsec
+    try:
+      self.Epoch = 2000.0 + (self.body.a_epoch - ephem.J2000) / 365.246
+    except AttributeError:  # For some reason, ephem.PlanetMoon objects don't have an a_epoch attribute
+      self.Epoch = 2000.0
+    self.RaA = self.body.g_ra * 180 * 3600 / ephem.pi     #radians to arcsec
+    self.DecA = self.body.g_dec * 180 * 3600 / ephem.pi   #radians to arcsec
+    self.RaC = self.body.ra * 180 * 3600 / ephem.pi       #radians to arcsec
+    self.DecC = self.body.dec * 180 * 3600 / ephem.pi     #radians to arcsec
+    self.Alt = self.body.alt * 180 / ephem.pi           #radians to degrees
+    self.Azi = self.body.az * 180 / ephem.pi           #radians to degrees
     if prefs.FlexureOn:
-      dRA,dDEC = self.Flex()
+      dRA, dDEC = self.Flex()
       self.RaC += dRA
       self.DecC += dDEC
     self.updatePM()
@@ -124,7 +128,7 @@ def getObject(name):
      otherwise return nothing.
   """
   byname = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
-            'ariel', 'callisto', 'deimos', 'dione', 'enceladus', 'europa', 'ganymede','hyperion', 'iapetus',
+            'ariel', 'callisto', 'deimos', 'dione', 'enceladus', 'europa', 'ganymede', 'hyperion', 'iapetus',
             'io', 'mimas', 'miranda', 'oberon', 'phobos', 'rhea', 'tethys', 'titan', 'titania', 'umbriel']
   if name.strip().lower() in byname:
     obj = ephem.__dict__[name.title()]()
