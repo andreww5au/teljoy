@@ -83,6 +83,9 @@ class Dome(object):
     """
     if not self.AutoDome:
       return                 # Don't do anything if we aren't in automatic mode
+    if self.queue and not self.Command: # If we aren't already processing a command, and there's one in the queue, do it now.
+      self.Command = self.queue.pop(0)
+      self.DomeLastTime = time.time()
 
     if self.Command:          # If we are currently processing a dome command:
       if self.Command == 'O':
@@ -124,11 +127,6 @@ class Dome(object):
               self._left()
             else:
               self._right()
-
-    else:                 # If we aren't processing a command, see if there is one in the queue.
-      if self.queue:
-        self.Command = self.queue.pop(0)
-        self.DomeLastTime = time.time()
 
   def move(self, az=None, force=False):
     """Add a 'move' command to the dome command queue, to be executed as soon as the dome is free.
