@@ -58,7 +58,7 @@ def GetSesame(name=''):
      SIMBAD, Vizier, and NED. Returns a position object.
   """
   try:
-    data = urllib2.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib2.quote(objid)).read()
+    data = urllib2.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib2.quote(name)).read()
   except IOError:
     logger.error('IO error contacting Sesame web service')
     return None
@@ -82,7 +82,7 @@ def GetSesame(name=''):
     for p in poslist:
       print "RA=%s, DEC=%s, Source=%s" % (sexstring(p[1], sexstring(p[2], p[0])))
     print "Using position from '%s'" % poslist[0][0]
-    return correct.CalcPosition(ra=p[1]/15.0, dec=p[2], epoch=2000.0, objid=objid)
+    return correct.CalcPosition(ra=p[1]/15.0, dec=p[2], epoch=2000.0, objid=name)
   else:
     return None
 
