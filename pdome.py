@@ -145,6 +145,9 @@ class Dome(object):
     """
     if not self.AutoDome:
       return
+    if self.queue and not self.Command:  # If we aren't already processing a command, and there's one in the queue, do it now.
+      self.Command = self.queue.pop(0)
+
     if self.Command:
       if self.CommandSent:
         if self._waitprompt():      #The command was sent earlier, and now a prompt has been received
@@ -196,9 +199,6 @@ class Dome(object):
               self.CommandSent = True
             except ValueError:
               logger.error('Invalid command in dome command queue: %s' % self.Command)
-    else:
-      if self.queue:
-        self.Command = self.queue.pop(0)
 
   def move(self, az=None, force=False):
     """Add a 'move' command to the dome command queue, to be executed as soon as the dome is free.
