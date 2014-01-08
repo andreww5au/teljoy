@@ -45,7 +45,13 @@ class EphemPos(correct.CalcPosition):
     Position.__init__(self, ra=ra, dec=dec, epoch=epoch, domepos=domepos, objid=objid)
     self.Time = EphemTime()
     self.observer = self.Time.observer
-    if isinstance(obj,ephem.Body):
+    if ( isinstance(obj,ephem.Body) or
+         isinstance(obj,ephem.Planet) or
+         isinstance(obj,ephem.PlanetMoon) or
+         isinstance(obj,ephem.EllipticalBody) or
+         isinstance(obj,ephem.ParabolicBody) or
+         isinstance(obj,ephem.HyperbolicBody) or
+         isinstance(obj,ephem.EarthSatellite) ):
       self.body = obj
       if self.body.name:
         self.ObjID = self.body.name
