@@ -1,6 +1,6 @@
-
 import sys
 import time
+import urllib2
 
 from globals import *
 from pdome import dome
@@ -48,8 +48,43 @@ def Lookup(objid=''):
     obj = sqlint.GetRC3(gid=objid.upper())
   if obj is None:
     obj = pyephem.getObject(name=objid)
+  if obj is None:
+    obj = GetSesame(name=objid)
   return obj
 
+
+def GetSesame(name=''):
+  """Given an object name, use the Sesame web service to look up the object in
+     SIMBAD, Vizier, and NED. Returns a position object.
+  """
+  try:
+    data = urllib2.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib2.quote(objid)).read()
+  except IOError:
+    logger.error('IO error contacting Sesame web service')
+    return None
+  poslist = []
+  for l in data.split('\n'):
+    if l.startswith('#='):
+      try:
+        source = l.split('=')[2].split(':')[0]
+      except IndexError:
+        source = '<' + l + '>'
+    if l.startswith('%J '):
+      try:
+        ra = float(l.split()[1])
+        dec = float(l.split()[2])
+      except (IndexError,ValueError):
+        pass  # Bad coordinates, ignore this line
+      poslist.append((source, ra, dec))
+
+  if poslist:
+    print "Found positions:"
+    for p in poslist:
+      print "RA=%s, DEC=%s, Source=%s" % (sexstring(p[1], sexstring(p[2], p[0])))
+    print "Using position from '%s'" % poslist[0][0]
+    return correct.CalcPosition(ra=p[1]/15.0, dec=p[2], epoch=2000.0, objid=objid)
+  else:
+    return None
 
 def ParseArgs(args, kws, pclass=correct.CalcPosition):
   """Take abitrary arguments stored in 'args' and 'kws' that hopefully specify coordinates, an object
@@ -58,25 +93,25 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
      Normally that would be an instance of the correct.CalcPosition class, but you can pass an alternate
      base class in using the 'pclass' attribute.
   """
-  ra,dec,epoch,objid,domepos,obj = None,None,None,None,None,None
-  for n in ['ra','RA','Ra']:
+  ra, dec, epoch, objid, domepos, obj = None, None, None, None, None, None
+  for n in ['ra', 'RA', 'Ra']:
     if n in kws.keys():
       ra = kws[n]
       break
-  for n in ['dec','Dec','DEC']:
+  for n in ['dec', 'Dec', 'DEC']:
     if n in kws.keys():
       dec = kws[n]
       break
-  for n in ['epoch','Epoch','EPOCH','ep','Ep','equinox','Equinox','eq','Eq']:
+  for n in ['epoch', 'Epoch', 'EPOCH', 'ep', 'Ep', 'equinox', 'Equinox', 'eq', 'Eq']:
     if n in kws.keys():
       epoch = kws[n]
-  for n in ['objid','Objid','ObjId','ObjID','objId','objID','id','Id','ID','name','Name']:
+  for n in ['objid', 'Objid', 'ObjId', 'ObjID', 'objId', 'objID', 'id', 'Id', 'ID', 'name', 'Name']:
     if n in kws.keys():
       objid = kws[n]
-  for n in ['domepos','Domepos','DomePos','domePos','DOMEPOS']:
+  for n in ['domepos', 'Domepos', 'DomePos', 'domePos', 'DOMEPOS']:
     if n in kws.keys():
       domepos = kws[n]
-  for n in ['o','O','obj','Obj','OBJ','pos','Pos','POS','position','Position']:
+  for n in ['o', 'O', 'obj', 'Obj', 'OBJ', 'pos', 'Pos', 'POS', 'position', 'Position']:
     if n in kws.keys():
       if isinstance(kws[n], correct.CalcPosition):
         obj = kws[n]
@@ -120,6 +155,8 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
 #Define a few convenience functions to take flexible arguments and return a position object.
 def Pos(*args, **kws):
   return ParseArgs(args=args, kws=kws)
+
+
 pos = Pos
 position = Pos
 p = Pos
@@ -146,6 +183,7 @@ def jump(*args, **kws):
     print "Moving dome."
     dome.move(az=dome.CalcAzi(ob))
 
+
 Jump = jump
 
 
@@ -162,6 +200,7 @@ def reset(*args, **kws):
   print "Resetting current position to:", ob
   detevent.current.Reset(obj=ob)
 
+
 Reset = reset
 
 
@@ -169,7 +208,8 @@ def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
   """
   detevent.current.Offset(ora=ora, odec=odec)
-  logger.info("Moved small offset distance: %4.1f,%4.1f" % ora,odec)
+  logger.info("Moved small offset distance: %4.1f,%4.1f" % ora, odec)
+
 
 Offset = offset
 
@@ -223,6 +263,7 @@ def shutdown():
     print "Waiting for telescope to park and shutter to close."
     time.sleep(5)
   sys.exit()
+
 
 Shutdown = shutdown
 ShutDown = shutdown
