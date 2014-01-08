@@ -13,58 +13,58 @@ import logging
 INIF = 'teljoy.ini'
 
 #$IFDEF NZ}
-  #DOBSLAT = -43.9866666667               #Lat: -43 59.2}
-  #DOBSLONG = -170.465                     #Long: -170 27.9}
+  #DOBSLAT = -43.9866666667               # Lat: -43 59.2}
+  #DOBSLONG = -170.465                     # Long: -170 27.9}
 #$ELSE}
-DOBSLAT = -32.008083333               #Lat: -32 00 29.1}
-DOBSLONG = -116.13501944               #Long: -116 08 06.07}
+DOBSLAT = -32.008083333               # Lat: -32 00 29.1}
+DOBSLONG = -116.13501944               # Long: -116 08 06.07}
 #$ENDIF}
 
 #These really are constant, unless this code is still being used thousands of years from now...
-MSOLDY = 1.00273790931     #Mean solar day = MsolDy Mean sidereal days}
-MSIDDY = 0.99726956637     #Mean sidereal day = MSidDy mean solar days}
-DRASID = -15.04106868     #Default sidereal rate (multiplied by 'SidFudge' factor from ini file)
+MSOLDY = 1.00273790931     # Mean solar day = MsolDy Mean sidereal days}
+MSIDDY = 0.99726956637     # Mean sidereal day = MSidDy mean solar days}
+DRASID = -15.04106868     # Default sidereal rate (multiplied by 'SidFudge' factor from ini file)
 
 #Fiddle with the values in teljoy.ini, these are just fallback values
-DFSLEWRATE = 144000                     #Default slew rate 2 deg/sec
-DFCOARSESETRATE = 3600                  #Default set rate 3arcmin/sec
-DFFINESETRATE = 1200                    #Default fine set rate 1arcmin/sec
-DFGUIDERATE = 100                       #Default guide rate 5arcsec/sec
+DFSLEWRATE = 108000                     # Default slew rate 1.5 deg/sec
+DFCOARSESETRATE = 3600                  # Default set rate 3arcmin/sec
+DFFINESETRATE = 1200                    # Default fine set rate 1arcmin/sec
+DFGUIDERATE = 100                       # Default guide rate 5arcsec/sec
 
-DFTEMP = 0                              #default (high altitude) air temp in deg C, for refraction calculation
-DFPRESS = 1015.92                       #default atm. press. in mb, for refraction calculation
+DFTEMP = 0                              # default (high altitude) air temp in deg C, for refraction calculation
+DFPRESS = 1015.92                       # default atm. press. in mb, for refraction calculation
 
-DEBUG = False    #If true, print extra debugging info - eg motion control activity
+DEBUG = False    # If true, print extra debugging info - eg motion control activity
 
-#DTABLE = 'ncurrent'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
-DTABLE = 'current'      #Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
+#DTABLE = 'ncurrent'      # Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
+DTABLE = 'current'      # Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
 
-PULSE = 0.05                       #50 milliseconds per 'tick'
+PULSE = 0.05                       # 50 milliseconds per 'tick'
 
-REALMOTORS = True   #If true, we're driving the real PLAT telescope, if false, driving test motors.
+REALMOTORS = True   # If true, we're driving the real PLAT telescope, if false, driving test motors.
 
 if REALMOTORS:
-  DIVIDER = 1   #Don't scale step values for real telescope
-  MOTOR_ACCEL = 50000     #2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
+  DIVIDER = 1   # Don't scale step values for real telescope
+  MOTOR_ACCEL = 50000     # 2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
 else:
-  DIVIDER = 20   #Scale down step values for testing with non-microstepped driver boards
-  MOTOR_ACCEL = 6000        #For test motors, this is 15 steps/frame/frame
+  DIVIDER = 20   # Scale down step values for testing with non-microstepped driver boards
+  MOTOR_ACCEL = 6000        # For test motors, this is 15 steps/frame/frame
 
-#Which paddles to simulate using press, release functions
-#DUMMYPADDLES = ['C','F']
+# Which paddles to simulate using press, release functions
+# DUMMYPADDLES = ['C','F']
 DUMMYPADDLES = []
 #DUMMY = ['C', 'F']  #List of paddles to  be simulated.
 
-#Which paddle the test-rig should operate (using input bits 8-15)
+# Which paddle the test-rig should operate (using input bits 8-15)
 TESTPADDLE = None
 #TESTPADDLE = 'C'
 
 FILTERS = ['Clear', 'Red', 'NCN', 'Blue', 'Visual', 'Infrared', 'Empty', 'Hole']
 
-CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini']    #Initialisation file path
+CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini']    # Initialisation file path
 
-LOGLEVEL_CONSOLE = logging.DEBUG      #Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
-LOGLEVEL_LOGFILE = logging.DEBUG      #Logging level for logfile
+LOGLEVEL_CONSOLE = logging.DEBUG      # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
+LOGLEVEL_LOGFILE = logging.DEBUG      # Logging level for logfile
 LOGFILE = "/tmp/teljoy.log"
 
 # create global logger object for Facility Controller
@@ -123,20 +123,20 @@ class Position(object):
      
        objid is an optional identifier for the target specified.
     """
-    self.ObjID = objid                     #Object ID
+    self.ObjID = objid                     # Object ID
     if type(ra) == str:
       ra = stringsex(ra)
     if (ra is None) or (type(ra) != int and type(ra) != float):
-      self.Ra = 0.0                        #mean RA in arcesc
+      self.Ra = 0.0                        # mean RA in arcesc
     else:
       self.Ra = ra * 15.0 * 3600.0
     if type(dec) == str:
       dec = stringsex(dec)
     if (dec is None) or (type(dec) != int and type(dec) != float):
-      self.Dec = 0.0                       #mean DEC in arcesc
+      self.Dec = 0.0                       # mean DEC in arcesc
     else:
       self.Dec = dec * 3600.0
-    self.Epoch = epoch                     #Equinox for apparent Ra & Dec
+    self.Epoch = epoch                     # Equinox for apparent Ra & Dec
     self.DomePos = domepos
 
   def __getstate__(self):
@@ -148,7 +148,7 @@ class Position(object):
     return d
 
   def __repr__(self):
-    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra/15.0/3600,fixed=True), sexstring(self.Dec/3600,fixed=True), self.Epoch)
+    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra/15.0/3600, fixed=True), sexstring(self.Dec/3600, fixed=True), self.Epoch)
     return s
 
   def __str__(self):
@@ -163,12 +163,12 @@ class Errors(object):
   """
 
   def __init__(self):
-    self.RefError = False       #The refraction code failed (typically due to very low altitude)
-    self.AltError = False       #Current altitude below defined threshold
-    self.AltErrorTag = None     #Save the 'AltErr' safety interlock tag, if there is one
-    self.CalError = CP.getboolean('Alarms', 'OrigPosWarn')      #Current position is unknown
-    self.CalErrorTag = None     #Save the 'CalErr' safety interlock tag, if there is one
-    self.TimeoutError = False   #Haven't heard from Prosp for a while, not safe to continue
+    self.RefError = False       # The refraction code failed (typically due to very low altitude)
+    self.AltError = False       # Current altitude below defined threshold
+    self.AltErrorTag = None     # Save the 'AltErr' safety interlock tag, if there is one
+    self.CalError = CP.getboolean('Alarms', 'OrigPosWarn')      # Current position is unknown
+    self.CalErrorTag = None     # Save the 'CalErr' safety interlock tag, if there is one
+    self.TimeoutError = False   # Haven't heard from Prosp for a while, not safe to continue
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -242,7 +242,7 @@ class Prefs(object):
     self.SkyFlatDec = CP.getfloat('Presets', 'SkyFlatDec')
 
 
-def sexstring(value=0, sp=':', fixed=False, dp=None):
+def sexstring(value=0.0, sp=':', fixed=False, dp=None):
   """Convert the floating point 'value' into a sexagecimal string.
      The character in 'sp' is used as a spacer between components. Useful for
      within functions, not on its own.
@@ -270,7 +270,7 @@ def sexstring(value=0, sp=':', fixed=False, dp=None):
   M = int((aval - float(D)) * 60)
   S = (aval - float(D) - float(M)/60) * 3600
   Si = int(S)
-  Sf = round(S-Si,dp)
+  Sf = round(S-Si, dp)
   if Sf == 1.0:
     Si += 1
     if Si == 60:
@@ -353,8 +353,8 @@ class SafetyInterlock(object):
     self.Active.set()
     self.Errors = {}
     self._tags = {}
-    self._stopfunctions = {}     #Functions to call when the system is paused
-    self._startfunctions = {}    #Functions to call when the system is un-paused
+    self._stopfunctions = {}     # Functions to call when the system is paused
+    self._startfunctions = {}    # Functions to call when the system is un-paused
 
   def add_tag(self, comment=''):
     """Adds a safety tag, stops the system if it hasn't already been stopped, and returns
@@ -389,7 +389,7 @@ class SafetyInterlock(object):
         logger.error("Can't remove safety tag - invalid tag")
         return
       del self._tags[tag]
-      if (not self._tags) and (not self.Active.is_set()):     #If no more tags, and the system hasn't already been started
+      if (not self._tags) and (not self.Active.is_set()):     # If no more tags, and the system hasn't already been started
         for name, action in self._startfunctions.iteritems():
           try:
             logger.info("Calling safety restart function: %s" % name)
@@ -461,7 +461,7 @@ CP, CPfile = UpdateConfig()
 errors = Errors()
 prefs = Prefs()
 
-safety = SafetyInterlock()   #Create a safety interlock object
+safety = SafetyInterlock()   # Create a safety interlock object
 
 DirtyTime = 0
 
