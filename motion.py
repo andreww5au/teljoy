@@ -11,6 +11,7 @@ import threading
 import time
 
 from globals import *
+import digio
 import usbcon
 
 
@@ -39,7 +40,7 @@ class LimitStatus(object):
              '%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
              'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s, Override=%(LimOverride)s]>')
   _strf = ( 'HWLimits=%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
-             'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s, Override=%(LimOverride)s]' )
+            'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s, Override=%(LimOverride)s]' )
 
   def __repr__(self):
     """This is called by python itself when the object is converted
@@ -54,16 +55,15 @@ class LimitStatus(object):
     return self._strf % self.__dict__
 
   def __init__(self):
-    self.LimitOnTime = 0.0        #How long the limit has been active
-    self.LimitOffTime = 0.0       #No idea, apparently never changed
-    self.HWLimit = False          #True if any of the hardware limits are active. Should be method, not attribute
-    self.OldLim = False           #?
-    self.PowerOff = False         #True if the telescope power is off (eg, switched off at the telescope)
-    self.HorizLim = False         #True if the mercury switch 'nest' horizon limit has tripper
-    self.MeshLim = False          #? 
-    self.EastLim = False          #RA axis eastward limit reached
-    self.WestLim = False          #RA axis westward limit reached
-    self.LimOverride = False      #True if the 'Limit Override' button on the telescope is pressed
+    self.LimitOnTime = 0.0        # How long the limit has been active
+    self.HWLimit = False          # True if any of the hardware limits are active. Should be method, not attribute
+    self.OldLim = False           # ?
+    self.PowerOff = False         # True if the telescope power is off (eg, switched off at the telescope)
+    self.HorizLim = False         # True if the mercury switch 'nest' horizon limit has tripper
+    self.MeshLim = False          # ?
+    self.EastLim = False          # RA axis eastward limit reached
+    self.WestLim = False          # RA axis westward limit reached
+    self.LimOverride = False      # True if the 'Limit Override' button on the telescope is pressed
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -88,14 +88,21 @@ class LimitStatus(object):
     """Test the limit states, handle any new limit conditions (set or cleared) since the
        last check, and update the flags.
     """
+    limits = digio.ReadLimit()
+    self.EastLim = ('EAST' in limits)
+    self.WestLim = ('WEST' in limits)
+    self.MeshLim = ('MESH' in limits)
+    self.HorizLim = ('HORIZON' in limits)
+    self.PowerOff = ('POWER' in limits)
+    if self.EastLim or self.WestLim or self.MeshLim or self.HorizLim or self.PowerOff:
+      self.HWLimit = True
     if (not self.OldLim) and (self.HWLimit):
       safety.add_tag("Hardware limit reached, closing dome and freezing telescope")  #Discard tag ID
       self.LimitOnTime = time.time()
-      self.LimitOffTime = 2147483647    #sys.maxint
       self.OldLim = True
     if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
          (not motors.Moving) and (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
-      self.OldLim = False
+      self.OldLim = False   # If the limit state has just been cleared
       self.HWLimit = False
       self.LimOverride = False
 

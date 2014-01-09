@@ -44,8 +44,8 @@ class Paddles(object):
        This method is called at regular intervals by the DetermineEvent loop.
     """
     #Read the Hand-paddle inputs}
-    cb = digio.ReadCoarse(motion.motors.Driver.inputs)
-    fb = digio.ReadFine(motion.motors.Driver.inputs)
+    cb = digio.ReadCoarse()
+    fb = digio.ReadFine()
 
     #check the Fine paddle speed switches and set appropriate mode and velocity
     if (fb & digio.FGuideMsk) == digio.FGuideMsk:
@@ -100,29 +100,28 @@ class Paddles(object):
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 
-      #check the Coarse paddle speed switches and set appropriate mode and velocity
-    #$IFDEF NZ}
-    #    if ((cb & digio.CspaMsk)==digio.CspaMsk) and ((cb & digio.CspbMsk)==digio.CspbMsk):
-    #      self.CoarseMode = 'CSet'
-    #      CoarsePaddleRate = prefs.CoarseSetRate
-    #    else:
-    #      if ((cb & digio.CspbMsk)==digio.CspbMsk):
-    #        self.CoarseMode = 'CGuide'
-    #        CoarsePaddleRate = prefs.GuideRate
-    #      else:
-    #        self.CoarseMode = 'CSlew'
-    #        CoarsePaddleRate = prefs.SlewRate
-    #$ELSE}
-    if (cb & digio.CSlewMsk) == digio.CSlewMsk:
-      self.CoarseMode = 'CSlew'
-#      logger.info('SLEW')
-      CoarsePaddleRate = prefs.SlewRate
+    # check the Coarse paddle speed switches and set appropriate mode and velocity
+    if SITE == 'NZ':
+      if ((cb & digio.CspaMsk) == digio.CspaMsk) and ((cb & digio.CspbMsk) == digio.CspbMsk):
+        self.CoarseMode = 'CSet'
+        CoarsePaddleRate = prefs.CoarseSetRate
+      else:
+        if ((cb & digio.CspbMsk) == digio.CspbMsk):
+          self.CoarseMode = 'CGuide'
+          CoarsePaddleRate = prefs.GuideRate
+        else:
+          self.CoarseMode = 'CSlew'
+          CoarsePaddleRate = prefs.SlewRate
     else:
-      self.CoarseMode = 'CSet'
-      CoarsePaddleRate = prefs.CoarseSetRate
-    #$ENDIF}
+      if (cb & digio.CSlewMsk) == digio.CSlewMsk:
+        self.CoarseMode = 'CSlew'
+  #      logger.info('SLEW')
+        CoarsePaddleRate = prefs.SlewRate
+      else:
+        self.CoarseMode = 'CSet'
+        CoarsePaddleRate = prefs.CoarseSetRate
 
-    #**Check the Coarse paddle by comparing cb to a set of masks}
+    # **Check the Coarse paddle by comparing cb to a set of masks}
     if (cb & digio.CNorth) == digio.CNorth:
 #      logger.info('N')
       if not self.ButtonPressedDEC:

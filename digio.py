@@ -8,18 +8,10 @@
     ReadFine     -           Read the fine paddle of the telescope.
     ReadLimit    -           Read the limit and power-down status.
 
-    These procedures handle all the I/O operations with the 8255 card.
-    The procedures are:
-
-    ReadPort            - Read a given port (1 -A,B,C or 2 -A,B,C).
-    WritePort           - Write to a given port (must first write to
-                          control register of port to enable it to be
-                          writeable).
-                          
-    The New Zealand installation also uses 8255 port IO to control the 
+    The New Zealand installation also uses digital port IO to control the
     dome. Instead of a serial link to a dedicated controller, as in Perth, 
     the serial link is to an encoder returning a stream of bytes containing
-    the dome azimuth, and 8255 IO is used to emulate the 'dome left' and
+    the dome azimuth, and digital IO is used to emulate the 'dome left' and
     'dome right' paddle buttons, which control the motors. This module contains
     the port IO for that task, while NZDOME.PAS contains the rest of the logic.    
 
@@ -29,6 +21,7 @@
 """
 
 from globals import *
+import motion            # Current state of input buts are in motion.motors.Driver.inputs
 
 CNorth    = 0x01                        #Mask for north on coarse paddles (red on test cable)
 CSouth    = 0x02                        #Mask for south (green on test cable)
@@ -45,22 +38,114 @@ FGuideMsk = 0x10                        #This bit is set if the fine paddle is s
 
 
 #Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
-LeftMsk =  1   #Masks for left and right dome output bits
-RightMsk = 2
+LeftBit =  40   # Output bit number for driving dome motor 'left' - bit 0 of port 2_C
+RightBit = 41   # Output bit number for driving dome motor 'right' - bit 1 of port 2_C
 CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
 CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
-#
-#Bit masks for limit switches on the New Zealand telescope. No limit switches
-#currently readable for Perth telescope.
-# TODO - current values relate only to the output from the ReadLimit() function below.
-POWERMSK = 0x01
-HORIZMSK = 0x02
-MESHMSK  = 0x04
-EASTMSK  = 0x08
-WESTMSK  = 0x10
 
 
-#$IFDEF NZ}
+CB = 0           #Defauly to Coarse-set speed
+FB = 0           #Default to Fine-set speed (ignore fine-guide)
+LastDirn = ''
+LastPaddle = ''
+
+
+
+def ReadCoarse():
+  """Return either the 6 bits of data from the IO bits, or a dummy value if
+     we're emulating the paddle in software.
+     In NZ, on the old card, this was port $216 = DI-low
+  """
+  inputs = motion.motors.Driver.inputs
+  if 'C' in DUMMYPADDLES:
+    return CB
+  val = (inputs >> 24) & 0x3F                 #bits 0-5 of port 2_A
+  if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
+    return 0    #more than one button pressed, so ignore inputs
+  else:
+    return val
+
+def ReadFine():
+  """Return the byte of data from the fine hand paddle port, or a dummy value if
+     we're emulating the paddle in software.
+     Return zero if called by the code in NZ.
+  """
+  if SITE == 'NZ':
+    return 0   # No fine paddle on NZ telescope, so always return 0
+  inputs = motion.motors.Driver.inputs
+  if 'F' in DUMMYPADDLES:
+    return FB
+  val = (inputs >> 40) & 0xFF         #bits 40-44, not inverted for real fine paddle
+  if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
+    return 0    #N+S pressed at the same time, or E+W
+  else:
+    return val
+
+def ReadLimit():
+  """Read the state of the limit switch input bits, and return a list of
+     active limit states (each a string). An empty list means no limits are
+     active. On old card, this was port $217 = DI-high
+  """
+  if SITE == 'PERTH':
+    return []     # Hardware limits can't be read in Perth
+  inputs = motion.motors.Driver.inputs
+  val = (inputs >> 32) & 0x7F                 #bits 0,1,2,5,6 of port 2_B
+  limits = []
+  if (val & 0x01) == 0x01:
+    limits.append('EAST')
+  if (val & 0x01) == 0x02:
+    limits.append('WEST')
+  if (val & 0x01) == 0x04:
+    limits.append('MESH')
+  if (val & 0x01) == 0x20:
+    limits.append('POWER')
+  if (val & 0x01) == 0x40:
+    limits.append('HORIZON')
+  return limits
+
+def DomeGoingLeft():
+  if SITE == 'PERTH':
+    return False     # No digital IO for dome in Perth
+  inputs = motion.motors.Driver.inputs
+  val = (inputs >> 24) & 0xFF                 #bit 6 of port 2_A
+  return (val & 0x40) == 0x40
+
+def DomeGoingRight():
+  if SITE == 'PERTH':
+    return False     # No digital IO for dome in Perth
+  inputs = motion.motors.Driver.inputs
+  val = (inputs >> 24) & 0xFF                 #bit 7 of port 2_A
+  return (val & 0x80) == 0x80
+
+def DomeStop():
+  """Turn off both dome motors.
+  """
+  if SITE == 'PERTH':
+    return      # No digital IO for dome in Perth
+  motion.motors.Driver.host.clear_outputs((1 << RightBit) + (1 << LeftBit))
+
+def DomeLeft():
+  if SITE == 'PERTH':
+    return      # No digital IO for dome in Perth
+  if DomeGoingRight():
+    DomeStop()
+    time.sleep(0.5)
+  if not DomeGoingRight():
+    motion.motors.Driver.host.clear_outputs(1 << RightBit)
+    motion.motors.Driver.host.set_outputs(1 << LeftBit)
+
+def DomeRight():
+  if SITE == 'PERTH':
+    return      # No digital IO for dome in Perth
+  if DomeGoingLeft():
+    DomeStop()
+    time.sleep(0.5)
+  if not DomeGoingLeft():
+    motion.motors.Driver.host.clear_outputs(1 << LeftBit)
+    motion.motors.Driver.host.set_outputs(1 << RightBit)
+
+
+#$IFDEF NZ:
 #Procedure ReadCoarse(var CB:byte)
 #var b:byte
 #begin
@@ -141,34 +226,6 @@ WESTMSK  = 0x10
 
 #$ELSE}
 
-CB = 0           #Defauly to Coarse-set speed
-FB = 0           #Default to Fine-set speed (ignore fine-guide)
-LastDirn = ''
-LastPaddle = ''
-
-
-def ReadCoarse(inputs):
-  if 'C' in DUMMYPADDLES:
-    return CB
-  val = (inputs >> 24) & 0xFF                 #bits 24-28, not inverted for real coarse paddle
-  if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
-    return 0    #more than one button pressed, so ignore inputs
-  else:
-    return val
-
-
-def ReadFine(inputs):
-  if 'F' in DUMMYPADDLES:
-    return FB
-  val = (inputs >> 40) & 0xFF         #bits 40-44, not inverted for real fine paddle
-  if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
-    return 0    #N+S pressed at the same time, or E+W
-  else:
-    return val
-
-def ReadLimit():
- return 0     #No limit switches readable on Perth telescope
- 
 
 #################
 # Dummy button-push routines, used for testing

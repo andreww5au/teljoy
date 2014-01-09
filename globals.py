@@ -10,15 +10,17 @@ import traceback
 import ConfigParser
 import logging
 
+SITE = 'PERTH'
+#SITE = 'NZ'
+
 INIF = 'teljoy.ini'
 
-#$IFDEF NZ}
-  #DOBSLAT = -43.9866666667               # Lat: -43 59.2}
-  #DOBSLONG = -170.465                     # Long: -170 27.9}
-#$ELSE}
-DOBSLAT = -32.008083333               # Lat: -32 00 29.1}
-DOBSLONG = -116.13501944               # Long: -116 08 06.07}
-#$ENDIF}
+if SITE == 'NZ':
+  DOBSLAT = -43.9866666667               # Lat: -43 59.2}
+  DOBSLONG = -170.465                    # Long: -170 27.9}
+else:
+  DOBSLAT = -32.008083333               # Lat: -32 00 29.1}
+  DOBSLONG = -116.13501944               # Long: -116 08 06.07}
 
 #These really are constant, unless this code is still being used thousands of years from now...
 MSOLDY = 1.00273790931     # Mean solar day = MsolDy Mean sidereal days}
