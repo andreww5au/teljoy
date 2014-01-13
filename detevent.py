@@ -19,7 +19,10 @@ import copy
 import traceback
 
 from globals import *
-import pdome
+if SITE == 'PERTH':
+  import pdome as dome
+elif SITE == 'NZ':
+  import nzdome as dome
 import correct
 import motion
 import sqlint
@@ -133,8 +136,8 @@ class CurrentPosition(correct.CalcPosition):
                                                                        sexstring(self.Dec/3600, dp=0))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
-    l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[pdome.dome.DomeInUse],
-                                                              {False:" No", True:"Yes"}[pdome.dome.DomeTracking],
+    l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[dome.dome.DomeInUse],
+                                                              {False:" No", True:"Yes"}[dome.dome.DomeTracking],
                                                               str(errors))
     return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
 
@@ -349,7 +352,7 @@ class CurrentPosition(correct.CalcPosition):
       self.DecC = prefs.ObsLat*3600
     else:
       errors.CalError = False
-      pdome.dome.IsShutterOpen = info.ShutterOpen
+      dome.dome.IsShutterOpen = info.ShutterOpen
       prefs.EastOfPier = info.EastOfPier
 
     motion.motors.Frozen = False    #Always start out not frozen
@@ -372,8 +375,8 @@ class CurrentPosition(correct.CalcPosition):
     self.AltAziConv()
     logger.debug('detevent.IniPos: New Alt/Azi: %4.1f, %4.1f' % (self.Alt, self.Azi))
 
-    pdome.dome.DomeAzi = pdome.dome.CalcAzi(self)
-    pdome.dome.DomeLastTime = time.time()
+    dome.dome.DomeAzi = dome.dome.CalcAzi(self)
+    dome.dome.DomeLastTime = time.time()
 
   def Reset(self, obj):
     """Set the current RA and DEC to those in the specified object (must be an instance of correct.CalcPosition)
@@ -438,15 +441,15 @@ def CheckDirtyDome():
 
      This function is called at regular intervals by the DetermineEvent loop.
   """
-  if ( (abs(pdome.dome.CalcAzi(current)-pdome.dome.DomeAzi) > 6) and
-       ((time.time()-pdome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
-       (not pdome.dome.DomeInUse) and
-       pdome.dome.DomeTracking and
+  if ( (abs(dome.dome.CalcAzi(current)-dome.dome.DomeAzi) > 6) and
+       ((time.time()-dome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
+       (not dome.dome.DomeInUse) and
+       dome.dome.DomeTracking and
        (not motion.motors.Moving) and
-       pdome.dome.AutoDome and
+       dome.dome.AutoDome and
        (not motion.motors.PosDirty) and
        not errors.CalError):
-    pdome.dome.move(pdome.dome.CalcAzi(current))
+    dome.dome.move(dome.dome.CalcAzi(current))
 
 
 def CheckDBUpdate():
@@ -465,10 +468,10 @@ def CheckDBUpdate():
     foo.posviolate = current.posviolate
     foo.moving = motion.motors.Moving
     foo.EastOfPier = prefs.EastOfPier
-    foo.DomeInUse = pdome.dome.DomeInUse
-    foo.ShutterInUse = pdome.dome.DomeInUse
-    foo.ShutterOpen = pdome.dome.IsShutterOpen
-    foo.DomeTracking = pdome.dome.DomeTracking
+    foo.DomeInUse = dome.dome.DomeInUse
+    foo.ShutterInUse = dome.dome.DomeInUse
+    foo.ShutterOpen = dome.dome.IsShutterOpen
+    foo.DomeTracking = dome.dome.DomeTracking
     foo.Frozen = motion.motors.Frozen
     foo.RA_guideAcc = paddles.RA_GuideAcc
     foo.DEC_guideAcc = paddles.DEC_GuideAcc
@@ -512,8 +515,8 @@ def DoTJbox():
         if safety.Active.is_set():
           AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
           logger.info("detevent.DoTJbox: Remote control jump to object: %s" % JObj)
-          if pdome.dome.AutoDome and (not AltErr):
-            pdome.dome.move(pdome.dome.CalcAzi(JObj))
+          if dome.dome.AutoDome and (not AltErr):
+            dome.dome.move(dome.dome.CalcAzi(JObj))
           if AltErr:
             logger.error("detevent.DoTJBox: Object in TJbox below Alt Limit")
           else:
@@ -530,8 +533,8 @@ def DoTJbox():
       if safety.Active.is_set():
         AltErr = current.Jump(BObj, prefs.SlewRate)
         logger.info("detevent.DoTJbox: Remote control jump to object: %s" % BObj)
-        if pdome.dome.AutoDome and (not AltErr):
-          pdome.dome.move(pdome.dome.CalcAzi(BObj))
+        if dome.dome.AutoDome and (not AltErr):
+          dome.dome.move(dome.dome.CalcAzi(BObj))
         if AltErr:
           logger.error('detevent.DoTJbox: Object in TJbox below Alt Limit')
         else:
@@ -560,17 +563,17 @@ def DoTJbox():
 
     elif other.action == 'dome':
       if other.DomeAzi < 0:
-        pdome.dome.move(pdome.dome.CalcAzi(current))
+        dome.dome.move(dome.dome.CalcAzi(current))
         logger.info("detevent.DoTJbox: Dome aligned to current telescope position")
       else:
-        pdome.dome.move(other.DomeAzi)
+        dome.dome.move(other.DomeAzi)
         logger.info("detevent.DoTJbox: Dome moved to %d" % other.DomeAzi)
       TJboxAction = other.action
 
     elif other.action == 'shutter':
       if other.Shutter:
         if safety.Active.is_set():
-          pdome.dome.open()           #True for open}
+          dome.dome.open()           #True for open}
           logger.info("detevent.DoTJbox: remote control - shutter opened")
           TJboxAction = other.action
         else:
@@ -578,7 +581,7 @@ def DoTJbox():
           TJboxAction = 'none'
           sqlint.ClearTJbox(db=db)
       else:
-        pdome.dome.close()
+        dome.dome.close()
         logger.info("detevent.DoTJbox: remote control - shutter closed")
         TJboxAction = other.action
 
@@ -610,15 +613,15 @@ def CheckTJbox():
     if sqlint.ExistsTJbox(db=db):
       DoTJbox()
   elif TJboxAction in ['jumpid','jumprd','jumpaa','offset']:
-    if (not motion.motors.Moving) and (not pdome.dome.DomeInUse):
+    if (not motion.motors.Moving) and (not dome.dome.DomeInUse):
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
   elif TJboxAction == 'dome':
-    if not pdome.dome.DomeInUse:
+    if not dome.dome.DomeInUse:
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
   elif TJboxAction == 'shutter':
-    if not pdome.dome.DomeInUse:
+    if not dome.dome.DomeInUse:
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
 
@@ -637,7 +640,7 @@ def CheckTimeout():
   """
   if TIMEOUT == 0:
     errors.TimeoutError = False
-  elif ((time.time()-ProspLastTime) > TIMEOUT) and pdome.dome.IsShutterOpen and (not pdome.dome.DomeInUse):
+  elif ((time.time()-ProspLastTime) > TIMEOUT) and dome.dome.IsShutterOpen and (not dome.dome.DomeInUse):
     logger.critical('detevent.CheckTimeout: No communication with Prosp for over %d seconds!\nClosing Shutter, Freezing Telescope.' % TIMEOUT)
     errors.TimeoutError = True
     safety.add_tag('Prosp communications time out - shutting down')  #Discard tag, we don't want to try to recover from this
@@ -690,7 +693,7 @@ def Init():
   fastloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
   fastloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if the PosDirty flag needs to be cleared
   fastloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
-  fastloop.register('pdome.dome.check', pdome.dome.check)  #Check to see if dome has reached destination azimuth
+  fastloop.register('dome.dome.check', dome.dome.check)  #Check to see if dome has reached destination azimuth
   fastloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
   fastloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
   fastloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather

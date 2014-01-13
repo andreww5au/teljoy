@@ -30,7 +30,10 @@ from globals import *
 import usbcon
 import motion
 import detevent
-from pdome import dome
+if SITE == 'PERTH':
+  from pdome import dome
+elif SITE == 'NZ':
+  from nzdome import dome
 #from digio import press, release, cslew, cset
 from utils import *
 import tjserver

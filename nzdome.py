@@ -5,7 +5,7 @@ import time
 
 from globals import *
 
-DOMEPORT = 2   # Serial port for dome encoder
+DOMEPORT = 1   # Serial port for dome encoder
 MAXDOMEMOVE = 300000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
 
 #Dome parameters:
@@ -137,39 +137,39 @@ class Dome(object):
        90 is due East.
     """
     if not self.AutoDome:
-      logger.error('pdome.Dome.move: Dome not in auto mode.')
+      logger.error('nzdome.Dome.move: Dome not in auto mode.')
       return
     if type(az) == float or type(az) == int:
       if az < 0 or az > 360:
-        logger.error("pdome.Dome.move: argument must be an integer between 0 and 359, not %d" % az)
+        logger.error("nzdome.Dome.move: argument must be an integer between 0 and 359, not %d" % az)
         return
     else:
-      logger.error("pdome.Dome.move: argument must be an integer between 0 and 359, not: %s" % az)
+      logger.error("nzdome.Dome.move: argument must be an integer between 0 and 359, not: %s" % az)
       return
     if safety.Active.is_set() or force:
       self.queue.append(str(int(az)))
     else:
-      logger.error('pdome.Dome.move: no dome activity until safety tags cleared.')
+      logger.error('nzdome.Dome.move: no dome activity until safety tags cleared.')
 
   def open(self, force=False):
     """If the safety interlock is not active, or the 'force' argument is true,
        add an 'open shutter' command to the dome command queue.
     """
     if not self.AutoDome:
-      logger.error('pdome.Dome.move: Dome not in auto mode.')
+      logger.error('nzdome.Dome.move: Dome not in auto mode.')
       return
     if safety.Active.is_set() or force:
       self.queue.append('O')
       self.queue.append('I')    #Check shutter status after the open command
     else:
-      logger.error('pdome.Dome.move: no dome activity until safety tags cleared.')
+      logger.error('nzdome.Dome.move: no dome activity until safety tags cleared.')
 
   def close(self, force=False):
     """If the safety interlock is not active, or the 'force' argument is true,
        add an 'close shutter' command to the dome command queue.
     """
     if not self.AutoDome:
-      logger.error('pdome.Dome.move: Dome not in auto mode.')
+      logger.error('nzdome.Dome.move: Dome not in auto mode.')
       return
     if safety.Active.is_set() or force:
       self.queue.append('C')

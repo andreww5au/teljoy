@@ -3,7 +3,10 @@ import time
 import urllib2
 
 from globals import *
-from pdome import dome
+if SITE == 'PERTH':
+  from pdome import dome
+elif SITE == 'NZ':
+  from nzdome import dome
 import correct
 import detevent
 import motion
