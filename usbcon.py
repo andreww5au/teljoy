@@ -194,8 +194,8 @@ class Driver(controller.Driver):
       for pin in configuration.pins[8:16]:
         pin.direction = controller.CONTROLLER_PIN_OUTPUT
         pin.report_input = False
-      for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
-        controller.configuration.pins[pin_number].invert_input = False   # Default is for all inputs to be inverted
+#      for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
+#        controller.configuration.pins[pin_number].invert_input = False   # Default is for all inputs to be inverted
     elif SITE == 'PERTH':
       for pin in configuration.pins[0:48]:   # Set all pins to inputs with values reported (paddles)
         pin.direction = controller.CONTROLLER_PIN_INPUT
