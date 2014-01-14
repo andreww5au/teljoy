@@ -166,34 +166,37 @@ class Driver(controller.Driver):
     # configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
 
     # Set the guider input pins:
-    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_0
-    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_1
-    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_2
-    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_3
+#    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_0
+#    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_1
+#    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_2
+#    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_3
 
     # Set the guider sample interval, in cycles of the controller clock frequency.
     # In this example, the guider is polled every 1ms, giving a maximum of
     # 100 for the guider value in each 100ms frame:
-    self.mc_guider_counter_divider = self.host.clock_frequency / 1000
+#    self.mc_guider_counter_divider = self.host.clock_frequency / 1000
 
     # Each guider value is multiplied by a fractional scale factor to get
     # the number of steps. The resulting value then has a maximum applied before
     # being added to the next available frame:
-    configuration.mc_guider_a_numerator = 4
-    configuration.mc_guider_a_denominator = 50   #4 steps per 50ms slot
-    configuration.mc_guider_a_limit = 20
-    configuration.mc_guider_b_numerator = 4
-    configuration.mc_guider_b_denominator = 50
-    configuration.mc_guider_b_limit = 20
+#    configuration.mc_guider_a_numerator = 4
+#    configuration.mc_guider_a_denominator = 50   #4 steps per 50ms slot
+#    configuration.mc_guider_a_limit = 20
+#    configuration.mc_guider_b_numerator = 4
+#    configuration.mc_guider_b_denominator = 50
+#    configuration.mc_guider_b_limit = 20
 
     # Set 24 pins to inputs, with values reported (coarse, fine and 'test' hand paddles):
-    for pin in configuration.pins[0:48]:
+    for pin in configuration.pins[0:40]:
       pin.direction = controller.CONTROLLER_PIN_INPUT
       pin.report_input = True
 
+    for pin in configuration.pins[40:48]:
+      pin.direction = controller.CONTROLLER_PIN_OUTPUT
+
     #Set the actual hand-paddle bits to NOT inverted, as they are active high.
-    for pin_number in [24,25,26,27,28, 40,41,42,43,44, 0,1,2,3]:      #[0,1,2,3,4, 16,17,18,19,20, 24,25,26,27]
-      configuration.pins[pin_number].invert_input = False
+#    for pin_number in [24,25,26,27,28, 40,41,42,43,44, 0,1,2,3]:      #[0,1,2,3,4, 16,17,18,19,20, 24,25,26,27]
+#      configuration.pins[pin_number].invert_input = False
 
     # Set the shutdown pins to outputs:
     for pin_number in (52, 53, 58, 59):
@@ -218,6 +221,7 @@ class Driver(controller.Driver):
     """
     # Set the shutdown pin values:
     d = self.host.set_outputs((1 << 52) | (1 << 58))
+    d = self.host.clear_outputs((1 << 40) | (1 << 41))  # NZ dome outputs
     d.addCallback(self._initialise_outputs_set)
     d.addErrback(self._initialise_error_occurred)
 
