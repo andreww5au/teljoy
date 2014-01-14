@@ -5,6 +5,7 @@
    up to date.
 """
 
+from globals import *
 import MySQLdb
 
 weather = None
@@ -118,6 +119,10 @@ class Weather(object):
   def checkweather(self):
     """Monitor Cloud and Rain data, and take action if necessary
     """
+    if SITE == 'NZ':
+      self.clear = True
+      return     # No weather sensor connection yet, in NZ
+
     if self.rainf <> 1:  #0 is unknown, 1 is not raining, 2 is 'wet', 3 is raining.
       self.rain = True
     else:
