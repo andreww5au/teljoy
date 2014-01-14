@@ -346,7 +346,8 @@ class CurrentPosition(correct.CalcPosition):
     """
     info, HA, LastMod = sqlint.ReadSQLCurrent(self)
     if info is None:            #Flag a Calibration Error if there was no valid data in the table
-      errors.CalError = True
+#      errors.CalError = True   # TODO - fix this instead of disabling the error
+      logger.error('DANGER - no initial position, you MUST check and reset the position before slewing!')
       #If there's no saved position, assume telescope is pointed straight up
       HA = 0
       self.DecC = prefs.ObsLat*3600
