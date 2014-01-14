@@ -10,8 +10,8 @@ import traceback
 import ConfigParser
 import logging
 
-SITE = 'PERTH'
-#SITE = 'NZ'
+#SITE = 'PERTH'
+SITE = 'NZ'
 
 INIF = 'teljoy.ini'
 
