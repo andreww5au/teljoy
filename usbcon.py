@@ -152,7 +152,7 @@ class Driver(controller.Driver):
       configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
 
     # Invert all the GPIO inputs, so they are active when pulled low:
-    for pin in configuration.pins[0:48]:
+    for pin in configuration.pins[0:40]:
       pin.invert_input = True
 
     # Set all of the motor control pins to motor control instead of just GPIO:
