@@ -1,4 +1,4 @@
-#! /usr/local/bin/python2.7
+#!/usr/bin/python
 
 import controller, time, random
 
@@ -46,7 +46,7 @@ class Driver(controller.Driver):
 		print "(+%0.4f) %s" % (time_delta, " ".join(map(str, values)))
 
 	def get_expected_controller_version(self):
-		return (0, 6)
+		return (0, 7)
 
 	def initialisation_error(self, failure):
 		self.log("* Initialisation Error: %s" % failure.getErrorMessage())
@@ -185,8 +185,8 @@ class Driver(controller.Driver):
 		configuration.mc_guider_b_limit = 20
 	
 		# Set one pin to an output:
-		#configuration.pins[controller.PIN_GPIO_8].direction = \
-		#  controller.CONTROLLER_PIN_OUTPUT
+		configuration.pins[controller.PIN_GPIO_40].direction = \
+		  controller.CONTROLLER_PIN_OUTPUT
 
 		# configuration.shutdown_0_input = controller.PIN_GPIO_0
 		# configuration.shutdown_1_input = controller.PIN_GPIO_1
@@ -239,15 +239,15 @@ class Driver(controller.Driver):
 
 	def _turn_output_on(self):
 		# Turn the output on, and set the timer to turn it off later:
-		self.host.set_outputs(1 << controller.PIN_GPIO_8)
+		self.host.set_outputs(1 << controller.PIN_GPIO_40)
 
-		self.host.add_timer(1.0, self._turn_output_off)
+		self.host.add_timer(2.0, self._turn_output_off)
 
 	def _turn_output_off(self):
 		# Turn the output off, and set the timer to turn it on later:
-		self.host.clear_outputs(1 << controller.PIN_GPIO_8)
+		self.host.clear_outputs(1 << controller.PIN_GPIO_40)
 
-		self.host.add_timer(1.0, self._turn_output_on)
+		self.host.add_timer(2.0, self._turn_output_on)
 
 	def _check_counters(self):
 		d = self.host.get_counters()

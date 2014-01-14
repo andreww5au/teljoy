@@ -1,7 +1,7 @@
 #! /usr/local/bin/python2.7
 # coding=latin1
 
-# Copyright Â© Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
+# Copyright © Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
 # This file is internal, confidential source code and is protected by
 # trade secret and copyright laws.
 
@@ -972,6 +972,8 @@ class Controller(object):
 
     d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
 
+    return d
+
   def force_outputs(self, outputs):
     """Sets all GPIO bits to the specified value on the controller card.
 
@@ -979,6 +981,8 @@ class Controller(object):
     self._last_outputs = outputs
 
     d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
+
+    return d
 
   def _handle_error(self, failure):
     failure.printTraceback()
