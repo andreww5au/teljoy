@@ -186,18 +186,21 @@ class Driver(controller.Driver):
 #    configuration.mc_guider_b_denominator = 50
 #    configuration.mc_guider_b_limit = 20
 
-    # Set 24 pins to inputs, with values reported (coarse, fine and 'test' hand paddles):
-    for pin in configuration.pins[0:40]:
-      pin.direction = controller.CONTROLLER_PIN_OUTPUT
-      pin.report_input = True
-
-    for pin in configuration.pins[40:48]:
-      pin.direction = controller.CONTROLLER_PIN_OUTPUT
-      pin.report_input = True
-
-    #Set the actual hand-paddle bits to NOT inverted, as they are active high.
-#    for pin_number in [24,25,26,27,28, 40,41,42,43,44, 0,1,2,3]:      #[0,1,2,3,4, 16,17,18,19,20, 24,25,26,27]
-#      configuration.pins[pin_number].invert_input = False
+    if SITE == 'NZ':
+      # Set 8 pins to outputs, the rest to inputs, with values reported (paddles, limits, power state):
+      for pin in configuration.pins[0:8] + configuration.pins[16:48]:
+        pin.direction = controller.CONTROLLER_PIN_INPUT
+        pin.report_input = True
+      for pin in configuration.pins[8:16]:
+        pin.direction = controller.CONTROLLER_PIN_OUTPUT
+        pin.report_input = False
+    elif SITE == 'PERTH':
+      for pin in configuration.pins[0:48]:   # Set all pins to inputs with values reported (paddles)
+        pin.direction = controller.CONTROLLER_PIN_INPUT
+        pin.report_input = True
+      #Set the actual hand-paddle bits to NOT inverted, as they are active high.
+      for pin_number in [24,25,26,27,28, 40,41,42,43,44, 0,1,2,3]:      #[0,1,2,3,4, 16,17,18,19,20, 24,25,26,27]
+        configuration.pins[pin_number].invert_input = False
 
     # Set the shutdown pins to outputs:
     for pin_number in (52, 53, 58, 59):

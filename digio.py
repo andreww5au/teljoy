@@ -38,8 +38,8 @@ FGuideMsk = 0x10                        #This bit is set if the fine paddle is s
 
 
 #Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
-LeftBit =  40   # Output bit number for driving dome motor 'left' - bit 0 of port 2_C
-RightBit = 41   # Output bit number for driving dome motor 'right' - bit 1 of port 2_C
+LeftBit = 8    # Output bit number for driving dome motor 'left' - bit 0 of port 2_C
+RightBit = 9   # Output bit number for driving dome motor 'right' - bit 1 of port 2_C
 CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
 CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
 
@@ -59,7 +59,10 @@ def ReadCoarse():
   inputs = motion.motors.Driver.inputs
   if 'C' in DUMMYPADDLES:
     return CB
-  val = (inputs >> 24) & 0x3F                 #bits 0-5 of port 2_A
+  if SITE == 'PERTH':
+    val = (inputs >> 24) & 0x3F
+  else:
+    val = (inputs >> 0) & 0x3F     # bits 0-5 of port 2_A
   if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
     return 0    #more than one button pressed, so ignore inputs
   else:
@@ -89,7 +92,7 @@ def ReadLimit():
   if SITE == 'PERTH':
     return []     # Hardware limits can't be read in Perth
   inputs = motion.motors.Driver.inputs
-  val = (inputs >> 32) & 0x7F                 #bits 0,1,2,5,6 of port 2_B
+  val = (inputs >> 16) & 0x7F                 #bits 0,1,2,5,6 of port 2_B
   limits = []
   if (val & 0x01) == 0x01:
     limits.append('EAST')
@@ -107,14 +110,14 @@ def DomeGoingLeft():
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
-  val = (inputs >> 24) & 0xFF                 #bit 6 of port 2_A
+  val = (inputs >> 0) & 0xFF                 #bit 6 of port 2_A
   return (val & 0x40) == 0x40
 
 def DomeGoingRight():
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
-  val = (inputs >> 24) & 0xFF                 #bit 7 of port 2_A
+  val = (inputs >> 0) & 0xFF                 #bit 7 of port 2_A
   return (val & 0x80) == 0x80
 
 def DomeStop():
