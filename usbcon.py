@@ -220,22 +220,15 @@ class Driver(controller.Driver):
        as 'ON'.
     """
     # Set the shutdown pin values:
-    d = self.host.clear_outputs((1 << 40) | (1 << 41))  # NZ dome outputs
-    d.addCallback(self._initialise_outputs_cleared)
-    d.addErrback(self._initialise_error_occurred)
-
-  def _initialise_outputs_cleared(self, _):
-    """Called when the configuration is saved and the output pins have
-       been cleared. Now set the ones that need setting.
-    """
     d = self.host.set_outputs((1 << 52) | (1 << 58))
     d.addCallback(self._initialise_finished)
     d.addErrback(self._initialise_error_occurred)
 
   def _initialise_finished(self, _):
     """Called when the configuration is saved and the output pins have
-       been set and cleared as needed.
+       been set.
     """
+    self.host.clear_outputs((1 << 40) | (1 << 41))
     logger.info("* Successfully Configured")
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
