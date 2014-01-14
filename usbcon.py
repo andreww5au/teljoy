@@ -220,7 +220,7 @@ class Driver(controller.Driver):
        as 'ON'.
     """
     # Set the shutdown pin values:
-    d = self.host.set_outputs((1 << 52) | (1 << 58))
+    d = self.host.set_outputs((1 << 40) | (1 << 41) | (1 << 52) | (1 << 58))
     d.addCallback(self._initialise_finished)
     d.addErrback(self._initialise_error_occurred)
 
@@ -228,7 +228,6 @@ class Driver(controller.Driver):
     """Called when the configuration is saved and the output pins have
        been set.
     """
-    self.host.clear_outputs((1 << 40) | (1 << 41))
     logger.info("* Successfully Configured")
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
