@@ -194,13 +194,15 @@ class Driver(controller.Driver):
       for pin in configuration.pins[8:16]:
         pin.direction = controller.CONTROLLER_PIN_OUTPUT
         pin.report_input = False
+      for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
+        controller.configuration.pins[pin_number].invert_input = False   # Default is for all inputs to be inverted
     elif SITE == 'PERTH':
       for pin in configuration.pins[0:48]:   # Set all pins to inputs with values reported (paddles)
         pin.direction = controller.CONTROLLER_PIN_INPUT
         pin.report_input = True
       #Set the actual hand-paddle bits to NOT inverted, as they are active high.
       for pin_number in [24,25,26,27,28, 40,41,42,43,44, 0,1,2,3]:      #[0,1,2,3,4, 16,17,18,19,20, 24,25,26,27]
-        configuration.pins[pin_number].invert_input = False
+        configuration.pins[pin_number].invert_input = False      # Default is for all inputs to be inverted
 
     # Set the shutdown pins to outputs:
     for pin_number in (52, 53, 58, 59):
