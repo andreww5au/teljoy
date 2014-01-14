@@ -188,11 +188,12 @@ class Driver(controller.Driver):
 
     # Set 24 pins to inputs, with values reported (coarse, fine and 'test' hand paddles):
     for pin in configuration.pins[0:40]:
-      pin.direction = controller.CONTROLLER_PIN_INPUT
+      pin.direction = controller.CONTROLLER_PIN_OUTPUT
       pin.report_input = True
 
     for pin in configuration.pins[40:48]:
       pin.direction = controller.CONTROLLER_PIN_OUTPUT
+      pin.report_input = True
 
     #Set the actual hand-paddle bits to NOT inverted, as they are active high.
 #    for pin_number in [24,25,26,27,28, 40,41,42,43,44, 0,1,2,3]:      #[0,1,2,3,4, 16,17,18,19,20, 24,25,26,27]
@@ -220,7 +221,7 @@ class Driver(controller.Driver):
        as 'ON'.
     """
     # Set the shutdown pin values:
-    d = self.host.set_outputs((1 << 40) | (1 << 41) | (1 << 52) | (1 << 58))
+    d = self.host.set_outputs((1 << 52) | (1 << 58))
     d.addCallback(self._initialise_finished)
     d.addErrback(self._initialise_error_occurred)
 
