@@ -29,9 +29,9 @@ class Driver(controller.Driver):
     self.inputs = 0L
 
   def get_expected_controller_version(self):
-    """This code needs controller version 0.5
+    """This code needs controller version 0.7
     """
-    return (0, 6)
+    return (0, 7)
 
   def initialise(self, state_details):
     """Initialise the controller, reset the queue so it starts
