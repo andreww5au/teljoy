@@ -11,7 +11,7 @@ import usb1, libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 6)
+module_version = (0, 7)
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
