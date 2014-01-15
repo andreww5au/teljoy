@@ -38,9 +38,6 @@ class Driver(controller.Driver):
        the motion system and calling for more data,
        and print out controller version details.
     """
-    logger.info('* Resetting USB hardware with hardware_reset()')  # Todo - add a flag to disable this, in case we need to see what exceptions there are
-    d = self.host.hardware_reset()
-    time.sleep(0.5)
     logger.info("* Initialising %s" % (self.host.mcu_version,))
     logger.info("    MCU Firmware Version: %s" % (self.host.mcu_version,))
     logger.info("FPGA Firmware Version: %s" % (self.host.fpga_version,))

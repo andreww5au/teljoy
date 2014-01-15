@@ -28,6 +28,14 @@ import traceback
 
 from globals import *
 import usbcon
+
+if __name__ == '__main__':
+  logger.info('* Resetting controller hardware with hardware_reset()')
+  instance = usbcon.controller.Controller(None)
+  instance.hardware_reset()
+  instance._close()
+  time.sleep(0.5)
+
 import motion
 import detevent
 if SITE == 'PERTH':
@@ -42,6 +50,8 @@ import pyephem
 
 SIGNAL_HANDLERS = {}
 CLEANUP_FUNCTION = None
+
+
 
 
 def SignalHandler(signum=None,frame=None):
