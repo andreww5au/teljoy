@@ -36,7 +36,7 @@ class LimitStatus(object):
      Only used for New Zealand telescopes, no limit state can be read in Perth. This code largely
      ported as-is, and has never actually been used on the NZ telescope.
   """
-  _reprf = ( '<LimitStatus: On: %(LimitOnTime) - ' +
+  _reprf = ( '<LimitStatus: On: %(LimitOnTime)5.2f - ' +
              '%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
              'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s, Override=%(LimOverride)s]>')
   _strf = ( 'HWLimits=%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
