@@ -96,13 +96,13 @@ def ReadLimit():
   limits = []
   if (val & 0x01) == 0x01:
     limits.append('EAST')
-  if (val & 0x01) == 0x02:
+  if (val & 0x02) == 0x02:
     limits.append('WEST')
-  if (val & 0x01) == 0x04:
+  if (val & 0x04) == 0x04:
     limits.append('MESH')
-  if (val & 0x01) == 0x20:
+  if (val & 0x20) == 0x20:
     limits.append('POWER')
-  if (val & 0x01) == 0x40:
+  if (val & 0x40) == 0x40:
     limits.append('HORIZON')
   return limits
 
