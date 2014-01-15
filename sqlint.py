@@ -37,7 +37,10 @@ import correct
 
 USER = 'honcho'
 PASSWORD = ''
-HOST = 'mysql'
+if SITE == 'NZ':
+  HOST = 'localhost'
+elif SITE == 'PERTH':
+  HOST = 'mysql'
 DATABASE = ''
 
 
