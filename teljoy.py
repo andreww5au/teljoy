@@ -33,8 +33,9 @@ if __name__ == '__main__':
   logger.info('* Resetting controller hardware with force_hardware_reset()')
   instance = usbcon.controller.Controller(None)
   instance.force_hardware_reset()
+  time.sleep(2)
   instance._close()
-  time.sleep(1)
+  del instance
 
 import motion
 import detevent
@@ -116,7 +117,7 @@ def _safety_shutdown():
   freeze(force=True)
   logger.info('Safety shutdown - closing dome shutter')
   LastDome = dome.IsShutterOpen
-  dome('close', force=True)
+  dome.close(force=True)
 
 
 def _safety_startup():
@@ -129,7 +130,7 @@ def _safety_startup():
     logger.error("safety_startup called while the system is not shut down!")
   if LastDome:
     logger.info('Safety startup - re-opening dome shutter')
-    dome('open', force=True)
+    dome.open(force=True)
   else:
     logger.info('Safety startup - dome  already closed when shut down, not re-opening')
   LastDome = None
