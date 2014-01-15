@@ -151,7 +151,7 @@ safety.register_startfunction('Safety Startup', function=_safety_startup, args=[
 #  release('S', paddle='C')
 #  press('N', paddle='C')
 
-#def s():
+saq#def s():
 #  release('N', paddle='C')
 #  press('S', paddle='C')
 

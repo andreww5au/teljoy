@@ -5,7 +5,7 @@ import time
 
 from globals import *
 
-DOMEPORT = 1   # Serial port for dome encoder
+DOMEPORT = '/dev/ttyUSB0'   # Serial port for dome encoder
 MAXDOMEMOVE = 300000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
 
 #Dome parameters:
@@ -32,7 +32,7 @@ class Dome(object):
     self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
     self.queue = []
     try:
-      self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=9600, stopbits=serial.STOPBITS_ONE, timeout=1.0, rtscts=False, xonxoff=False, dsrdtr=False)
+      self.ser = serial.Serial(DOMEPORT, baudrate=9600, stopbits=serial.STOPBITS_ONE, timeout=1.0, rtscts=False, xonxoff=False, dsrdtr=False)
     except:
       self.ser = None
       print "Error opening serial port, no dome communication"
