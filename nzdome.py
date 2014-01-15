@@ -3,6 +3,7 @@ import math
 import serial
 import time
 
+import digio
 from globals import *
 
 DOMEPORT = '/dev/ttyUSB0'   # Serial port for dome encoder
@@ -123,14 +124,14 @@ class Dome(object):
         else:
           if az > self.DomeAzi:
             if (az - self.DomeAzi) < 180:
-              self._right()
+              digio.DomeRight()
             else:
-              self._left()
+              digio.DomeLeft()
           else:
             if (self.DomeAzi - az) < 180:
-              self._left()
+              digio.DomeLeft()
             else:
-              self._right()
+              digio.DomeRight()
 
   def move(self, az=None, force=False):
     """Add a 'move' command to the dome command queue, to be executed as soon as the dome is free.
