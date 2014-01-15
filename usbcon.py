@@ -196,6 +196,7 @@ class Driver(controller.Driver):
         pin.report_input = False
       for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
         configuration.pins[pin_number].invert_input = False   # Normally all inputs to be inverted, see top of this method
+      configuration.shutdown_0_input = 21    # The 'Power' input triggers a hardware shutdown if it goes active
     elif SITE == 'PERTH':
       for pin in configuration.pins[0:48]:   # Set all pins to inputs with values reported (paddles)
         pin.direction = controller.CONTROLLER_PIN_INPUT
