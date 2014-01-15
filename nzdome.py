@@ -7,6 +7,7 @@ from globals import *
 
 DOMEPORT = '/dev/ttyUSB0'   # Serial port for dome encoder
 MAXDOMEMOVE = 300000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
+ENCODEROFFSET = 27    # Add this many counts to the encoder value (range 0-255) before converting to azimuth
 
 #Dome parameters:
 RD = 3.48                             #Dome radius, in metres
@@ -73,7 +74,10 @@ class Dome(object):
     self.ser.flushInput()      # Empty dome input buffer to get most recent position
     data = self.ser.read(1)
     if data:
-      return GrayToBin(ord(data)) / 256.0 * 360    # Convert to degrees
+      raw = ord(data) + ENCODEROFFSET  # Value in range 0-255 for full circle
+      if raw > 255:
+        raw -= 256
+      return (raw / 256.0) * 360    # Convert to degrees
     else:
       return -1
 
