@@ -115,10 +115,10 @@ class Dome(object):
           az = 0
 
         self.DomeAzi = self.getDomeAzi()
-        if ( (abs(self.DomeAzi - az) < 2.5) or
+        if ( (abs(self.DomeAzi - az) < 5) or
              (self.DomeAzi < 0) or
              (time.time() - self.DomeLastTime) > MAXDOMEMOVE ):
-          self._stop()
+          digio.DomeStop()
           self.Command = None
           self.DomeInUse = False
         else:
