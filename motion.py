@@ -97,11 +97,13 @@ class LimitStatus(object):
     if self.EastLim or self.WestLim or self.MeshLim or self.HorizLim or self.PowerOff:
       self.HWLimit = True
     if (not self.OldLim) and (self.HWLimit):
-      safety.add_tag("Hardware limit reached, closing dome and freezing telescope")  #Discard tag ID
-      self.LimitOnTime = time.time()
+      logger.critical("Hardware limit active!")
+#      safety.add_tag("Hardware limit reached, closing dome and freezing telescope")  #Discard tag ID
+#      self.LimitOnTime = time.time()
       self.OldLim = True
     if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
          (not motors.Moving) and (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
+      logger.info("Hardware limit cleared.")
       self.OldLim = False   # If the limit state has just been cleared
       self.HWLimit = False
       self.LimOverride = False
