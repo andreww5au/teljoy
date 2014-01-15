@@ -55,6 +55,8 @@ TC_STATE_COMMAND_RESET_IO = 0x02
 TC_STATE_COMMAND_ENABLE_GUIDER = 0x03
 TC_STATE_COMMAND_DISABLE_GUIDER = 0x04
 TC_STATE_COMMAND_FORCE_INTERRUPT = 0x05
+TC_STATE_COMMAND_HARDWARE_RESET = 0x06
+TC_STATE_COMMAND_FORCE_HARDWARE_RESET = 0x07
 
 TC_STATE_IDLE = 0x00
 TC_STATE_RUNNING = 0x01
@@ -228,6 +230,8 @@ fpga_error_bit_descriptions = [ \
   "ERROR_BIT_ISOLATOR_ERROR", \
   "ERROR_BIT_CONFIGURATION_LOCK_ERROR", \
   "ERROR_BIT_SHUTDOWN_INPUT_TRIGGERED", \
+  "ERROR_BIT_SHUTDOWN_TIMEOUT_EXCEEDED", \
+  "ERROR_BIT_ERROR_CLEARING_ERROR", \
   "ERROR_BIT_LAST"]
 
 exception_descriptions = [ \
@@ -713,6 +717,37 @@ class Controller(object):
 
     d = self._control_write(TC_ISSUE_STATE_COMMAND, \
       struct.pack("<L", TC_STATE_COMMAND_SHUTDOWN))
+
+    d.addCallback(self._state_command_completed)
+
+    return d
+
+  def hardware_reset(self):
+    """Forces the controller to do a hardware reset.
+
+    This command will only work from TC_STATE_IDLE or TC_STATE_EXCEPTION.
+
+    Unless an error occurs the hardware will be reset before the request returns.
+    """
+
+    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
+      struct.pack("<L", TC_STATE_COMMAND_HARDWARE_RESET))
+
+    d.addCallback(self._state_command_completed)
+
+    return d
+
+  def force_hardware_reset(self):
+    """Forces the controller to do a hardware reset, regardless of the control state.
+
+    This command will work in any state, and will reset the hardware even if
+    motor control is active. It should only be used for manual resets.
+
+    Unless an error occurs the hardware will be reset before the request returns.
+    """
+
+    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
+      struct.pack("<L", TC_STATE_COMMAND_FORCE_HARDWARE_RESET))
 
     d.addCallback(self._state_command_completed)
 
