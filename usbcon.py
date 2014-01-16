@@ -382,8 +382,12 @@ class Driver(controller.Driver):
     logger.debug('acq in _check_counters:')
     self.lock.acquire()
     logger.debug('acq in _check_counters success')
-    d = self.host.get_counters()
-    d.addCallback(self._complete_check_counters)
+    if self.host._running:
+      d = self.host.get_counters()
+      d.addCallback(self._complete_check_counters)
+    else:
+      self.lock.release()
+      logger.debug('release in _check_counters - host is not running')
 
   def _complete_check_counters(self, counters):
     """Update the counter log data using the values returned from the controller.
@@ -415,12 +419,12 @@ class Driver(controller.Driver):
       #Get the next velocity value pair from the motion control system
       va,vb = self._getframe()
       #And add those values to the hardware queue.
-      logger.debug('acq in enqueue_frame_available:')
+#      logger.debug('acq in enqueue_frame_available:')
       self.lock.acquire()
-      logger.debug('acq in enqueue_frame_available success')
+#      logger.debug('acq in enqueue_frame_available success')
       self.frame_number = self.host.enqueue_frame(va, vb)
       self.lock.release()
-      logger.debug('release in enqueue_frame_available')
+#      logger.debug('release in enqueue_frame_available')
 
       self.FrameLog.append((self.frame_number, va, vb))
       if len(self.FrameLog) > 60:    # Log the last three seconds worth of frames
