@@ -329,7 +329,7 @@ class Driver(controller.Driver):
     # Wait around for some arbitrary event; it could be an input change or user input, or
     # both. For the example we'll just wait for a few seconds:
     self.log("Waiting Before Restarting")
-    self.host.add_timer(3.0, self._stop_now)
+    self.host.add_timer(10, self._stop_now)
 
 
   def _stop_now(self):
