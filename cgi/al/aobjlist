@@ -1,0 +1,166 @@
+#!/usr/bin/python
+
+import cgi
+from albatross import SimpleContext
+import copy
+import string
+import time
+import sys
+
+print 'Content-Type: text/html'
+print
+
+sys.path.append('/home/observer/PyDevel/Prosp')
+
+import objects
+import globals
+
+pagesize = 10
+
+
+def pval(s, tp):
+  """Return the string interpreted either as a sexagesimal (if tp=='sex'), a float
+     (if tp=='float') or a string (if tp=='string'). Throw an exception if there's
+     any errors.
+  """
+  if tp=='sex':
+    return globals.stringsex(s)
+  elif tp=='float':
+    return float(s)
+  elif tp=='string':
+    return string.strip(string.upper(s))
+  else:
+    raise ValueError, "Wrong data type"
+
+def pfilt(name, tp='sex', sticky=0):
+  """Parse ctx.locals for 'name' and 'nname' data, and return an appropriate value.
+     tp='sex' for sexagesimal format, or 'float' or 'string'. If 'sticky' is true, then
+     a null value for the new field will revert to the last good value, otherwise the 
+     return value will be None.
+  """
+  try:
+    newf = getattr(ctx.locals, 'n'+name)
+  except:
+    newf = None
+    setattr(ctx.locals, 'n'+name, None)
+  try:
+    oldf = getattr(ctx.locals, name)
+  except:
+    oldf = None
+  if newf:
+    if (not oldf) or (newf == oldf):
+      try:
+        val = pval(newf, tp)
+      except:
+        setattr(ctx.locals, 'n'+name, None)
+        val = None
+    else:
+      try:
+        val = pval(newf, tp)
+      except:
+        setattr(ctx.locals, 'n'+name, None)
+        try:
+          val = pval(oldf)
+        except:
+          val = None
+  else:
+    setattr(ctx.locals, 'n'+name, None)
+    val = None
+    if sticky:
+      try:
+        val = pval(oldf, tp)
+        setattr(ctx.locals, 'n'+name, oldf)
+      except:
+        val = None
+    
+  return val
+
+
+ctx = SimpleContext('.')
+
+form = cgi.FieldStorage()
+ctx.locals.form = form
+for name in form.keys():
+  if type(form[name]) is type([]):
+    value = []
+    for elem in form[name]:
+      value.append(elem.value)
+  else:
+    value = form[name].value
+#  print "ctx.locals."+name+"="+`value`+"\n<br>"
+  setattr(ctx.locals, name, value)
+
+
+#for k in dir(ctx.locals):
+#  print k,':', getattr(ctx.locals, k),"<br>\n"
+
+sortby = pfilt('sortby', tp='string', sticky=1)
+filtid = pfilt('filtid', tp='string')
+filttype = pfilt('filttype', tp='string')
+framin = pfilt('filtramin', tp='sex')
+framax = pfilt('filtramax', tp='sex')
+fdecmin = pfilt('filtdecmin', tp='sex')
+fdecmax = pfilt('filtdecmax', tp='sex')
+flodmin = pfilt('filtlodmin', tp='float')
+flodmax = pfilt('filtlodmax', tp='float')
+
+try:
+  opage = int(ctx.locals.opage)
+except:
+  opage = 1
+
+try:
+  action = ctx.locals.action
+except:
+  action = None
+
+if (not sortby) or (string.strip(string.upper(sortby))=="NONE"):
+  sortby = "ObjID"
+ctx.locals.sortby = string.upper(string.strip(sortby))
+
+templ = ctx.load_template('aobjlist.html')
+
+if action <> "Redraw":
+  try:
+    page = ctx.locals.cpage
+    if page == "Next":
+      page = opage+1
+    elif page == "Prev":
+      page = opage-1
+    else:
+      page=int(page)
+  except:
+    page=1
+else:
+  page=1
+
+olist = objects.filtobjects(id=filtid, type=filttype, sortby=sortby,
+                            ramin=framin, ramax=framax,
+                            decmin=fdecmin, decmax=fdecmax,
+                            lodmin=flodmin, lodmax=flodmax,
+                            page=page, pagesize=pagesize)
+nobjects = objects.filtobjects(id=filtid, type=filttype, sortby=sortby,
+                               ramin=framin, ramax=framax,
+                               decmin=fdecmin, decmax=fdecmax,
+                               lodmin=flodmin, lodmax=flodmax,
+                               count=1)
+
+
+for ob in olist:
+  if ob.LastObs:
+    ob.LastObsDate = time.strftime("%Y/%m/%d",time.gmtime(ob.LastObs))
+    ob.LastObsTime = time.strftime("%H:%M:%S",time.gmtime(ob.LastObs))
+  else:
+    ob.LastObsDate = ""
+    ob.LastObsTime = ""
+  ob.filtnames,ob.exptimes = objects.pls(ob.sublist)
+
+ctx.locals.cpage = page
+ctx.locals.opage = page
+ctx.locals.pages = nobjects/pagesize + 1
+ctx.locals.olist = olist
+ctx.locals.filttypelist = ['ALL', 'PLANET', 'IMAGE', 'SN', 'PHOTOM', 'STORE', 'REF', 'FOCUS']
+
+templ.to_html(ctx)
+
+ctx.flush_content()

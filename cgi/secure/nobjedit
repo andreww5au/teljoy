@@ -1,0 +1,22 @@
+#!/usr/bin/python
+
+import cgi
+import sys
+import traceback
+import string
+
+print 'Content-Type: text/html\n\n'
+
+try:
+  import nobjedit
+
+  form=cgi.FieldStorage()
+
+  print nobjedit.page(form)
+except: 
+  print "There has been an error. Please cut and paste this error information"
+  print "in an email to andrew@physics.uwa.edu.au.<p>\n<p>\n"
+  e=traceback.format_exception(sys.exc_type,sys.exc_value, sys.exc_traceback)
+  for l in e:
+    print string.replace(cgi.escape(l)+'<p>','\n','<br>')
+
