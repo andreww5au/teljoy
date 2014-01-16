@@ -389,7 +389,7 @@ class Driver(controller.Driver):
     self.lock.release()
     logger.debug('release in _complete_check_counters')
     if DEBUG:
-      logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
+      logger.debug("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
                   (counters.reference_frame_number,
                    counters.a_total_steps,
                    counters.b_total_steps,
@@ -427,7 +427,7 @@ class Driver(controller.Driver):
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
       if DEBUG and (self.frame_number % 1200 == 0):
-        print "* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb)
+        logger.debug("* Enqueued Frame (%s = %d, %d)" % (self.frame_number, va, vb))
 
   def state_changed(self, details):
     """Called when the controller run state changes. This is usually either on
@@ -438,7 +438,7 @@ class Driver(controller.Driver):
     logger.info(`details`)
 
     if details.state == controller.TC_STATE_STOPPING:
-      logger.critical('Hardware shutdown in progress, telescope decelerating.')
+      logger.info('Hardware shutdown in progress, telescope decelerating.')
       self.running = False
     elif details.state == controller.TC_STATE_EXCEPTION:
       self.running = False
@@ -453,7 +453,7 @@ class Driver(controller.Driver):
     """
     self.lock.release()
     logger.debug('release in get_exeption_completed')
-    logger.error("Exception Details: %s" % details)
+    logger.info("Exception Details: %s" % details)
     self.exception = details
     # Get the counters to see the last frame before the shutdown began:
     logger.debug('acq in get_exception_completed:')

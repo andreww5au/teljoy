@@ -23,7 +23,7 @@ def KickStart():
   """Start the motion control thread to keep the motor queue full.
   """
   global intthread
-  print "Kickstarting motion control thread"
+  logger.info("Kickstarting motion control thread")
   #Start the queue handler thread to keep the queue full
   intthread = threading.Thread(target=RunQueue, name='USB-controller-thread')
   intthread.daemon = True
@@ -356,8 +356,8 @@ class Axis(object):
         send += self.hold
         self.hold = 0
 
-      self.padlog -= send * (CutFrac/10.0)   # Subtract the cut portion of motion  this frame from the paddle log
-      send = send * (1-CutFrac/10.0)
+      self.padlog -= send * (CutFrac/100.0)   # Subtract the cut portion of motion  this frame from the paddle log
+      send = send * (1-CutFrac/100.0)
 
       #Break final velocity for this tick into integer & fraction
       fracpart, int_send = math.modf(send)
@@ -389,7 +389,7 @@ class MotorControl(object):
     self.limits = limits
     self.lock = threading.RLock()
     self.Driver = None
-    self.CutFrac = 0            # Fraction of steps to throw away during emergency stop - 0 (none) to 10 (100%)
+    self.CutFrac = 0            # Fraction of steps to throw away during emergency stop - 0 (none) to 100 (100%)
     logger.debug('motion.MotorControl.__init__: finished global vars')
 
   def __getstate__(self):
@@ -430,7 +430,7 @@ class MotorControl(object):
     #Determine motor speeds and displacements.
     #If slewing (paddle or Jump) exit and return True as an error
     if (self.Jumping or self.Paddling):
-      logger.debug('motion.MotorControl.Jump called while telescope is already moving')
+      logger.error('motion.MotorControl.Jump called while telescope is already moving')
       return True
     if safety.Active.is_set() or force:
       with self.lock:
@@ -447,8 +447,8 @@ class MotorControl(object):
       ovrd = self.limits.LimOverrite
       if self.limits.PowerOff or self.limits.HorizLim or self.limits.MeshLim:
         ovrd = False     # Only allow east and west limits to be overriden
-      if self.limits.HWlimit and (not ovrd) and (self.CutFrac<10):
-        self.CutFrac += 1
+      if self.limits.HWlimit and (not ovrd) and (self.CutFrac<100):
+        self.CutFrac += 10
       if (not self.limits.HWlimit) or ovrd:
         self.CutFrac = 0
 
