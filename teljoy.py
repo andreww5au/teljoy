@@ -29,13 +29,14 @@ import traceback
 from globals import *
 import usbcon
 
-if __name__ == 'NEVER':
-  logger.info('* Resetting controller hardware with force_hardware_reset()')
+if __name__ == '__main__':
+  logger.info('* Resetting controller hardware with hardware_reset()')
   instance = usbcon.controller.Controller(None)
-  instance.force_hardware_reset()
-  time.sleep(2)
+  instance.hardware_reset()
+  time.sleep(1)
   instance._close()
   del instance
+  time.sleep(1)
 
 import motion
 import detevent
