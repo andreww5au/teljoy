@@ -521,7 +521,7 @@ class Driver(controller.Driver):
     d = self.host.clear_outputs(bitfield)
     d.addCallback(self.outputs_changed)
 
-  def outputs_changed(self):
+  def outputs_changed(self, _):
     """Callback has returned, the output bits have been set or cleared.
     """
     self.lock.release()
