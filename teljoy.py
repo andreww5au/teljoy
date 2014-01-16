@@ -167,6 +167,7 @@ if __name__ == '__main__':
   LastFrozen = None  # State of the motion.motors.Frozen boolean, saved during safety shutdowns
   weather.Init()    #Initialise weather package, including SQL connection
   motion.KickStart()
+  time.sleep(0.2)  # Wait for motion control to start up
   m = motion.motors
   d = m.Driver
   limits = motion.limits

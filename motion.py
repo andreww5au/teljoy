@@ -476,7 +476,7 @@ def RunQueue():
   while True:
     try:
       motors = MotorControl(limits=limits)
-      motors.Driver = usbcon.Driver(getframe=self.getframe, limits=limits)
+      motors.Driver = usbcon.Driver(getframe=motors.getframe, limits=limits)
       motors.Driver.run()
     except:
       print "controller.Controller.stop() was called with an exception:"
