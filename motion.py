@@ -444,7 +444,7 @@ class MotorControl(object):
     """
     """
     if SITE == 'NZ':
-      ovrd = self.limits.LimOverrite
+      ovrd = self.limits.LimOverride
       if self.limits.PowerOff or self.limits.HorizLim or self.limits.MeshLim:
         ovrd = False     # Only allow east and west limits to be overriden
       if self.limits.HWlimit and (not ovrd) and (self.CutFrac<100):

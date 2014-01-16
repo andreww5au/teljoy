@@ -117,7 +117,7 @@ def isdark():
   h = herenow()
   sun = ephem.Sun()
   sun.compute(h)
-  if (float(sun.alt) * 180 / pi) > -12:
+  if (float(sun.alt) * 180 / ephem.pi) > -12:
     return False
   else:
     return True

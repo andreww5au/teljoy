@@ -66,6 +66,7 @@ def GetSesame(name=''):
     logger.error('IO error contacting Sesame web service')
     return None
   poslist = []
+  source = '?'
   for l in data.split('\n'):
     if l.startswith('#='):
       try:
@@ -76,18 +77,19 @@ def GetSesame(name=''):
       try:
         ra = float(l.split()[1])
         dec = float(l.split()[2])
+        poslist.append((source, ra, dec))
       except (IndexError,ValueError):
         pass  # Bad coordinates, ignore this line
-      poslist.append((source, ra, dec))
 
   if poslist:
     print "Found positions:"
     for p in poslist:
       print "RA=%s, DEC=%s, Source=%s" % (sexstring(p[1]), sexstring(p[2]), p[0])
     print "Using position from '%s'" % poslist[0][0]
-    return correct.CalcPosition(ra=p[1]/15.0, dec=p[2], epoch=2000.0, objid=name)
+    return correct.CalcPosition(ra=poslist[0][1]/15.0, dec=poslist[0][2], epoch=2000.0, objid=name)
   else:
     return None
+
 
 def ParseArgs(args, kws, pclass=correct.CalcPosition):
   """Take abitrary arguments stored in 'args' and 'kws' that hopefully specify coordinates, an object
