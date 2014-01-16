@@ -447,9 +447,9 @@ class MotorControl(object):
       ovrd = self.limits.LimOverride
       if self.limits.PowerOff or self.limits.HorizLim or self.limits.MeshLim:
         ovrd = False     # Only allow east and west limits to be overriden
-      if self.limits.HWlimit and (not ovrd) and (self.CutFrac<100):
+      if self.limits.HWLimit and (not ovrd) and (self.CutFrac<100):
         self.CutFrac += 10
-      if (not self.limits.HWlimit) or ovrd:
+      if (not self.limits.HWLimit) or ovrd:
         self.CutFrac = 0
 
     self.ticks += 50

@@ -298,7 +298,7 @@ class CurrentPosition(correct.CalcPosition):
     elif (not safety.Active.is_set()) and (not force):
       logger.error('detevent.Jump: safety interlock - no jumping allowed.')
       return True
-    elif motion.limits.LimitHit.is_set():
+    elif motion.limits.HWLimit:
       logger.error('Hardware limit active - no jumping allowed.')
       return True
     else:
