@@ -543,6 +543,8 @@ class Driver(controller.Driver):
     self.lock.acquire()
     logger.debug('acq in stop() success')
     self.host.stop()
+    self.lock.releae()
+    logger.debug('release in stop()')
 
   def shutdown(self):
     """Do a clean shutdown, acquiring the lock first to make sure there's no transfer happening.
@@ -551,6 +553,8 @@ class Driver(controller.Driver):
     self.lock.acquire()
     logger.debug('acq in shutdown() success')
     self.host.shutdown()
+    self.lock.releae()
+    logger.debug('release in shutdown()')
 
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
