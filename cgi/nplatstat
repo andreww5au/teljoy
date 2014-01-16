@@ -1,0 +1,292 @@
+#!/usr/bin/python -Wignore
+
+import cgi
+import sys
+import traceback
+import time
+import os
+import stat
+
+sys.path.append('/home/observer/PyDevel')
+from Prosp.globals import *
+from Prosp import weather
+from Prosp.extras import prospclient
+from teljoy.extras import tjclient
+
+
+HTMLheader="""
+<META HTTP-EQUIV="Refresh" CONTENT="5;URL=nplatstat">
+<html>
+<head>
+<title>PLAT Telescope and Camera Status</title>
+</head>
+<body BGCOLOR=000000 TEXT=FFFFFF LINK=cc99ff VLINK=cc99ff>
+"""
+
+HTMLtrailer="""
+<p>
+<img src="/platstat/clouds.png" height="400" width="800">
+</body>
+</html>
+"""
+
+def AddObjURL(status):
+  "Return a URL pointing to the 'Add Object' CGI"
+  if status.TJ.current.Ra and status.TJ.current.Dec and (not status.TJ.current.posviolate):
+    return 'Click <A href="secure/nobjedit?new=1&'+ \
+           'ObjID='+status.TJ.current.ObjID+'&'+ \
+           'ObjRA='+sexstring(status.TJ.current.Ra/15/3600)+'&'+ \
+           'ObjDec='+sexstring(status.TJ.current.Dec/3600)+'&'+ \
+           'ObjEpoch='+str(status.TJ.current.Epoch)+'&'+ \
+           'filtname='+filtname(status.filter)+'&'+ \
+           'exptime='+str(status.exptime)+'&'+ \
+           'xg='+`status.guider[0]`+'&'+ \
+           'yg='+`status.guider[1]`+'">'+ \
+           'HERE</A> to add the current object to the database. &nbsp; &nbsp;'
+  else:
+    return 'Current position can not be stored in the database. &nbsp; &nbsp;'
+
+
+def trow(s):
+  return "<tr> %s</tr>\n" % s
+
+def head(s):
+  return "<th> %s</th>" % s
+
+def data(s):
+  if s:
+    return "<td>%s</td>" % s
+  else:
+    return "<td>&nbsp;</td>"
+
+
+def ObsParams(status):
+  "Return an HTML table with the current observing parameters"
+  tmp = "<B>Camera setup</B>\n <table border=1>\n"
+  tmp += trow(data("") + head("Value"))
+  if status.imaging and status.connected:
+    shutemp = "OPEN"
+  else:
+    shutemp = "CLOSED"
+  tmp += trow(head("Shutter") + data(shutemp))
+  tmp += trow(head("Filter") + data(filtname(status.filter)))
+  tmp += trow(head("Guider") + data(`status.guider[0]` + "," + `status.guider[1]`))
+  tmp += trow(head("Exp Time") + data(str(status.exptime)))
+  tmp += trow(head("Object") + data(status.object))
+  tmp += trow(head("Path") + data(status.path))
+  tmp += trow(head("Next File") + data(status.nextfile))
+  tmp += trow(head("Last File") + data(status.lastfile))
+  tmp += trow(head("Image Type") + data(status.imgtype))
+  tmp += trow(head("Observer") + data(status.observer))
+  tmp += "</table>\n"
+  return tmp
+
+
+def since(tm):
+  """Return a string containing the time in seconds since the epoch supplied.
+  """
+  return `int(time.time()-tm)`+' sec'
+
+
+def InstParams(status):
+  "Return an HTML table with the current instrument parameters"
+  tmp = "<B>CCD and Chiller Parameters</B>\n <table border=1> \n"
+  tmp += trow(head("Temp") + head("Set Temp") + head("Tstatus") +
+              head("Observing Mode") )
+  if status.connected:
+    if status.cool:
+      ttmp = "ON (%3.0f)" % status.settemp
+    else:
+      ttmp = "OFF (%3.0f)" % status.settemp
+    tmp += trow(data(str(status.temp)) +
+                data(ttmp) +
+                data(status.tempstatus) +
+                data(status.mode) )
+    tmp += trow(head("AirTemp") + head("WaterTemp") + head("SetPoint") +
+                head("DewPoint") + head("LastChiller"))
+    if status.chiller is None:    #Water chiller not connected
+      tmp += trow(data(str(round(status.weather.temp, 1))) +
+                  data("?") +
+                  data("?") +
+                  data(str(round(status.weather.dewpoint, 1))) +
+                  data("-") )
+    else:
+      tmp += trow(data(str(round(status.weather.temp, 1))) +
+                  data(str(round(status.chiller.watertemp, 1))) +
+                  data(str(round(status.chiller.setpoint, 1))) +
+                  data(str(round(status.weather.dewpoint, 1))) +
+                  data(since(status.chiller.lastchillerchecktime)))
+  else:
+    tmp += trow(data("?") +
+                data("?") +
+                data("Unknown") +
+                data("Unknown") )
+    tmp += trow(head('<font color="red">Prosp not running, Chiller not regulated!</font>'))
+  tmp += "</table> \n"
+  return tmp
+
+
+def TJParams(status):
+  "Write a table with the current telescope/object parameters"
+  tmp="<B>Teljoy Status</B>\n <table border=1>\n"
+  tmp += trow(data("") + head("Value"))
+  tmp += trow(head("Object ID") + data(status.TJ.current.ObjID))
+  if status.TJ.current.Ra and status.TJ.current.Dec and (not status.TJ.current.posviolate):
+    tmp += trow(head("RA") + data(sexstring(status.TJ.current.Ra/15/3600)))
+    tmp += trow(head("Dec") + data(sexstring(status.TJ.current.Dec/3600)))
+    tmp += trow(head("Epoch") + data(str(status.TJ.current.Epoch)))
+  elif status.TJ.current.RaC and status.TJ.current.DecC:
+    tmp += trow(head("RA") + data(sexstring(status.TJ.current.RaC/15/3600)))
+    tmp += trow(head("Dec") + data(sexstring(status.TJ.current.DecC/3600)))
+    tmp += trow(head("Epoch") + data("Raw"))
+  else:
+    tmp += trow(head("RA") + data('--'))
+    tmp += trow(head("Dec") + data('--'))
+    tmp += trow(head("Epoch") + data('--'))
+
+  tmp += trow(head("Alt") + data(sexstring(status.TJ.current.Alt)))
+  tmp += trow(head("Azi") + data(sexstring(status.TJ.current.Azi)))
+  tmp += trow(head("LST") + data(sexstring(status.TJ.current.Time.LST)))
+  flags=''
+  if status.TJ.current.posviolate:
+    flags += 'P'
+  else:
+    flags += '.'
+  if status.TJ.motors.Moving:
+    flags += 'M'
+  else:
+    flags += '.'
+  if status.TJ.prefs.EastOfPier:
+    flags += 'E'
+  else:
+    flags += '.'
+  if status.TJ.dome.DomeInUse:
+    flags += 'D'
+  else:
+    flags += '.'
+  if status.TJ.dome.ShutterInUse:
+    flags += 'S'
+  else:
+    flags += '.'
+  if status.TJ.dome.DomeTracking:
+    flags += 'T'
+  else:
+    flags += '.'
+  if status.TJ.motors.Frozen:
+    flags += 'F'
+  else:
+    flags += '.'
+  if not status.TJ.dome.ShutterOpen:
+    flags += 'C'
+  else:
+    flags += '.'
+  tmp += trow(head("Flags") + data(flags))
+  tmp += trow(head("UT Date") + data(str(status.TJ.current.Time.UT)[:10]))
+  tmp += trow(head("UT Time") + data(str(status.TJ.current.Time.UT)[11:-7]))
+  tmp += "</table> \n"
+  return tmp
+
+
+def yn(arg=0):
+  if arg:
+    return '<font color="red"><blink><H2>YES!</H2></blink></font>'
+  else:
+    return 'no'
+
+
+def ny(arg=1):
+  if arg:
+    return 'yes'
+  else:
+    return '<font color="red"><blink><H2>NO!</H2></blink></font>'
+
+
+def monitoring(arg):
+  if arg:
+    return "twilight,<p>rain,cloud"
+  else:
+    return "Disabled"
+
+
+def unyv(arg):
+  if arg==0:
+    return "?"
+  elif arg==1:
+    return "n"
+  elif arg==2:
+    return "y"
+  elif arg==3:
+    return "Y"
+  else:
+    return "E"
+
+
+def WeatherParams(self):
+  "Write a table with the current weather status info."
+  weather.status.update()
+  tmp="<B>Weather Status</B>\n <table border=1>\n"
+  tmp += trow(data("") + head("Value"))
+  if weather.status.skytemp:
+    tmp += trow(head("Sky Temp") + data(`weather.status.skytemp` + ' C'))
+  else:
+    tmp += trow(head("Sky Temp") + data("Error"))
+  tmp += trow(head("Raining") + data(yn(weather.status.rain)))
+  tmp += trow(head("LastMod") + data(`weather.status.lastmod` + " sec"))
+  tmp += trow(head("Humidity") + data(`weather.status.humidity` + ' %'))
+  tmp += trow(head("Flags") + data('C=' + unyv(weather.status.cloudf) +
+                                   ' W=' + unyv(weather.status.windf) +
+                                   ' R=' + unyv(weather.status.rainf) +
+                                   ' D=' + unyv(weather.status.dayf)))
+  
+
+  if self.connected:
+    tmp += trow(head("Dark") + data(ny(self.isdark)))
+    tmp += trow(head("Monitoring") +
+                data(monitoring(self.MonitorActive)))
+
+    tmp += trow(head("Close Temp") + data(`self.weather.SkyCloseTemp`))
+    tmp += trow(head("Open Temp") + data(`self.weather.SkyOpenTemp`))
+    tmp += trow(head("Open Delay") +
+                data(`self.weather.WeatherOpenDelay` + " sec"))
+    tmp += trow(head("Clear") + data(ny(self.weather.clear)))
+    if (not self.weather.clear) and self.weather.OKforsec:
+      tmp += trow(head("But OK for:") + data(`self.weather.OKforsec` + " sec"))
+
+  tmp += "</table> \n"
+  return tmp
+  
+
+def Exits():
+  return '&nbsp; &nbsp; Go to <A href="al/aobjlist">Objects Database</A>'
+
+
+
+if __name__ == '__main__':
+  print "Content-Type: text/html\n\n"
+  print HTMLheader
+
+  msg = prospclient.Init()
+  status = prospclient.status
+  if not status.connected:
+    print "Error message from Prosp client: %s" % msg
+
+  msg = tjclient.Init()
+  status.TJ = tjclient.status
+  if not status.TJ.connected:
+    print "Error message from Teljoy client: %s" % msg
+
+  #print "<h3>Observing Parameters</h3>\n"
+  print "<table border=0> \n "   #borderless outer table
+  print trow(data("\n"+ObsParams(status))+data("<br>")+ #Camera observing params
+             data(TJParams(status))+                    #Teljoy parameters
+             data(WeatherParams(status)) )              #Weather status
+  print "</table> \n"    #End of outer borderless table
+  print "<br>\n"
+  #print "<h3>CCD and Chiller Parameters</h3>\n"
+  print InstParams(status)
+  print AddObjURL(status)
+  print Exits()
+  print HTMLtrailer
+
+
+
