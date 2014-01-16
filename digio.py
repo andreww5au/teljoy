@@ -50,6 +50,16 @@ LastDirn = ''
 LastPaddle = ''
 
 
+def set_outputs(n):
+  motion.motors.Driver.lock.acquire()
+  d = motion.motors.Driver.set_outputs(n)
+  d.addCallback(motion.motors.lock.release)
+
+def clear_outputs(n):
+  motion.motors.Driver.lock.acquire()
+  d = motion.motors.Driver.clear_outputs(n)
+  d.addCallback(motion.motors.lock.release)
+
 
 def ReadCoarse():
   """Return either the 6 bits of data from the IO bits, or a dummy value if
@@ -130,7 +140,7 @@ def DomeStop():
   """
   if SITE == 'PERTH':
     return      # No digital IO for dome in Perth
-  motion.motors.Driver.clear_outputs((1 << RightBit) + (1 << LeftBit))
+  clear_outputs((1 << RightBit) + (1 << LeftBit))
 
 
 def DomeLeft():
@@ -140,8 +150,8 @@ def DomeLeft():
     DomeStop()
     time.sleep(0.5)
   if not DomeGoingRight():
-    motion.motors.Driver.clear_outputs(1 << RightBit)
-    motion.motors.Driver.set_outputs(1 << LeftBit)
+    clear_outputs(1 << RightBit)
+    set_outputs(1 << LeftBit)
 
 
 def DomeRight():
@@ -151,8 +161,8 @@ def DomeRight():
     DomeStop()
     time.sleep(0.5)
   if not DomeGoingLeft():
-    motion.motors.Driver.clear_outputs(1 << LeftBit)
-    motion.motors.Driver.set_outputs(1 << RightBit)
+    clear_outputs(1 << LeftBit)
+    set_outputs(1 << RightBit)
 
 
 #$IFDEF NZ:

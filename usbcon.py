@@ -510,21 +510,14 @@ class Driver(controller.Driver):
   def set_outputs(self, bitfield):
     """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
-    self.lock.acquire()
     d = self.host.set_outputs(bitfield)
-    d.addCallback(self.outputs_changed)
+    return d
 
   def clear_outputs(self, bitfield):
     """Given a 64-bit number, turn OFF the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
-    self.lock.acquire()
     d = self.host.clear_outputs(bitfield)
-    d.addCallback(self.outputs_changed)
-
-  def outputs_changed(self, _):
-    """Callback has returned, the output bits have been set or cleared.
-    """
-    self.lock.release()
+    return d
 
   def stop(self):
     """Stop the controller loop, triggering creation of a new Driver and Controller.
