@@ -475,6 +475,7 @@ def RunQueue():
   limits = usbcon.LimitStatus()
   while True:
     try:
+      oldmotors = motors    # Keep a  reference to the old object around, in case it takes time to clean itself up on exit
       motors = MotorControl(limits=limits)
       motors.Driver = usbcon.Driver(getframe=motors.getframe, limits=limits)
       motors.Driver.run()
