@@ -471,6 +471,8 @@ def RunQueue(self):
      unrecoverable error that means the main program must exit.
   """
   global motors
+  global limits
+  limits = usbcon.LimitStatus()
   while True:
     try:
       motors = MotorControl(limits=limits)
@@ -485,6 +487,6 @@ def RunQueue(self):
 
 #Main init routine for unit
 
-limits = usbcon.LimitStatus()
+limits = None
 motors = None
 
