@@ -175,11 +175,22 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_denominator = 10
     configuration.mc_guider_b_limit = 20
 
+    for pin in configuration.pins[0:8] + configuration.pins[16:48]:
+      pin.direction = controller.CONTROLLER_PIN_INPUT
+      pin.report_input = True
+    for pin in configuration.pins[8:16]:
+      pin.direction = controller.CONTROLLER_PIN_OUTPUT
+      pin.report_input = False
+    for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
+      configuration.pins[pin_number].invert_input = False   # Normally all inputs to be inverted, see top of this method
+    configuration.shutdown_0_input = 21    # The 'Power' input triggers a hardware shutdown if it goes active
+
     # Set one pin to an output:
     configuration.pins[controller.PIN_GPIO_8].direction = \
       controller.CONTROLLER_PIN_OUTPUT
 
-    configuration.shutdown_0_input = controller.PIN_GPIO_21
+
+#    configuration.shutdown_0_input = controller.PIN_GPIO_21
 #    configuration.shutdown_1_input = controller.PIN_GPIO_1
 #    configuration.shutdown_2_input = controller.PIN_GPIO_2
 #    configuration.shutdown_3_input = controller.PIN_GPIO_3
