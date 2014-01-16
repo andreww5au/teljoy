@@ -142,7 +142,9 @@ class Driver(controller.Driver):
     logger.info("* Initial Run State:")
     logger.info(`state_details`)
 
+    logger.debug('acq in initialise():')
     self.lock.acquire()   # Keep other threads grubby hands away while we configure the controller
+    logger.debug('acq in initialise() success')
 
     if state_details.state == controller.TC_STATE_EXCEPTION:
       d = self.host.get_exception()
@@ -336,6 +338,7 @@ class Driver(controller.Driver):
     logger.info("* Successfully Configured")
     self.running = True
     self.lock.release()
+    logger.debug('release in _initialise_finished')
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
 
@@ -345,6 +348,7 @@ class Driver(controller.Driver):
     logger.error("* Initialisation Error: %s" % failure.getErrorMessage())
     logger.error(failure.getTraceback())
     self.lock.release()
+    logger.debug('release in initialise_error()')
 
   def _initialise_error_occurred(self, failure):
     """Called when the initialisation/configuration functions defined above generate an error.
@@ -352,6 +356,7 @@ class Driver(controller.Driver):
     logger.error("* Configuration Failed:")
     logger.error(failure.getTraceback())
     self.lock.release()
+    logger.debug('release in initialise_error_occurred()')
     self.host.stop()
 
 #  def _turn_output_on(self):
@@ -374,7 +379,9 @@ class Driver(controller.Driver):
        _initialise_outputs_set above, and re-called by _complete_check_counters
        below.
     """
+    logger.debug('acq in _check_counters:')
     self.lock.acquire()
+    logger.debug('acq in _check_counters success')
     d = self.host.get_counters()
     d.addCallback(self._complete_check_counters)
 
@@ -383,6 +390,7 @@ class Driver(controller.Driver):
        Set up another call to update the counters in 60 seconds.
     """
     self.lock.release()
+    logger.debug('release in _complete_check_counters')
     if DEBUG:
       logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
                   (counters.reference_frame_number,
@@ -407,9 +415,12 @@ class Driver(controller.Driver):
       #Get the next velocity value pair from the motion control system
       va,vb = self._getframe()
       #And add those values to the hardware queue.
+      logger.debug('acq in enqueue_frame_available:')
       self.lock.acquire()
+      logger.debug('acq in enqueue_frame_available success')
       self.frame_number = self.host.enqueue_frame(va, vb)
       self.lock.release()
+      logger.debug('release in enqueue_frame_available')
 
       self.FrameLog.append((self.frame_number, va, vb))
       if len(self.FrameLog) > 60:    # Log the last three seconds worth of frames
@@ -434,7 +445,9 @@ class Driver(controller.Driver):
       self.running = False
     elif details.state == controller.TC_STATE_EXCEPTION:
       self.running = False
+      logger.debug('acq in state_changed:')
       self.lock.acquire()
+      logger.debug('acq in state_changed() success')
       d = self.host.get_exception()
       d.addCallback(self._get_exception_completed)
 
@@ -442,15 +455,19 @@ class Driver(controller.Driver):
     """Called when we have any exception details after a state change.
     """
     self.lock.release()
+    logger.debug('release in get_exeption_completed')
     logger.error("Exception Details: %s" % details)
     self.exception = details
     # Get the counters to see the last frame before the shutdown began:
+    logger.debug('acq in get_exception_completed:')
     self.lock.acquire()
+    logger.debug('acq in get_exception_completed() success')
     d = self.host.get_counters()
     d.addCallback(self._get_counters_before_stop_completed)
 
   def _get_counters_before_stop_completed(self, counters):
     self.lock.release()
+    logger.debug('release in _get_counters_before_stop_completed')
     logger.info("Shutdown after frame %s, (%s, %s) total steps before shutdown ramp." % (
        counters.reference_frame_number,
        counters.a_total_steps,
@@ -522,13 +539,17 @@ class Driver(controller.Driver):
   def stop(self):
     """Stop the controller loop, triggering creation of a new Driver and Controller.
     """
+    logger.debug('acq in stop:')
     self.lock.acquire()
+    logger.debug('acq in stop() success')
     self.host.stop()
 
   def shutdown(self):
     """Do a clean shutdown, acquiring the lock first to make sure there's no transfer happening.
     """
+    logger.debug('acq in shutdown:')
     self.lock.acquire()
+    logger.debug('acq in shutdown() success')
     self.host.shutdown()
 
   def run(self):
