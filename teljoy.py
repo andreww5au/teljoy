@@ -159,9 +159,6 @@ safety.register_startfunction('Safety Startup', function=_safety_startup, args=[
 #  release('N', paddle='C')
 #  release('S', paddle='C')
 
-m = motion.motors
-d = m.Driver
-
 def i():
   print usbcon.binstring(d.inputs)
 
@@ -170,6 +167,9 @@ if __name__ == '__main__':
   LastFrozen = None  # State of the motion.motors.Frozen boolean, saved during safety shutdowns
   weather.Init()    #Initialise weather package, including SQL connection
   motion.KickStart()
+  m = motion.motors
+  d = m.Driver
+  limits = motion.limits
   detevent.Init()
   RegisterCleanup(cleanup)
   current = detevent.current
