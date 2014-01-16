@@ -29,12 +29,11 @@ import traceback
 from globals import *
 import usbcon
 
-if __name__ == 'NEVER':
+if __name__ == '__main__':
   logger.info('* Resetting controller hardware with hardware_reset()')
   instance = usbcon.controller.Controller(None)
   instance.hardware_reset()
   time.sleep(1)
-  instance._close()
   del instance
   time.sleep(1)
 
