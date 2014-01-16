@@ -60,7 +60,7 @@ def clear_outputs(n):
   d = motion.motors.Driver.clear_outputs(n)
   d.addCallback(release_lock)
 
-def release_lock(foo, bar):
+def release_lock(foo):
   motion.motors.Driver.lock.release()
 
 
