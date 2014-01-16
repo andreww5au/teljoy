@@ -464,7 +464,7 @@ class MotorControl(object):
 
 
 
-def RunQueue(self):
+def RunQueue():
   """Starts the motion control queue running.
 
      This function only exits if stop() was called with an exception, indicating an
