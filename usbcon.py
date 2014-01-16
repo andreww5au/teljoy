@@ -450,6 +450,7 @@ class Driver(controller.Driver):
     # sent to the motors because of the shutdown:
     da, db = 0, 0    # Number of steps queued but not moved after the shutdown.
     lastframe = counters.reference_frame_number    # Last frame number actually sent to the motors
+    fva, fvb = 0, 0
     for (n,va,vb) in self.FrameLog:
       if n == lastframe:
         fva, fvb = va, vb     # Record the final velocity in each axis at the last frame before the shutdown
