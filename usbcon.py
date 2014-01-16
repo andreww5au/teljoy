@@ -533,6 +533,13 @@ class Driver(controller.Driver):
     self.host.stop()
     self.lock.release()
 
+  def shutdown(self):
+    """Do a clean shutdown, acquiring the lock first to make sure there's no transfer happening.
+    """
+    self.lock.acquire()
+    self.host.shutdown()
+    self.lock.release()
+
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can
        also be replaced with any object implementing the methods required by libusb1:

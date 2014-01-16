@@ -29,7 +29,7 @@ import traceback
 from globals import *
 import usbcon
 
-if __name__ == '__main__':
+if __name__ == 'NEVER':
   logger.info('* Resetting controller hardware with hardware_reset()')
   instance = usbcon.controller.Controller(None)
   instance.hardware_reset()
@@ -99,7 +99,7 @@ def cleanup():
   finally:
     detevent.fastloop.shutdown()
     detevent.slowloop.shutdown()
-    motion.motors.Driver.host.shutdown()
+    motion.motors.Driver.shutdown()
     detevent.fastthread.join()
     detevent.slowthread.join()
     time.sleep(1)
