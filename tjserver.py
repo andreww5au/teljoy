@@ -10,7 +10,10 @@ import socket
 from globals import *
 import detevent
 import motion
-import pdome
+if SITE == 'NZ':
+  import nzdome as dome
+else:
+  import pdome as dome
 import utils
 
 #hmac = "ShiverMeTimbers"
@@ -84,7 +87,7 @@ class Telescope(object):
     return detevent.current.__getstate__()
 
   def GetDome(self):
-    return pdome.dome.__getstate__()
+    return dome.dome.__getstate__()
 
   def GetPrefs(self):
     return prefs.__dict__
@@ -102,9 +105,9 @@ class Telescope(object):
     if safety.Active.is_set():
       mesg = "Jumping to: %s\n" % ob
       detevent.current.Jump(ob)
-      if pdome.dome.AutoDome:
+      if dome.dome.AutoDome:
         mesg += "Moving dome."
-        pdome.dome.move(az=pdome.dome.CalcAzi(ob))
+        dome.dome.move(az=dome.dome.CalcAzi(ob))
       return mesg
     else:
       return "ERROR: safety interlock set, can't jump telescope"
@@ -145,19 +148,19 @@ class Telescope(object):
   def dome(self, arg):
     """move, open, or close the dome.
     """
-    if not pdome.dome.AutoDome:
+    if not dome.dome.AutoDome:
       return "ERROR: Dome not in automatic mode."
     if not safety.Active.is_set():
       return "ERROR: safety interlock, can't open, shut, or move dome"
     if type(arg)==int or type(arg)==float:
-      pdome.dome.move(arg)
+      dome.dome.move(arg)
       return "Dome moving to %s" % arg
     elif type(arg)==str:
       if arg.upper() in ['O','OPEN']:
-        pdome.dome.open()
+        dome.dome.open()
         return "Dome opening"
       elif arg.upper() in ['C','CLOSE']:
-        pdome.dome.close()
+        dome.dome.close()
         return "Dome closing"
       else:
         return "ERROR: Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
