@@ -118,6 +118,7 @@ class Driver(controller.Driver):
     self.configuration = None
     self.running = False
     self.exception = None
+    self.FrameLog = []   # Log of the last few seconds of frame data, as a list of tuples
     self.dropped_frames = None
     self.limits = limits
 
