@@ -315,7 +315,7 @@ class Axis(object):
       self.Paddle_start = False
       self.Paddle_stop = True
 
-  def getframe(self, Frozen):
+  def getframe(self, Frozen=None, CutFrac=None):
     """Called by the controller thread when new data needs to be calculated to send to the
        controller queue for this axis.
 
@@ -356,6 +356,9 @@ class Axis(object):
         send += self.hold
         self.hold = 0
 
+      self.padlog -= send * (CutFrac/10.0)   # Subtract the cut portion of motion  this frame from the paddle log
+      send = send * (1-CutFrac/10.0)
+
       #Break final velocity for this tick into integer & fraction
       fracpart, int_send = math.modf(send)
       self.frac += fracpart    #Accumulate the fractional part
@@ -386,6 +389,7 @@ class MotorControl(object):
     self.limits = limits
     self.lock = threading.RLock()
     self.Driver = None
+    self.CutFrac = 0            # Fraction of steps to throw away during emergency stop - 0 (none) to 10 (100%)
     logger.debug('motion.MotorControl.__init__: finished global vars')
 
   def __getstate__(self):
@@ -439,11 +443,20 @@ class MotorControl(object):
   def getframe(self):
     """
     """
+    if SITE == 'NZ':
+      ovrd = self.limits.LimOverrite
+      if self.limits.PowerOff or self.limits.HorizLim or self.limits.MeshLim:
+        ovrd = False     # Only allow east and west limits to be overriden
+      if self.limits.HWlimit and (not ovrd) and (self.CutFrac<10):
+        self.CutFrac += 1
+      if (not self.limits.HWlimit) or ovrd:
+        self.CutFrac = 0
+
     self.ticks += 50
 
     was_moving = self.Moving
-    int_RA = self.RA.getframe(self.Frozen)
-    int_DEC = self.DEC.getframe(self.Frozen)
+    int_RA = self.RA.getframe(Frozen=self.Frozen, CutFrac=self.CutFrac)
+    int_DEC = self.DEC.getframe(Frozen=self.Frozen, CutFrac=self.CutFrac)
 
     self.Paddling = (self.RA.Paddling or self.DEC.Paddling)
     self.Jumping = (self.RA.Jumping or self.DEC.Jumping)

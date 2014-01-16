@@ -51,8 +51,7 @@ class LimitStatus(object):
     self.EastLim = False          # RA axis eastward limit reached
     self.WestLim = False          # RA axis westward limit reached
     self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
-    self.LimitHit = threading.Event()
-    self.LimitCleared = threading.Event()
+    self.LimOverride = False      # True if the limit has been overridden in software
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
@@ -74,35 +73,29 @@ class LimitStatus(object):
     return (not self.HWLimit) or (self.LimOverride and self.EastLim)
 
   def check(self, inputs=None):
-    """Test the limit states, handle any new limit conditions (set or cleared) since the
-       last check, and update the flags.
+    """Test the limit states asynchronously, in the motor control thread, as we are notified
+       about changed inputs. This function can SET the global limit flag (self.HWLimit), but
+       not clear it - this flag can only be cleared at a higher level, when not jumping,
+       slewing with the paddle, etc.
     """
     limits = digio.ReadLimit(inputs=inputs)
-    self.EastLim = ('EAST' in limits)
-    self.WestLim = ('WEST' in limits)
-    self.MeshLim = ('MESH' in limits)
-    self.HorizLim = ('HORIZON' in limits)
     self.PowerOff = ('POWER' in limits)
+    if not self.PowerOff:
+      self.EastLim = ('EAST' in limits)
+      self.WestLim = ('WEST' in limits)
+      self.MeshLim = ('MESH' in limits)
+      self.HorizLim = ('HORIZON' in limits)
+
     if self.EastLim or self.WestLim or self.MeshLim or self.HorizLim or self.PowerOff:
-      self.HWLimit = True
+      self.HWLimit = True  # The global limit flag can be set here, but only cleared
+                           # in detevent when it's safe (no jump/paddle motion)
     if (not self.OldLim) and (self.HWLimit):
       if self.PowerOff:
         logger.info('Telescope switched off.')
       else:
         logger.critical("Hardware limit reached!")
-      self.LimitCleared.clear()
-      self.LimitHit.set()   # Signal that we've hit a hardware limit
       self.OldLim = True
       self.LimitOnTime = time.time()   # Timestamp of the last time we hit a hardware limit
-    if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
-         (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
-      logger.info("Telescope power switched on, limit cleared.")
-      self.OldLim = False   # If the limit state has just been cleared
-      self.HWLimit = False
-      self.LimitCleared.set()   # Signal that we've just _cleared_ a hardware limit, and need to restart the queue
-      self.LimitHit.set()       # Setting both events indicate that a limit was active in the past, but now it's clear
-
-  # Note that self.LimitHit is never cleared here - that's up to the code that restarts the queue when it's safe to do so.
 
 
 
@@ -295,7 +288,7 @@ class Driver(controller.Driver):
         pin.report_input = False
       for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
         configuration.pins[pin_number].invert_input = False   # Normally all inputs to be inverted, see top of this method
-      configuration.shutdown_0_input = 21    # The 'Power' input triggers a hardware shutdown if it goes active
+#      configuration.shutdown_0_input = 21    # The 'Power' input triggers a hardware shutdown if it goes active
     elif SITE == 'PERTH':
       for pin in configuration.pins[0:48]:   # Set all pins to inputs with values reported (paddles)
         pin.direction = controller.CONTROLLER_PIN_INPUT

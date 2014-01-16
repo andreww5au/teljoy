@@ -146,9 +146,6 @@ class CurrentPosition(correct.CalcPosition):
 
        This function is called at regular intervals by the DetermineEvent loop.
     """
-    if motion.limits.LimitHit.is_set():
-      motion.motors.Frozen = True   # If we're in a hardware shutdown, it's frozen sidereal motion for us...
-
     #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
     if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
       self.posviolate = True
@@ -172,24 +169,6 @@ class CurrentPosition(correct.CalcPosition):
       motion.motors.DEC.padlog = 0
       motion.motors.DEC.reflog = 0
       motion.motors.DEC.guidelog = 0
-
-    if motion.limits.LimitHit.is_set() and motion.limits.LimitCleared.is_set():
-      # A hardware limit has just been cleared - either the power key was switched on,
-      # or the override button was pressed in the case of a limit switch trip.
-      if motion.motors.Driver.dropped_frames is not None:
-        da, db = motion.motors.Driver.dropped_frames   # Steps lost because they were in the queue during a hardware shutdown
-        da += (time.time() - motion.limits.LimitOnTime) * 20 * prefs.RAsid    # Steps lost to lack of sidereal motion while limit was active
-        da += 8 * prefs.RAsid    # Account for the 8 frames of zero velocity pre-filled when we restart the queue
-        self.RaA -= da
-        self.DecA -= db
-        self.RaC -= da
-        self.DecC -= db
-        logger.info('Resetting motion queue, cancelling any paddle motion or slews in progress.')
-        motion.motors.Driver.stop()
-        motion.limits.LimitHit.clear()
-        motion.limits.LimitCleared.clear()
-      else:
-        logger.info('Limit cleared, but dropped_frames not yet defined.')
 
     if self.RaA > (24*60*60*15):
       self.RaA -= (24*60*60*15)
@@ -458,6 +437,22 @@ def CheckDirtyPos():
     paddles.DEC_GuideAcc = 0.0
 
 
+def CheckLimitClear():
+  """Periodically check to see if a hardware limit state has been cleared. If it has,
+     and it's now safe to resume motion (we aren't moving, etc), then clear the
+     global limit flag.
+  """
+  if motion.limits.HWLimit and ( (not motion.motors.Moving) and
+                                 (not motion.limits.PowerOff) and
+                                 (not motion.limits.HorizLim) and
+                                 (not motion.limits.MeshLim) and
+                                 (not motion.limits.EastLim) and
+                                 (not motion.limits.WestLim) ):
+    logger.info('Hardware limit cleared or power restored.')
+    motion.limits.HWLimit = False
+    motion.limits.LimOverride = False
+
+
 def CheckDirtyDome():
   """When prefs.DomeTracking is on, make sure that the dome is moved to the current
      telescope azimuth after each telescope more, or if the telescope has tracked
@@ -721,6 +716,7 @@ def Init():
   fastloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
   fastloop.register('dome.dome.check', dome.dome.check)  #Check to see if dome has reached destination azimuth
   fastloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
+  fastloop.register('CheckLimitClear', CheckLimitClear)          # Test to see if the hardware limits are clear now, and if safe, clear the global limit flag
   fastloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
   fastloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
