@@ -1,4 +1,4 @@
-#! /usr/local/bin/python2.7
+#!/usr/bin/python
 
 import controller, time, random, sys, traceback
 
@@ -179,15 +179,15 @@ class Driver(controller.Driver):
     configuration.pins[controller.PIN_GPIO_8].direction = \
       controller.CONTROLLER_PIN_OUTPUT
 
-    configuration.shutdown_0_input = controller.PIN_GPIO_0
-    configuration.shutdown_1_input = controller.PIN_GPIO_1
-    configuration.shutdown_2_input = controller.PIN_GPIO_2
-    configuration.shutdown_3_input = controller.PIN_GPIO_3
+    configuration.shutdown_0_input = controller.PIN_GPIO_21
+#    configuration.shutdown_1_input = controller.PIN_GPIO_1
+#    configuration.shutdown_2_input = controller.PIN_GPIO_2
+#    configuration.shutdown_3_input = controller.PIN_GPIO_3
 
-    configuration.mc_a_positive_limit_input = controller.PIN_GPIO_4
-    configuration.mc_a_negative_limit_input = controller.PIN_GPIO_5
-    configuration.mc_b_positive_limit_input = controller.PIN_GPIO_6
-    configuration.mc_b_negative_limit_input = controller.PIN_GPIO_7
+#    configuration.mc_a_positive_limit_input = controller.PIN_GPIO_4
+#    configuration.mc_a_negative_limit_input = controller.PIN_GPIO_5
+#    configuration.mc_b_positive_limit_input = controller.PIN_GPIO_6
+#    configuration.mc_b_negative_limit_input = controller.PIN_GPIO_7
 
     # Set the first input pins so that any changes are reported by
     # calling inputs_changed on this driver class:
