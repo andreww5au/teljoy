@@ -121,6 +121,7 @@ class Driver(controller.Driver):
     self.FrameLog = []   # Log of the last few seconds of frame data, as a list of tuples
     self.dropped_frames = None
     self.limits = limits
+    self.lock = threading.RLock()
 
   def get_expected_controller_version(self):
     """This code needs controller version 0.7
@@ -140,6 +141,8 @@ class Driver(controller.Driver):
 
     logger.info("* Initial Run State:")
     logger.info(`state_details`)
+
+    self.lock.acquire()   # Keep other threads grubby hands away while we configure the controller
 
     if state_details.state == controller.TC_STATE_EXCEPTION:
       d = self.host.get_exception()
@@ -332,6 +335,7 @@ class Driver(controller.Driver):
     """
     logger.info("* Successfully Configured")
     self.running = True
+    self.lock.release()
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
 
@@ -340,12 +344,14 @@ class Driver(controller.Driver):
     """
     logger.error("* Initialisation Error: %s" % failure.getErrorMessage())
     logger.error(failure.getTraceback())
+    self.lock.release()
 
   def _initialise_error_occurred(self, failure):
     """Called when the initialisation/configuration functions defined above generate an error.
     """
     logger.error("* Configuration Failed:")
     logger.error(failure.getTraceback())
+    self.lock.release()
     self.host.stop()
 
 #  def _turn_output_on(self):
@@ -368,6 +374,7 @@ class Driver(controller.Driver):
        _initialise_outputs_set above, and re-called by _complete_check_counters
        below.
     """
+    self.lock.acquire()
     d = self.host.get_counters()
     d.addCallback(self._complete_check_counters)
 
@@ -375,6 +382,7 @@ class Driver(controller.Driver):
     """Update the counter log data using the values returned from the controller.
        Set up another call to update the counters in 60 seconds.
     """
+    self.lock.release()
     if DEBUG:
       logger.info("* Frame %s, (%s, %s) total steps, (%s, %s) guider steps, (%s, %s) measured." %
                   (counters.reference_frame_number,
@@ -399,7 +407,9 @@ class Driver(controller.Driver):
       #Get the next velocity value pair from the motion control system
       va,vb = self._getframe()
       #And add those values to the hardware queue.
+      self.lock.acquire()
       self.frame_number = self.host.enqueue_frame(va, vb)
+      self.lock.release()
 
       self.FrameLog.append((self.frame_number, va, vb))
       if len(self.FrameLog) > 60:    # Log the last three seconds worth of frames
@@ -424,19 +434,23 @@ class Driver(controller.Driver):
       self.running = False
     elif details.state == controller.TC_STATE_EXCEPTION:
       self.running = False
+      self.lock.acquire()
       d = self.host.get_exception()
       d.addCallback(self._get_exception_completed)
 
   def _get_exception_completed(self, details):
     """Called when we have any exception details after a state change.
     """
+    self.lock.release()
     logger.error("Exception Details: %s" % details)
     self.exception = details
     # Get the counters to see the last frame before the shutdown began:
+    self.lock.acquire()
     d = self.host.get_counters()
     d.addCallback(self._get_counters_before_stop_completed)
 
   def _get_counters_before_stop_completed(self, counters):
+    self.lock.release()
     logger.info("Shutdown after frame %s, (%s, %s) total steps before shutdown ramp." % (
        counters.reference_frame_number,
        counters.a_total_steps,
@@ -485,7 +499,6 @@ class Driver(controller.Driver):
 
     self.dropped_frames = (da,db)    # Need to adjust the position by this amount before restarting the queue.
 
-
   def inputs_changed(self, inputs):
     """Called whenever any of the 'notifiable' binary inputs have changed state.
     """
@@ -497,12 +510,28 @@ class Driver(controller.Driver):
   def set_outputs(self, bitfield):
     """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
-    self.host.set_outputs(bitfield)
+    self.lock.acquire()
+    d = self.host.set_outputs(bitfield)
+    d.addCallback(self.outputs_changed)
 
   def clear_outputs(self, bitfield):
     """Given a 64-bit number, turn OFF the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
-    self.host.clear_outputs(bitfield)
+    self.lock.acquire()
+    d = self.host.clear_outputs(bitfield)
+    d.addCallback(self.outputs_changed)
+
+  def outputs_changed(self):
+    """Callback has returned, the output bits have been set or cleared.
+    """
+    self.lock.release()
+
+  def stop(self):
+    """Stop the controller loop, triggering creation of a new Driver and Controller.
+    """
+    self.lock.acquire()
+    self.host.stop()
+    self.lock.release()
 
   def run(self):
     """Enter the polling loop. The default poller (returned by select.poll) can

@@ -185,7 +185,7 @@ class CurrentPosition(correct.CalcPosition):
         self.RaC -= da
         self.DecC -= db
         logger.info('Resetting motion queue, cancelling any paddle motion or slews in progress.')
-        motion.motors.Driver.host.stop()
+        motion.motors.Driver.stop()
         motion.limits.LimitHit.clear()
         motion.limits.LimitCleared.clear()
       else:

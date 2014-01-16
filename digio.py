@@ -130,7 +130,7 @@ def DomeStop():
   """
   if SITE == 'PERTH':
     return      # No digital IO for dome in Perth
-  motion.motors.Driver.host.clear_outputs((1 << RightBit) + (1 << LeftBit))
+  motion.motors.Driver.clear_outputs((1 << RightBit) + (1 << LeftBit))
 
 
 def DomeLeft():
@@ -140,8 +140,8 @@ def DomeLeft():
     DomeStop()
     time.sleep(0.5)
   if not DomeGoingRight():
-    motion.motors.Driver.host.clear_outputs(1 << RightBit)
-    motion.motors.Driver.host.set_outputs(1 << LeftBit)
+    motion.motors.Driver.clear_outputs(1 << RightBit)
+    motion.motors.Driver.set_outputs(1 << LeftBit)
 
 
 def DomeRight():
@@ -151,8 +151,8 @@ def DomeRight():
     DomeStop()
     time.sleep(0.5)
   if not DomeGoingLeft():
-    motion.motors.Driver.host.clear_outputs(1 << LeftBit)
-    motion.motors.Driver.host.set_outputs(1 << RightBit)
+    motion.motors.Driver.clear_outputs(1 << LeftBit)
+    motion.motors.Driver.set_outputs(1 << RightBit)
 
 
 #$IFDEF NZ:
