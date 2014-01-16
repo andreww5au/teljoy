@@ -624,7 +624,9 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
   querystr = qstr1 + qstr2 + qstr3 + qstr4
   try:
     curs.execute(querystr)
+    db.commit()
   except dblib.Error as error:
+    db.rollback()
     logger.error("sqlint.UpdateSQLCurrent: teljoy.%s query error: '%s'" % (DTABLE,error))
     logger.error("Query=<%s>" % (querystr,))
   return None
