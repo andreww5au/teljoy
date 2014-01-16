@@ -43,6 +43,9 @@ class Paddles(object):
 
        This method is called at regular intervals by the DetermineEvent loop.
     """
+    if motion.limits.LimitHit.is_set():
+      return   # Ignore hand paddles when a hardware limit is active
+
     #Read the Hand-paddle inputs}
     cb = digio.ReadCoarse()
     fb = digio.ReadFine()

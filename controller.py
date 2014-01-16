@@ -1,7 +1,7 @@
 #! /usr/local/bin/python2.7
 # coding=latin1
 
-# Copyright © Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
+# Copyright Â© Bit Plantation Pty Ltd (ACN 152 088 634). All Rights Reserved.
 # This file is internal, confidential source code and is protected by
 # trade secret and copyright laws.
 
@@ -11,7 +11,7 @@ import usb1, libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 7)
+module_version = (0, 7, 1)
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
@@ -254,7 +254,10 @@ exception_descriptions = [ \
   "TC_EXCEPTION_IO_SUPPLY_ERROR", \
   "TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW", \
   "TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED", \
-  "TC_EXCEPTION_UNEXPECTED_FPGA_RESET"]
+  "TC_EXCEPTION_UNEXPECTED_FPGA_RESET", \
+  "TC_EXCEPTION_FPGA_READBACK_ERROR", \
+  "TC_EXCEPTION_UNEXPECTED_STEPPER_STOP", \
+  "TC_EXCEPTION_CLEARING_EXCEPTION_FAILED"]
 
 CONTROLLER_PIN_INPUT = 0
 CONTROLLER_PIN_OUTPUT = 1
@@ -475,7 +478,7 @@ class ExceptionDetails(object):
     if 0 <= self.exception <= len(exception_descriptions):
       description = exception_descriptions[self.exception]
     else:
-      description = "(Unknown Exception Code)"
+      description = "(Unknown Exception Code %s)" % self.exception
 
     return "<ExceptionDetails %s %s>" % (description, self.properties)
 
@@ -560,6 +563,7 @@ class Controller(object):
     self._last_state_callback = None
 
     self._running = True
+    self._run_failure = None
 
     self._timers_heap = []
 
@@ -592,6 +596,7 @@ class Controller(object):
 
   def _close(self):
     self._device_handle.close()
+    self._device_handle = None
 
     self._context.exit()
 
@@ -697,10 +702,12 @@ class Controller(object):
           self._call_enqueue_available()
 
       else:
-        self.stop()
+        if self._running:
+          self.stop(failure.Failure(InterruptTransferFailedException( \
+            "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
 
-        self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
-          "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
+          self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
+            "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
     finally:
       transfer.close()
 
@@ -835,7 +842,7 @@ class Controller(object):
     return configuration
 
   def _handle_initialise_error(self, failure):
-    self.stop()
+    self.stop(failure)
 
     self._driver.initialisation_error(failure)
 
@@ -858,22 +865,30 @@ class Controller(object):
         "MCU (Version %s.%s) does not match the version of the firmware in " \
         "the FPGA (Version %s.%s)." % (mcu_major, mcu_minor, fpga_major, fpga_minor))
 
-    if module_version != self.mcu_version:
+    if module_version[:2] != self.mcu_version:
       raise ControllerVersionException("The version of this Python module " \
-        "(Version %s.%s) does not match the version of the firmware in " \
+        "(Version %s.%s.%s) does not match the version of the firmware in " \
         "the MCU (Version %s.%s)." % \
-        (module_version[0], module_version[1], fpga_major, fpga_minor))
+        (module_version[0], module_version[1], module_version[2], fpga_major, fpga_minor))
 
     expected_version = self._driver.get_expected_controller_version()
 
-    if expected_version != module_version:
-      raise ControllerVersionException("Your code is expecting version " \
-        "%s.%s of the controller module, but the controller module is " \
-        "version %s.%s. Update the \"get_expected_controller_version\" " \
+    if len(expected_version) != 3:
+      raise ControllerVersionException("This version of the controller " \
+        "library requires a three element version number tuple from your driver " \
+        "(version %s.%s.%s). Update the \"get_expected_controller_version\" " \
         "method in your driver class, and then carefully check any " \
         "release notes for this module and thoroughly test the new version." %
-        (expected_version[0], expected_version[1], \
-        module_version[0], module_version[1]))
+        (module_version[0], module_version[1], module_version[2]))
+
+    if expected_version != module_version:
+      raise ControllerVersionException("Your code is expecting version " \
+        "%s.%s.%s of the controller module, but the controller module is " \
+        "version %s.%s.%s. Update the \"get_expected_controller_version\" " \
+        "method in your driver class, and then carefully check any " \
+        "release notes for this module and thoroughly test the new version." %
+        (expected_version[0], expected_version[1], expected_version[2], \
+        module_version[0], module_version[1], module_version[2]))
 
     # Force an interrupt so that the driver can be provided with it:
     d = self._control_write(TC_ISSUE_STATE_COMMAND, \
@@ -983,9 +998,15 @@ class Controller(object):
 
     self._close()
 
-  def stop(self):
+    # If stop was called with an exception (wrapped in a twisted
+    # failure), raise it now:
+    if self._run_failure is not None:
+      self._run_failure.raiseException()
+
+  def stop(self, run_failure = None):
     """Called in event handlers or timers to stop the event loop."""
     self._running = False
+    self._run_failure = run_failure
 
   def set_outputs(self, outputs):
     """Sets the specified GPIO bits high on the controller card.
@@ -1306,6 +1327,9 @@ class Driver(object):
     - controller.TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW
     - controller.TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED
     - controller.TC_EXCEPTION_UNEXPECTED_FPGA_RESET
+    - controller.TC_EXCEPTION_FPGA_READBACK_ERROR
+    - controller.TC_EXCEPTION_UNEXPECTED_STEPPER_STOP
+    - controller.TC_EXCEPTION_CLEARING_EXCEPTION_FAILED
 
     For printing state details, use the state_description and exception_description properties.
     """
@@ -1315,6 +1339,9 @@ class Driver(object):
 
     The reportable inputs are set in the configuration. The inputs are passed in as
     a long integer bit mask.
+
+    During initialisation input changes are not reported. Once initialisation is completed
+    this method will be called with the current input state.
     """
     pass
 

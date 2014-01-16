@@ -3,6 +3,7 @@
 """
 
 import controller
+import digio
 from globals import *
 
 
@@ -18,20 +19,112 @@ class DriverException(Exception):
   pass
 
 
+class LimitStatus(object):
+  """Class to represent the hardware limit state/s.
+
+     Only used for New Zealand telescopes, no limit state can be read in Perth. This code largely
+     ported as-is, and has never actually been used on the NZ telescope.
+  """
+  _reprf = ( '<LimitStatus: %(HWLimit)s   [PowerOff=%(PowerOff)s, ' +
+             'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s]>')
+  _strf = ( 'HWLimits=%(HWLimit)s [PowerOff=%(PowerOff)s, ' +
+            'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s]')
+
+  def __repr__(self):
+    """This is called by python itself when the object is converted
+       to a string automatically, or using the `` operation.
+    """
+    return self._reprf % self.__dict__
+
+  def __str__(self):
+    """This is called by python itself when the object is converted to
+       a string using the str() function.
+    """
+    return self._strf % self.__dict__
+
+  def __init__(self):
+    self.HWLimit = False          # True if any of the hardware limits are active. Should be method, not attribute
+    self.OldLim = False           # ?
+    self.PowerOff = False         # True if the telescope power is off (eg, switched off at the telescope)
+    self.HorizLim = False         # True if the mercury switch 'nest' horizon limit has tripper
+    self.MeshLim = False          # ?
+    self.EastLim = False          # RA axis eastward limit reached
+    self.WestLim = False          # RA axis westward limit reached
+    self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
+    self.LimitHit = threading.Event()
+    self.LimitCleared = threading.Event()
+
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = self.__dict__.copy()
+    del d['__setattr__']
+    return d
+
+  def CanEast(self):
+    """Returns True if there is no limit set, or the West limit is set but
+       we can still move East to escape the limit.
+    """
+    return (not self.HWLimit) or (self.LimOverride and self.WestLim)
+
+  def CanWest(self):
+    """Returns True if there is no limit set, or the East limit is set but
+       we can still move West to escape the limit.
+    """
+    return (not self.HWLimit) or (self.LimOverride and self.EastLim)
+
+  def check(self, inputs=None):
+    """Test the limit states, handle any new limit conditions (set or cleared) since the
+       last check, and update the flags.
+    """
+    limits = digio.ReadLimit(inputs=inputs)
+    self.EastLim = ('EAST' in limits)
+    self.WestLim = ('WEST' in limits)
+    self.MeshLim = ('MESH' in limits)
+    self.HorizLim = ('HORIZON' in limits)
+    self.PowerOff = ('POWER' in limits)
+    if self.EastLim or self.WestLim or self.MeshLim or self.HorizLim or self.PowerOff:
+      self.HWLimit = True
+    if (not self.OldLim) and (self.HWLimit):
+      if self.PowerOff:
+        logger.info('Telescope switched off.')
+      else:
+        logger.critical("Hardware limit reached!")
+      self.LimitCleared.clear()
+      self.LimitHit.set()   # Signal that we've hit a hardware limit
+      self.OldLim = True
+      self.LimitOnTime = time.time()   # Timestamp of the last time we hit a hardware limit
+    if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
+         (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
+      logger.info("Telescope power switched on, limit cleared.")
+      self.OldLim = False   # If the limit state has just been cleared
+      self.HWLimit = False
+      self.LimitCleared.set()   # Signal that we've just _cleared_ a hardware limit, and need to restart the queue
+      self.LimitHit.set()       # Setting both events indicate that a limit was active in the past, but now it's clear
+
+  # Note that self.LimitHit is never cleared here - that's up to the code that restarts the queue when it's safe to do so.
+
+
+
 class Driver(controller.Driver):
   """To use the controller, a driver class with callbacks must be
      defined to handle the asynchronous events:
   """
-  def __init__(self, getframe=None):
+  def __init__(self, getframe=None, limits=None):
     # (Keep some values to generate test steps)
     self._getframe = getframe
     self.frame_number = 0
     self.inputs = 0L
+    self.configuration = None
+    self.running = False
+    self.exception = None
+    self.dropped_frames = None
+    self.limits = limits
 
   def get_expected_controller_version(self):
     """This code needs controller version 0.7
     """
-    return (0, 7)
+    return (0, 7, 1)
 
   def initialise(self, state_details):
     """Initialise the controller, reset the queue so it starts
@@ -212,6 +305,7 @@ class Driver(controller.Driver):
 
     # Send the configuration to the controller:
     d = self.host.configure(configuration)
+    self.configuration = configuration     # Save the configuration for later reference.
 
     # The deferred is completed once the configuration is written:
     d.addCallback(self._initialise_configuration_written)
@@ -236,6 +330,7 @@ class Driver(controller.Driver):
        been set.
     """
     logger.info("* Successfully Configured")
+    self.running = True
     # Schedule a timer to check the counters:
     self.host.add_timer(1.0, self._check_counters)
 
@@ -305,6 +400,10 @@ class Driver(controller.Driver):
       #And add those values to the hardware queue.
       self.frame_number = self.host.enqueue_frame(va, vb)
 
+      self.FrameLog.append((self.frame_number, va, vb))
+      if len(self.FrameLog) > 60:    # Log the last three seconds worth of frames
+        self.FrameLog =  self.FrameLog[1:]
+
       # Every "frame" of step data has a unique number, starting with
       # zero. Step counts and guider step counts when queried are
       # also associated with a frame number:
@@ -321,7 +420,9 @@ class Driver(controller.Driver):
 
     if details.state == controller.TC_STATE_STOPPING:
       logger.critical('Hardware shutdown in progress, telescope decelerating.')
+      self.running = False
     elif details.state == controller.TC_STATE_EXCEPTION:
+      self.running = False
       d = self.host.get_exception()
       d.addCallback(self._get_exception_completed)
 
@@ -329,7 +430,59 @@ class Driver(controller.Driver):
     """Called when we have any exception details after a state change.
     """
     logger.error("Exception Details: %s" % details)
-    self.host.stop()
+    self.exception = details
+    # Get the counters to see the last frame before the shutdown began:
+    d = self.host.get_counters()
+    d.addCallback(self._get_counters_before_stop_completed)
+
+  def _get_counters_before_stop_completed(self, counters):
+    logger.info("Shutdown after frame %s, (%s, %s) total steps before shutdown ramp." % (
+       counters.reference_frame_number,
+       counters.a_total_steps,
+       counters.b_total_steps))
+
+    # The controller--in 0.7--doesn't update these counters during shutdown, and after clearing
+    # an exception the counters and frame number are reset. A future update will make the total
+    # steps after a shutdown available too.
+
+    # Add up the contents of the frames that were queued to the controller, but not actually
+    # sent to the motors because of the shutdown:
+    da, db = 0, 0    # Number of steps queued but not moved after the shutdown.
+    lastframe = counters.reference_frame_number    # Last frame number actually sent to the motors
+    for (n,va,vb) in self.FrameLog:
+      if n == lastframe:
+        fva, fvb = va, vb     # Record the final velocity in each axis at the last frame before the shutdown
+      if n > lastframe:
+        da += va
+        db += vb    # Add the 'lost' velocities in each frame queued but not moved.
+
+    # From this tally of dropped steps, subtract the number of steps taken by
+    # the motor during the emergency shutdown, using the defined shutdown
+    # accelleration in each axis.
+    if fva > 0:   # We were moving in a positive direction before the shutdown
+      while fva > self.configuration.mc_a_shutdown_acceleration:
+        fva -= self.configuration.mc_a_shutdown_acceleration
+        da -= self.configuration.mc_a_shutdown_acceleration
+      da -= fva
+    elif fva < 0:
+      while fva < -self.configuration.mc_a_shutdown_acceleration:
+        fva += self.configuration.mc_a_shutdown_acceleration
+        da += self.configuration.mc_a_shutdown_acceleration
+      da -= fva
+
+    if fvb > 0:   # We were moving in a positive direction before the shutdown
+      while fvb > self.configuration.mc_b_shutdown_acceleration:
+        fvb -= self.configuration.mc_b_shutdown_acceleration
+        db -= self.configuration.mc_b_shutdown_acceleration
+      db -= fvb
+    elif fvb < 0:
+      while fvb < -self.configuration.mc_b_shutdown_acceleration:
+        fvb += self.configuration.mc_b_shutdown_acceleration
+        db += self.configuration.mc_b_shutdown_acceleration
+      db -= fvb
+
+    self.dropped_frames = (da,db)    # Need to adjust the position by this amount before restarting the queue.
+
 
   def inputs_changed(self, inputs):
     """Called whenever any of the 'notifiable' binary inputs have changed state.
@@ -337,6 +490,7 @@ class Driver(controller.Driver):
     if DEBUG:
       logger.info("* %s" % binstring(inputs))
     self.inputs = inputs
+    self.limits.check(inputs=self.inputs)
 
   def set_outputs(self, bitfield):
     """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
@@ -352,9 +506,11 @@ class Driver(controller.Driver):
     """Enter the polling loop. The default poller (returned by select.poll) can
        also be replaced with any object implementing the methods required by libusb1:
 
-       This function doesn't exit.
+       This function exits if stop() is called. If stop was passed an exception, it indicates an
+       unrecoverable error that means the main program must exit, and that exception is raised
+       by the run() method. If stop() had no arguments, the run() method returns normally.
     """
-    logger.info('usbcon.Driver.run reached.')
     controller.run(driver=self)
+
 
 

@@ -84,14 +84,16 @@ def ReadFine():
   else:
     return val
 
-def ReadLimit():
+
+def ReadLimit(inputs = None):
   """Read the state of the limit switch input bits, and return a list of
      active limit states (each a string). An empty list means no limits are
      active. On old card, this was port $217 = DI-high
   """
   if SITE == 'PERTH':
     return []     # Hardware limits can't be read in Perth
-  inputs = motion.motors.Driver.inputs
+  if inputs is None:
+    inputs = motion.motors.Driver.inputs
   val = (inputs >> 16) & 0x7F                 #bits 0,1,2,5,6 of port 2_B
   limits = []
   if (val & 0x01) == 0x01:
@@ -106,12 +108,14 @@ def ReadLimit():
     limits.append('HORIZON')
   return limits
 
+
 def DomeGoingLeft():
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
   val = (inputs >> 0) & 0xFF                 #bit 6 of port 2_A
   return (val & 0x40) == 0x40
+
 
 def DomeGoingRight():
   if SITE == 'PERTH':
@@ -120,12 +124,14 @@ def DomeGoingRight():
   val = (inputs >> 0) & 0xFF                 #bit 7 of port 2_A
   return (val & 0x80) == 0x80
 
+
 def DomeStop():
   """Turn off both dome motors.
   """
   if SITE == 'PERTH':
     return      # No digital IO for dome in Perth
   motion.motors.Driver.host.clear_outputs((1 << RightBit) + (1 << LeftBit))
+
 
 def DomeLeft():
   if SITE == 'PERTH':
@@ -136,6 +142,7 @@ def DomeLeft():
   if not DomeGoingRight():
     motion.motors.Driver.host.clear_outputs(1 << RightBit)
     motion.motors.Driver.host.set_outputs(1 << LeftBit)
+
 
 def DomeRight():
   if SITE == 'PERTH':

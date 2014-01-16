@@ -25,88 +25,12 @@ def KickStart():
   global intthread
   print "Kickstarting motion control thread"
   #Start the queue handler thread to keep the queue full
-  intthread = threading.Thread(target=motors.Driver.run, name='USB-controller-thread')
+  intthread = threading.Thread(target=RunQueue, name='USB-controller-thread')
   intthread.daemon = True
   intthread.start()
 
 
-class LimitStatus(object):
-  """Class to represent the hardware limit state/s. 
-     
-     Only used for New Zealand telescopes, no limit state can be read in Perth. This code largely
-     ported as-is, and has never actually been used on the NZ telescope.
-  """
-  _reprf = ( '<LimitStatus: On: %(LimitOnTime)5.2f - ' +
-             '%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
-             'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s, Override=%(LimOverride)s]>')
-  _strf = ( 'HWLimits=%(HWLimit)s [Old=%(OldLim)s, PowerOff=%(PowerOff)s, ' + 
-            'Horiz=%(HorizLim)s, Mesh=%(MeshLim)s, East=%(EastLim)s, West=%(WestLim)s, Override=%(LimOverride)s]' )
 
-  def __repr__(self):
-    """This is called by python itself when the object is converted
-       to a string automatically, or using the `` operation.
-    """
-    return self._reprf % self.__dict__
-
-  def __str__(self):
-    """This is called by python itself when the object is converted to
-       a string using the str() function.
-    """
-    return self._strf % self.__dict__
-
-  def __init__(self):
-    self.LimitOnTime = 0.0        # How long the limit has been active
-    self.HWLimit = False          # True if any of the hardware limits are active. Should be method, not attribute
-    self.OldLim = False           # ?
-    self.PowerOff = False         # True if the telescope power is off (eg, switched off at the telescope)
-    self.HorizLim = False         # True if the mercury switch 'nest' horizon limit has tripper
-    self.MeshLim = False          # ?
-    self.EastLim = False          # RA axis eastward limit reached
-    self.WestLim = False          # RA axis westward limit reached
-    self.LimOverride = False      # True if the 'Limit Override' button on the telescope is pressed
-
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
-    """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    return d
-
-  def CanEast(self):
-    """Returns True if there is no limit set, or the West limit is set but
-       we can still move East to escape the limit.
-    """
-    return (not self.HWLimit) or (self.LimOverride and self.WestLim)
-
-  def CanWest(self):
-    """Returns True if there is no limit set, or the East limit is set but
-       we can still move West to escape the limit.
-    """
-    return (not self.HWLimit) or (self.LimOverride and self.EastLim)
-
-  def check(self):
-    """Test the limit states, handle any new limit conditions (set or cleared) since the
-       last check, and update the flags.
-    """
-    limits = digio.ReadLimit()
-    self.EastLim = ('EAST' in limits)
-    self.WestLim = ('WEST' in limits)
-    self.MeshLim = ('MESH' in limits)
-    self.HorizLim = ('HORIZON' in limits)
-    self.PowerOff = ('POWER' in limits)
-    if self.EastLim or self.WestLim or self.MeshLim or self.HorizLim or self.PowerOff:
-      self.HWLimit = True
-    if (not self.OldLim) and (self.HWLimit):
-      logger.critical("Hardware limit active!")
-#      safety.add_tag("Hardware limit reached, closing dome and freezing telescope")  #Discard tag ID
-#      self.LimitOnTime = time.time()
-      self.OldLim = True
-    if ( (not self.PowerOff) and (not self.HorizLim) and (not self.MeshLim) and
-         (not motors.Moving) and (not self.EastLim) and (not self.WestLim) and self.HWLimit ):
-      logger.info("Hardware limit cleared.")
-      self.OldLim = False   # If the limit state has just been cleared
-      self.HWLimit = False
-      self.LimOverride = False
 
 
 
@@ -449,7 +373,7 @@ class MotorControl(object):
      self.Driver.run to keep the controller queue full. This thread is started when the 'KickStart()' function
      is called by the main program.
   """
-  def __init__(self):
+  def __init__(self, limits=None):
     logger.debug('motion.MotorControl.__init__: Initializing Global variables')
     self.Jumping = False        #True if a 'Jump' (precalculated slew) is in progress for either axis
     self.Paddling = False       #True if hand-paddle movement is in progress for either axis
@@ -459,8 +383,9 @@ class MotorControl(object):
     self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
     self.RA = Axis(sidereal=prefs.RAsid)
     self.DEC = Axis()
+    self.limits = limits
     self.lock = threading.RLock()
-    self.Driver = usbcon.Driver(getframe=self.getframe)
+    self.Driver = None
     logger.debug('motion.MotorControl.__init__: finished global vars')
 
   def __getstate__(self):
@@ -539,9 +464,27 @@ class MotorControl(object):
 
 
 
+def RunQueue(self):
+  """Starts the motion control queue running.
+
+     This function only exits if stop() was called with an exception, indicating an
+     unrecoverable error that means the main program must exit.
+  """
+  global motors
+  while True:
+    try:
+      motors = MotorControl(limits=limits)
+      motors.Driver = usbcon.Driver(getframe=self.getframe, limits=limits)
+      motors.Driver.run()
+    except:
+      print "controller.Controller.stop() was called with an exception:"
+      traceback.print_exc()
+      break
+    logger.info("Restarting controller.run().")
+
+
 #Main init routine for unit
 
-limits = LimitStatus()
-motors = MotorControl()
-
+limits = usbcon.LimitStatus()
+motors = None
 

@@ -146,6 +146,9 @@ class CurrentPosition(correct.CalcPosition):
 
        This function is called at regular intervals by the DetermineEvent loop.
     """
+    if motion.limits.LimitHit.is_set():
+      motion.motors.Frozen = True   # If we're in a hardware shutdown, it's frozen sidereal motion for us...
+
     #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
     if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
       self.posviolate = True
@@ -169,6 +172,24 @@ class CurrentPosition(correct.CalcPosition):
       motion.motors.DEC.padlog = 0
       motion.motors.DEC.reflog = 0
       motion.motors.DEC.guidelog = 0
+
+    if motion.limits.LimitHit.is_set() and motion.limits.LimitCleared.is_set():
+      # A hardware limit has just been cleared - either the power key was switched on,
+      # or the override button was pressed in the case of a limit switch trip.
+      if motion.motors.Driver.dropped_frames is not None:
+        da, db = motion.motors.Driver.dropped_frames   # Steps lost because they were in the queue during a hardware shutdown
+        da += (time.time() - motion.limits.LimitOnTime) * 20 * prefs.RAsid    # Steps lost to lack of sidereal motion while limit was active
+        da += 8 * prefs.RAsid    # Account for the 8 frames of zero velocity pre-filled when we restart the queue
+        self.RaA -= da
+        self.DecA -= db
+        self.RaC -= da
+        self.DecC -= db
+        logger.info('Resetting motion queue, cancelling any paddle motion or slews in progress.')
+        motion.motors.Driver.host.stop()
+        motion.limits.LimitHit.clear()
+        motion.limits.LimitCleared.clear()
+      else:
+        logger.info('Limit cleared, but dropped_frames not yet defined.')
 
     if self.RaA > (24*60*60*15):
       self.RaA -= (24*60*60*15)
@@ -297,6 +318,9 @@ class CurrentPosition(correct.CalcPosition):
       return True
     elif (not safety.Active.is_set()) and (not force):
       logger.error('detevent.Jump: safety interlock - no jumping allowed.')
+      return True
+    elif motion.limits.LimitHit.is_set():
+      logger.error('Hardware limit active - no jumping allowed.')
       return True
     else:
       if force:
@@ -675,6 +699,7 @@ def CheckErrors():
     logger.info("Current position now calibrated, removing safety interlock tag.")
     safety.remove_tag(errors.CalErrorTag)
     errors.CalErrorTag = None
+
 
 
 def Init():

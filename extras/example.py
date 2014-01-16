@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/local/bin/python2.7
 
 import controller, time, random
 
@@ -42,7 +42,7 @@ class Driver(controller.Driver):
 		print "(+%0.4f) %s" % (time_delta, " ".join(map(str, values)))
 
 	def get_expected_controller_version(self):
-		return (0, 7)
+		return (0, 7, 1)
 
 	def initialisation_error(self, failure):
 		self.log("* Initialisation Error: %s" % failure.getErrorMessage())
