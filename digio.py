@@ -53,12 +53,15 @@ LastPaddle = ''
 def set_outputs(n):
   motion.motors.Driver.lock.acquire()
   d = motion.motors.Driver.set_outputs(n)
-  d.addCallback(motion.motors.lock.release)
+  d.addCallback(release_lock)
 
 def clear_outputs(n):
   motion.motors.Driver.lock.acquire()
   d = motion.motors.Driver.clear_outputs(n)
-  d.addCallback(motion.motors.lock.release)
+  d.addCallback(release_lock)
+
+def release_lock(foo, bar):
+  motion.motors.Driver.lock.release()
 
 
 def ReadCoarse():
