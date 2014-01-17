@@ -34,7 +34,7 @@ def page(form=None):
   else:
     newobject = 0
 
-  #newobject is true if the oject is a newly created blank object that must be added to the list
+  #newobject is true if the object is a newly created blank object that must be added to the list
   #later. If newobject isn't true, the object returned isn't a copy, any changes will affect
   #the actual object list when saved to the file.
 
@@ -85,9 +85,6 @@ def page(form=None):
       
       ob.save(ask=0, force=1)
 
-      imgname = form['imgname'].value
-      os.remove(imgname)
-
       output.append(nobjedithtml.savedmessage)
       output.append(nobjedithtml.trailer)
 
@@ -106,9 +103,12 @@ def page(form=None):
   for field in ['ObjID', 'name', 'ObjRA', 'ObjDec', 'ObjEpoch',
                 'XYpos_X', 'XYpos_Y', 'type', 'period', 'comment']:
     try:
-      d[field]=ob.__dict__[field]
-    except:
-      d[field]=' '
+      d[field] = form[field]
+    except AttributeError:
+      try:
+        d[field] = ob.__dict__[field]
+      except:
+        d[field] = ' '
   d['filtnames'],d['exptimes'] = objects.pls(ob.sublist)
 
   output.append(htmlutil.subdict(nobjedithtml.newobject, d))
