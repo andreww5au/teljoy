@@ -344,14 +344,14 @@ def filtobjects(curs=None,
       select count(*) as num
       from objects left join objtemp on objects.ObjID = objtemp.ObjID
       where 
-        (objects.ObjID like "%s") and
+        (UPPER(objects.ObjID) like "%s") and
         ( (fObjRA >= %s) and (fObjRA <= %s) ) and
         ( (fObjDec >= %s) and (fObjDec <= %s) ) and
         ( ( (to_days(now())-IFNULL(to_days(LastObs),0)) >= %s) and 
           ( (to_days(now())-IFNULL(to_days(LastObs),0)) <= %s) ) and
         (type like "%s")
     """
-    squery = squery % (sid, sramin, sramax, sdecmin, sdecmax, slodmin, slodmax, stype)
+    squery = squery % (sid.upper(), sramin, sramax, sdecmin, sdecmax, slodmin, slodmax, stype)
     curs.execute(squery)
     if curs.rowcount:
       try:
