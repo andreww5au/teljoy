@@ -22,7 +22,7 @@ class Object:
     self.subframes=1
     self.sublist=[('',0.0)]
     self.XYpos=(0,0)
-    self.type=''
+    self.type='IMAGE'
     self.period=0.0
     self.comment=''
     self.LastObs=0.0
@@ -167,6 +167,7 @@ class Object:
          "comment='"+self.comment+"' "+
          "where ObjID='"+self.ObjID+"'")
 
+    db.commit()
     print "Object "+self.ObjID+" saved."
     return 1
 
@@ -188,6 +189,7 @@ class Object:
         print "Object "+self.ObjID+" not deleted."
         return 0
     curs.execute("delete from objects where ObjID='"+self.ObjID+"'")
+    db.commit()
     print "Object "+self.ObjID+" deleted from database."
     return 1
 
@@ -200,6 +202,7 @@ def ZapPeriods(period=0, type='', curs=None):
     curs=db.cursor()
   if type:
     curs.execute("update teljoy.objects set period="+`period`+" where type='"+type+"' and ObjID not like 'P%'")
+  db.commit()
    
 
 
@@ -284,6 +287,8 @@ def filtobjects(curs=None,
       fObjDec = globals.stringsex(c['ObjDec'])
       curs.execute('replace into objtemp set ObjID="' + c['ObjID'] + '", '
                    'fObjRA=' + `fObjRA` + ', fObjDec=' + `fObjDec` + ' ')
+
+  db.commit()
 
   if ramin:
     sramin = str(ramin)

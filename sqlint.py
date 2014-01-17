@@ -837,8 +837,7 @@ def GetObject(name, db=None):
     if db is None:
       db = gdb
     curs = db.cursor()
-  querystr = ( "select ObjID,ObjRA,ObjDec,ObjEpoch,filtname,exptime," +
-               "XYpos_X,XYpos_Y,type,comment from teljoy.objects where " +
+  querystr = ( "select ObjID,ObjRA,ObjDec,ObjEpoch from teljoy.objects where " +
                "ObjID='%s'" % name )
   try:
     curs.execute(querystr)
