@@ -21,7 +21,7 @@ header="""
 
 savedmessage="""
 <P>Go to <A href="../al/aobjlist">Objects Database</A>, or <P>\n
-       <A href="../platstat">Observing Status Page</A>.<P>
+       <A href="../bncstat">Observing Status Page</A>.<P>
 """
 
 
@@ -143,27 +143,6 @@ Enter event parameters:<p>
 </table><p>
 
 <input type="submit" name="save" value="Save changes">
-
-"""
-
-gstarheader = """
-<table border=1>
-<tr>
-  <th>Num</th>
-  <th>RA</th>
-  <th>Dec</th>
-  <th>Mag</th>
-  <th>X</th>
-  <th>Y</th>
-</tr>
-"""
-
-gstartrailer = """
-</table>
-
-<p>
-Best guide star candidate shown below in red.
-</p>
 
 """
 

@@ -3,24 +3,16 @@
    function called by the 'nobjedit' script stub.
 """
 
-import math
-import copy
-import string
 import cgi
-import urllib
 import os
 import traceback
-import tempfile
 import sys
-sys.path.append('/home/observer/PyDevel/Prosp')
 
+sys.path.append('/home/mjuo')
 
 import htmlutil
-import objects
+from teljoy.cgi import objects
 import nobjedithtml
-from guidestar.starposc import getstars, best
-from guidestar.guideplot import drawstars
-from guidestar.xyglobs import sexstring
 
    
  
@@ -60,51 +52,20 @@ def page(form=None):
           d[field]=form[field].value
         except:
           d[field]=' '
-          
-      try:
-        slist = getstars(ra=d['ObjRA'], dec=d['ObjDec'], epoch=float(d['ObjEpoch']) )
-        bstar = best(slist)
-        tempfile.tempdir = '/var/www/tmp'
-        imgname = tempfile.mktemp('.jpg').replace('@','A')
-        drawstars(slist=slist, best=bstar, outfile=imgname)
-      except:
-        slist = []
-        bstar = None
-        imgname = ''
-        output.append('Error calculating guide stars')
-        e = traceback.format_exception(sys.exc_type,sys.exc_value, sys.exc_traceback)
-        for l in e:
-          output.append(string.replace(cgi.escape(l)+'<p>','\n','<br>'))
 
-      if slist and (bstar is not None) and ob.XYpos == (0,0):
-        d['XYpos_X'], d['XYpos_Y'] = '%d' % (slist[bstar].x,), '%d' % (slist[bstar].y,)
-      else:
-        d['XYpos_X'], d['XYpos_Y'] = '%d' % (ob.XYpos[0],), '%d' % (ob.XYpos[1],)
+      d['XYpos_X'], d['XYpos_Y'] = '%d' % (ob.XYpos[0],), '%d' % (ob.XYpos[1],)
+
       output.append( htmlutil.subdict(nobjedithtml.confirmobject, d))
 
-      output.append( nobjedithtml.gstarheader )
-      for i in range(len(slist)):
-        s = slist[i]
-        if s.visible:
-          if i == bstar:
-            output.append('<tr><td><b>%d</b></td><td>%s</td><td>%s</td><td>%5.2f</td><td>%d</td><td>%d</td></tr>\n' %
-                          (i, sexstring(s.pos.a), sexstring(s.pos.d), s.mag, s.x, s.y) )
-          else:
-            output.append('<tr><td>%d</td><td>%s</td><td>%s</td><td>%5.2f</td><td>%d</td><td>%d</td></tr>\n' %
-                          (i, sexstring(s.pos.a), sexstring(s.pos.d), s.mag, s.x, s.y) )
-      output.append( nobjedithtml.gstartrailer )
-      if imgname:
-        output.append('<img src="/tmp/' + os.path.basename(imgname) + '" width=800 height=600>')
-      output.append('<input type="hidden" name="imgname" value="' + imgname + '">')
       output.append( nobjedithtml.trailer )
-      return string.join(output)
+      return ''.join(output)
     except:
       output.append("Error parsing 'save new object' form.\n" + nobjedithtml.trailer)
       e = traceback.format_exception(sys.exc_type,sys.exc_value, sys.exc_traceback)
       for l in e:
-        output.append(string.replace(cgi.escape(l)+'<p>','\n','<br>'))
+        output.append((cgi.escape(l)+'<p>').replace('\n', '<br>'))
 
-      return string.join(output)
+      return ''.join(output)
 
   #If someone has said 'Yes, I'm sure I want to save this object', add it to the list
   if form.has_key('Yes'):
@@ -130,14 +91,14 @@ def page(form=None):
       output.append(nobjedithtml.savedmessage)
       output.append(nobjedithtml.trailer)
 
-      return string.join(output)
+      return ''.join(output)
     except ValueError:
       output.append("Error parsing data for new object.")
       e = traceback.format_exception(sys.exc_type,sys.exc_value, sys.exc_traceback)
       for l in e:
-        output.append(string.replace(cgi.escape(l)+'<p>','\n','<br>'))
+        output.append((cgi.escape(l)+'<p>').replace('\n','<br>'))
       output.append(nobjedithtml.trailer)
-      return string.join(output)
+      return ''.join(output)
 
   #If we aren't saving an object, or confirming a save, just show boxes for all 
   #the details, either blank for a new event or filled in to edit an existing one
@@ -152,5 +113,5 @@ def page(form=None):
 
   output.append(htmlutil.subdict(nobjedithtml.newobject, d))
   output.append(nobjedithtml.trailer)
-  return string.join(output)
+  return ''.join(output)
 
