@@ -147,7 +147,7 @@ class CurrentPosition(correct.CalcPosition):
        This function is called at regular intervals by the DetermineEvent loop.
     """
     #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
-    if motion.motors.Frozen or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
+    if motion.motors.Frozen or motion.limits.HWLimit or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
       self.posviolate = True
 
     with motion.motors.RA.lock:
@@ -349,7 +349,7 @@ class CurrentPosition(correct.CalcPosition):
     """
     info, HA, LastMod = sqlint.ReadSQLCurrent(self)
     if info is None:            #Flag a Calibration Error if there was no valid data in the table
-#      errors.CalError = True   # TODO - fix this instead of disabling the error
+      errors.CalError = True
       logger.error('DANGER - no initial position, you MUST check and reset the position before slewing!')
       #If there's no saved position, assume telescope is pointed straight up
       HA = 0
