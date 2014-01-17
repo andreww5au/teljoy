@@ -8,9 +8,9 @@ import os
 import stat
 
 sys.path.append('/home/mjuo/')
-from globals import *
+from teljoy.globals import *
 from teljoy import weather
-from extras import tjclient
+from teljoy.extras import tjclient
 
 DFILTER = 'I'   # Default filter for new objects created
 DEXPTIME = 60   # Default exposure time for new objects created
