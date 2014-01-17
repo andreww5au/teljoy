@@ -10,9 +10,9 @@ import sys
 print 'Content-Type: text/html'
 print
 
-sys.path.append('/home/observer/PyDevel/Prosp')
+sys.path.append('/home/mjuo/')
 
-import objects
+from teljoy.cgi import objects
 import globals
 
 pagesize = 10
@@ -60,7 +60,7 @@ def pfilt(name, tp='sex', sticky=0):
       except:
         setattr(ctx.locals, 'n'+name, None)
         try:
-          val = pval(oldf)
+          val = pval(oldf, tp)
         except:
           val = None
   else:

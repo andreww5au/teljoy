@@ -230,7 +230,7 @@ def psl(filtnames='I',exptimes='1.0'):
         for i in range(len(filtlist)):
           sublist.append( (filtlist[i],float(exptlist[i])) )
       else:
-        print "No match between number of filts and number of exptimes in object: "+self.ObjID
+        print "No match between number of filts and number of exptimes in object"
         subframes = 1
         sublist.append( (filtlist[0],float(exptlist[0])) )
   return subframes,sublist
