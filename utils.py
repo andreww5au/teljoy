@@ -32,23 +32,19 @@ SKYFLAT = correct.HADecPosition(ha=prefs.SkyFlatHourAngle,
 
 
 def Lookup(objid=''):
-  """Given a string, look up that name in teljoy.objects, the RC3 catalog, and
+  """Given a string, look up that name in teljoy.objects, and
      anywhere else that seems reasonable. Return a position object for that name,
      or None if it can't be found. Try both the name as given, and if that fails,
      the name converted to all upper case.
-
-     Normally that would be an instance of the correct.CalcPosition class, but you can pass an alternate
-     base class in using the 'pclass' attribute. This alternate class is NOT USED if the ID is used to look
-     up an object in the database, either in teljoy.objects (when a correct.CalcPosition is returned) or in
-     the RC3 catalog (when an sqlint.Galaxy object is returned).
   """
   obj = sqlint.GetObject(name=objid)
-  if obj is None:
-    obj = sqlint.GetObject(name=objid.upper())
-  if obj is None:
-    obj = sqlint.GetRC3(gid=objid)
-  if obj is None:
-    obj = sqlint.GetRC3(gid=objid.upper())
+
+  if SITE == 'PERTH':   # Old Perth Observatory supernova search galaxy catalogues
+    if obj is None:
+      obj = sqlint.GetRC3(gid=objid)
+    if obj is None:
+      obj = sqlint.GetRC3(gid=objid.upper())
+
   if obj is None:
     obj = pyephem.getObject(name=objid)
   if obj is None:
