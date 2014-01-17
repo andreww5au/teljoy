@@ -33,7 +33,7 @@ def AddObjURL(status):
   "Return a URL pointing to the 'Add Object' CGI"
   if status.current.Ra and status.current.Dec and (not status.current.posviolate):
     return 'Click <A href="secure/nobjedit?new=1&'+ \
-           'ObjID='+status.current.ObjID+'&'+ \
+           'ObjID=%s&' %  status.current.ObjID + \
            'ObjRA='+sexstring(status.current.Ra/15/3600)+'&'+ \
            'ObjDec='+sexstring(status.current.Dec/3600)+'&'+ \
            'ObjEpoch='+str(status.current.Epoch)+'&'+ \
