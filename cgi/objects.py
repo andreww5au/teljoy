@@ -1,12 +1,10 @@
 
 import MySQLdb
-import safecursor
-DictCursor=safecursor.SafeCursor
+from MySQLdb.cursors import DictCursor
 
-import string
 import time
 
-import globals
+from teljoy import globals
 
 class Object:
 
@@ -140,13 +138,13 @@ class Object:
          "'"+self.type.strip()+"', "+
          `self.period`+", "+
          "'"+self.comment.strip()+"') ")
-      if string.upper(self.origid)<>string.upper(self.ObjID):
+      if self.origid.upper() != self.ObjID.upper():
         if self.origid<>'':
           curs.execute("delete from objects where ObjID='"+self.origid+"'")
     else:
       if ask:
         print "Entry "+self.ObjID+" already exists, do you want to replace it?"
-        ans=string.strip(string.lower(raw_input("y/n (default n): ")))[:1]
+        ans=raw_input("y/n (default n): ").strip().lower()[:1]
         if ans<>'y':
           print "Object "+self.ObjID+" not overwritten."
           return 0
@@ -185,7 +183,7 @@ class Object:
       return 0
     if ask:
       print "Entry "+self.ObjID+" already exists, do you want to replace it?"
-      ans=string.strip(string.lower(raw_input("y/n (default n): ")))[:1]
+      ans=raw_input("y/n (default n): ").strip().lower()[:1]
       if ans<>'y':
         print "Object "+self.ObjID+" not deleted."
         return 0
@@ -320,22 +318,22 @@ def filtobjects(curs=None,
   if (not id) or (id == "NONE"):
     sid = "%"
   else:
-    sid = string.replace(id,r'%',r'\%')
-    sid = string.replace(sid,r'_',r'\_')
-    sid = string.replace(sid,r'*',r'%')
-    sid = string.replace(sid,r'?',r'_')
+    sid = id.replace(r'%', r'\%')
+    sid = sid.replace(r'_',r'\_')
+    sid = sid.replace(r'*',r'%')
+    sid = sid.replace(r'?',r'_')
 
   if (not type) or (type == "NONE"):
     stype = "%"
   else:
-    stype = string.upper(string.strip(type))
+    stype = type.strip().upper()
     if stype == 'ALL':
       stype = "%"
 
   if (not sortby) or (sortby == "NONE"):
     sortby = "ObjID"
   else:
-    sortby = string.strip(string.upper(sortby))
+    sortby = sortby.strip().upper()
     if sortby == 'OBJRA':
       sortby = 'fObjRA'
     elif sortby == 'OBJDEC':
@@ -404,7 +402,7 @@ def sorttype(o,p):
 
 
 #print 'connecting to database for objects database access'
-db=MySQLdb.Connection(host='mysql', user='honcho', passwd='',
+db=MySQLdb.Connection(host='localhost', user='honcho', passwd='',
                       db='teljoy', cursorclass=DictCursor)
 #print 'connected'
 

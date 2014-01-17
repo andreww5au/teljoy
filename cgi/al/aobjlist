@@ -3,7 +3,6 @@
 import cgi
 from albatross import SimpleContext
 import copy
-import string
 import time
 import sys
 
@@ -13,7 +12,7 @@ print
 sys.path.append('/home/mjuo/')
 
 from teljoy.cgi import objects
-import globals
+from teljoy import globals
 
 pagesize = 10
 
@@ -28,7 +27,7 @@ def pval(s, tp):
   elif tp=='float':
     return float(s)
   elif tp=='string':
-    return string.strip(string.upper(s))
+    return s.strip().upper()
   else:
     raise ValueError, "Wrong data type"
 
@@ -114,9 +113,9 @@ try:
 except:
   action = None
 
-if (not sortby) or (string.strip(string.upper(sortby))=="NONE"):
+if (not sortby) or (sortby.strip().upper() == "NONE"):
   sortby = "ObjID"
-ctx.locals.sortby = string.upper(string.strip(sortby))
+ctx.locals.sortby = sortby.strip().upper()
 
 templ = ctx.load_template('aobjlist.html')
 
