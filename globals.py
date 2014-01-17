@@ -73,17 +73,22 @@ LOGFILE = "/tmp/teljoy.log"
 logger = logging.getLogger("teljoy")
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages, formatted with timestamps
-fh = logging.FileHandler(LOGFILE)
-fh.setLevel(LOGLEVEL_LOGFILE)
-ff = logging.Formatter("%(asctime)s: %(name)s-%(levelname)s  %(message)s")
-fh.setFormatter(ff)
+try:
+  fh = logging.FileHandler(LOGFILE)
+  fh.setLevel(LOGLEVEL_LOGFILE)
+  ff = logging.Formatter("%(asctime)s: %(name)s-%(levelname)s  %(message)s")
+  fh.setFormatter(ff)
+except:
+  fh = None    # This will fail if we don't have permission to write to an existing log file.
+
 # create console handler with a higher log level, and without timestamps
 ch = logging.StreamHandler()
 ch.setLevel(LOGLEVEL_CONSOLE)
 cf = logging.Formatter("%(name)s-%(levelname)s  %(message)s")
 ch.setFormatter(cf)
 # add the handlers to the logger
-logger.addHandler(fh)
+if fh is not None:
+  logger.addHandler(fh)
 logger.addHandler(ch)
 
 
@@ -467,6 +472,4 @@ safety = SafetyInterlock()   # Create a safety interlock object
 
 DirtyTime = 0
 
-logger.info('globals.py init finished')
-print 'Globals init finished'
 

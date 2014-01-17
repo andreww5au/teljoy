@@ -15,7 +15,7 @@ DFILTER = 'I'   # Default filter for new objects created
 DEXPTIME = 60   # Default exposure time for new objects created
 
 HTMLheader="""
-<META HTTP-EQUIV="Refresh" CONTENT="5;URL=nplatstat">
+<META HTTP-EQUIV="Refresh" CONTENT="5;URL=bncstat">
 <html>
 <head>
 <title>B&C Telescope Status</title>
