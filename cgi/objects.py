@@ -34,7 +34,7 @@ class Object:
     if str=='':
       self.empty()
     else:
-      curs.execute("select * from objects where ObjID='"+str+"'")
+      curs.execute("select * from objects where UPPER(ObjID)='"+str.upper()+"'")
       
       if not curs.rowcount:
         self.empty()
@@ -87,7 +87,7 @@ class Object:
   def updatetime(self, curs=None):
     if not curs:
       curs=db.cursor()
-    curs.execute("update objects set lastobs=NOW() where ObjID='"+self.ObjID+"'")
+    curs.execute("update objects set lastobs=NOW() where UPPER(ObjID)='"+self.ObjID.upper()+"'")
 
   def display(self):
     print '%9s:%11s %11s (%6.1f)%8s%6.5g (%5d,%5d)%8s * %d' % (self.ObjID,
@@ -122,7 +122,7 @@ class Object:
       print "Empty ObjID, can't save object."
       return 0
     filtnames,exptimes = pls(self.sublist)
-    if not curs.execute("select * from objects where ObjID='"+self.ObjID+"'"):
+    if not curs.execute("select * from objects where UPPER(ObjID)='"+self.ObjID.upper()+"'"):
       curs.execute("insert into objects (ObjID,name,ObjRA,ObjDec,ObjEpoch,filtnames,"+
          "exptimes,"+
          "XYpos_X,XYpos_Y,type,period,comment) values ("+
@@ -140,7 +140,7 @@ class Object:
          "'"+self.comment.strip()+"') ")
       if self.origid.upper() != self.ObjID.upper():
         if self.origid<>'':
-          curs.execute("delete from objects where ObjID='"+self.origid+"'")
+          curs.execute("delete from objects where UPPER(ObjID)='"+self.origid.upper()+"'")
     else:
       if ask:
         print "Entry "+self.ObjID+" already exists, do you want to replace it?"
@@ -165,7 +165,7 @@ class Object:
          "type='"+self.type+"', "+
          "period="+`self.period`+", "+
          "comment='"+self.comment+"' "+
-         "where ObjID='"+self.ObjID+"'")
+         "where UPPER(ObjID)='"+self.ObjID.upper()+"'")
 
     db.commit()
     print "Object "+self.ObjID+" saved."
@@ -178,7 +178,7 @@ class Object:
     if self.ObjID=='':
       print "Empty ObjID, can't delete object."
       return 0
-    curs.execute("select * from objects where ObjID='"+self.ObjID+"'")
+    curs.execute("select * from objects where UPPER(ObjID)='"+self.ObjID.upper()+"'")
     if not curs.rowcount:
       print "Object not found in database."
       return 0
@@ -188,7 +188,7 @@ class Object:
       if ans<>'y':
         print "Object "+self.ObjID+" not deleted."
         return 0
-    curs.execute("delete from objects where ObjID='"+self.ObjID+"'")
+    curs.execute("delete from objects where UPPER(ObjID)='"+self.ObjID.upper()+"'")
     db.commit()
     print "Object "+self.ObjID+" deleted from database."
     return 1
@@ -349,14 +349,14 @@ def filtobjects(curs=None,
       select count(*) as num
       from objects left join objtemp on objects.ObjID = objtemp.ObjID
       where 
-        (objects.ObjID like "%s") and
+        (UPPER(objects.ObjID) like "%s") and
         ( (fObjRA >= %s) and (fObjRA <= %s) ) and
         ( (fObjDec >= %s) and (fObjDec <= %s) ) and
         ( ( (to_days(now())-IFNULL(to_days(LastObs),0)) >= %s) and 
           ( (to_days(now())-IFNULL(to_days(LastObs),0)) <= %s) ) and
         (type like "%s")
     """
-    squery = squery % (sid, sramin, sramax, sdecmin, sdecmax, slodmin, slodmax, stype)
+    squery = squery % (sid.upper(), sramin, sramax, sdecmin, sdecmax, slodmin, slodmax, stype)
     curs.execute(squery)
     if curs.rowcount:
       try:
@@ -370,7 +370,7 @@ def filtobjects(curs=None,
     select objects.ObjID 
     from objects left join objtemp on objects.ObjID = objtemp.ObjID
     where 
-      (objects.ObjID like "%s") and
+      (UPPER(objects.ObjID) like "%s") and
       ( (fObjRA >= %s) and (fObjRA <= %s) ) and
       ( (fObjDec >= %s) and (fObjDec <= %s) ) and
       ( ( (to_days(now())-IFNULL(to_days(LastObs),0)) >= %s) and 
@@ -379,7 +379,7 @@ def filtobjects(curs=None,
     order by %s 
     limit %d, %d
   """
-  squery = squery % (sid, sramin, sramax, sdecmin, sdecmax, slodmin, slodmax, stype,
+  squery = squery % (sid.upper(), sramin, sramax, sdecmin, sdecmax, slodmin, slodmax, stype,
                      sortby, (page-1)*pagesize, pagesize)
 #  print squery + "\n<br>"
   curs.execute(squery)

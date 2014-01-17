@@ -838,7 +838,7 @@ def GetObject(name, db=None):
       db = gdb
     curs = db.cursor()
   querystr = ( "select ObjID,ObjRA,ObjDec,ObjEpoch from teljoy.objects where " +
-               "ObjID='%s'" % name )
+               "UPPER(ObjID)='%s'" % name.upper() )
   try:
     curs.execute(querystr)
   except dblib.Error as error:
