@@ -103,13 +103,17 @@ def page(form=None):
   for field in ['ObjID', 'name', 'ObjRA', 'ObjDec', 'ObjEpoch',
                 'XYpos_X', 'XYpos_Y', 'type', 'period', 'comment']:
     try:
-      d[field] = form[field]
-    except AttributeError:
+      d[field] = form[field].value
+    except KeyError:
       try:
         d[field] = ob.__dict__[field]
       except:
         d[field] = ' '
-  d['filtnames'],d['exptimes'] = objects.pls(ob.sublist)
+  try:
+    d['filtnames'] = form['filtname'].value
+    d['exptimes'] = form['exptime'].value
+  except KeyError:
+    d['filtnames'],d['exptimes'] = objects.pls(ob.sublist)
 
   output.append(htmlutil.subdict(nobjedithtml.newobject, d))
   output.append(nobjedithtml.trailer)
