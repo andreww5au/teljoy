@@ -8,6 +8,7 @@ DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
 import Pyro4
 import time
 import datetime
+import traceback
 
 status = None
 ShutterAction = None
@@ -114,22 +115,31 @@ class TelClient(StatusObj):
   def connect(self):
     self.connected = False
     ok = False
+    msg = ''
     if self.proxy is not None:
       self.proxy._pyroRelease()
+
     try:
-      self.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
+      self.proxy = Pyro4.Proxy(DEFURL)   # Use hardwired host/port first
       ok = True
     except Pyro4.errors.PyroError:
+      msg += "Can't find teljoy using default URL, trying nameserver.\n"
+      msg += "Local traceback: \n" + traceback.format_exc() + "\n"
       try:
-        self.proxy = Pyro4.Proxy(DEFURL)   # If we can't find a nameserver, try the default host/port
+        self.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
+        ok = True
       except Pyro4.errors.PyroError:
         self.proxy = None
-        return "Can't find Teljoy service in nameserver"
+        msg += "Can't find Teljoy service using nameserver"
+        msg += "Local traceback: \n" + traceback.format_exc() + "\n"
+        return msg
     if ok:
       try:
         self.update()
         self.connected = True
       except Pyro4.errors.PyroError:
+        msg += "Local traceback: \n" + traceback.format_exc() + "\n"
+        msg += "Remote Traceback: \n" + "".join(Pyro4.util.getPyroTraceback()) + "\n"
         return "Can't connect to Teljoy Pyro4 service - is Teljoy running?"
 
 
