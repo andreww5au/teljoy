@@ -148,7 +148,11 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
       epoch = 2000.0
     return pclass(ra=args[0], dec=args[1], epoch=epoch, objid=objid, domepos=domepos)
   elif len(args) == 3:
-    return pclass(ra=args[0], dec=args[1], epoch=args[2], objid=objid, domepos=domepos)
+    try:
+      epoch = float(args[2])
+    except:
+      epoch = 2000
+    return pclass(ra=args[0], dec=args[1], epoch=epoch, objid=objid, domepos=domepos)
 
   return None
 
