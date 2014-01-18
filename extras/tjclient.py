@@ -1,6 +1,10 @@
 """Pyro4 RPC client library for Teljoy
 """
 
+DEFHOST = '132.181.49.137'
+DEFPORT = 9696
+DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
+
 import Pyro4
 import time
 import datetime
@@ -116,8 +120,11 @@ class TelClient(StatusObj):
       self.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
       ok = True
     except Pyro4.errors.PyroError:
-      self.proxy = None
-      return "Can't find Teljoy service in nameserver"
+      try:
+        self.proxy = Pyro4.Proxy(DEFURL)   # If we can't find a nameserver, try the default host/port
+      except Pyro4.errors.PyroError:
+        self.proxy = None
+        return "Can't find Teljoy service in nameserver"
     if ok:
       try:
         self.update()
