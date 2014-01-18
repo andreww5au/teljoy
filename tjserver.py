@@ -12,8 +12,10 @@ import detevent
 import motion
 if SITE == 'NZ':
   import nzdome as dome
+  TESTHOST = 'www.canterbury.ac.nz'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 else:
   import pdome as dome
+  TESTHOST = 'www.google.com.au'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 import utils
 
 #hmac = "ShiverMeTimbers"
@@ -44,7 +46,7 @@ class Telescope(object):
         logger.info("Previous Pyro daemon socket port: %d" % existing.port)
         # start the daemon on the previous port, and try to detect the IP address of an external interface.
         try:
-          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('google.com.au'), port=existing.port)
+          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress(TESTHOST), port=existing.port)
         except:   # Fails if the above DNS name isn't found, eg no internet connection
           pyro_daemon = Pyro4.Daemon(port=existing.port)   # Bind to the loopback address if we can't find an external interface
         # register the object in the daemon with the old objectId
