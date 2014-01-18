@@ -1,11 +1,10 @@
 #!/usr/bin/python -Wignore
 
 import cgi
+import math
 import sys
 import traceback
 import time
-import os
-import stat
 
 sys.path.append('/home/mjuo/')
 from teljoy.globals import *
@@ -70,57 +69,80 @@ def TJParams(status):
   "Write a table with the current telescope/object parameters"
   tmp="<B>Teljoy Status</B>\n <table border=1>\n"
   tmp += trow(data("") + head("Value"))
-  tmp += trow(head("Object ID") + data(status.current.ObjID))
   if status.current.Ra and status.current.Dec and (not status.current.posviolate):
+    tmp += trow(head("Object ID") + data(status.current.ObjID))
     tmp += trow(head("RA") + data(sexstring(status.current.Ra/15/3600)))
     tmp += trow(head("Dec") + data(sexstring(status.current.Dec/3600)))
     tmp += trow(head("Epoch") + data(str(status.current.Epoch)))
+    tmp += trow(head("Nonsid Track") + data("RA: %8.5g, DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
   elif status.current.RaC and status.current.DecC:
+    tmp += trow(head("Object ID") + data(''))
     tmp += trow(head("RA") + data(sexstring(status.current.RaC/15/3600)))
     tmp += trow(head("Dec") + data(sexstring(status.current.DecC/3600)))
-    tmp += trow(head("Epoch") + data("Raw"))
+    tmp += trow(head("Epoch") + data("of date"))
+    tmp += trow(head("Nonsid Track") + data("RA: %8.5g, DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
   else:
+    tmp += trow(head("Object ID") + data(''))
     tmp += trow(head("RA") + data('--'))
     tmp += trow(head("Dec") + data('--'))
     tmp += trow(head("Epoch") + data('--'))
+    tmp += trow(head("Nonsid Track") + data("--"))
 
-  tmp += trow(head("Alt") + data(sexstring(status.current.Alt)))
-  tmp += trow(head("Azi") + data(sexstring(status.current.Azi)))
-  tmp += trow(head("LST") + data(sexstring(status.current.Time.LST)))
-  flags=''
+  if status.current.Alt:
+    HA = status.current.RaC/15/3600 - status.current.Time.LST
+    if HA > 12.0:
+      HA -= 24.0
+    if HA < -12.0:
+      HA += 24.0
+    airmass = '%6.4g' % 1/math.cos((90-status.current.Alt)/180*math.pi)
+    tmp += trow(head("Alt") + data(sexstring(status.current.Alt)))
+    tmp += trow(head("Azi") + data(sexstring(status.current.Azi)))
+    tmp += trow(head("LST") + data(sexstring(status.current.Time.LST)))
+    tmp += trow(head("Hour Angle") + data(sexstring(HA)))
+    tmp += trow(head("Airmass") + data(airmass))
+    tmp += trow(head("Dome Azi") + data(str(status.dome.DomeAzi)))
+  else:
+    tmp += trow(head("Alt") + data('--'))
+    tmp += trow(head("Azi") + data('--'))
+    tmp += trow(head("LST") + data('--'))
+    tmp += trow(head("Hour Angle") + data('--'))
+    tmp += trow(head("Airmass") + data('--'))
+    tmp += trow(head("Dome Azi") + data('--'))
+  flags = []
   if status.current.posviolate:
-    flags += 'P'
-  else:
-    flags += '.'
+    flags.append('PosViolate')
   if status.motors.Moving:
-    flags += 'M'
-  else:
-    flags += '.'
+    if status.motors.Jumping:
+      flags.append('Moving(Jump)')
+    elif status.motors.Paddling:
+      flags.append('Moving(Paddles)')
+    else:
+      flags.append('Moving(?)')
   if status.prefs.EastOfPier:
-    flags += 'E'
-  else:
-    flags += '.'
+    flags.append('EastOfPier')
   if status.dome.DomeInUse:
-    flags += 'D'
-  else:
-    flags += '.'
-  if status.dome.ShutterInUse:
-    flags += 'S'
-  else:
-    flags += '.'
+    flags.append('DomeInUse')
   if status.dome.DomeTracking:
-    flags += 'T'
-  else:
-    flags += '.'
+    flags.append('DomeTracking')
   if status.motors.Frozen:
-    flags += 'F'
+    flags.append('Frozen')
+  tmp += trow(head("Flags") + data(', '.join(flags)))
+  if status.limits.HWLimit:
+    limits = []
+    if status.limits.PowerOff:
+      limits.append("PowerOff")
+    else:
+      if status.limits.EastLim:
+        limits.append('EAST')
+      if status.limits.WestLim:
+        limits.append('WEST')
+      if status.limits.HorizLim:
+        limits.append('HORIZON')
+      if status.limits.MeshLim:
+        limits.append('MESH')
+    tmp += trow(head("Limits") + data("HW Limit ACTIVE: [%s]" % ', '.join(limits)))
   else:
-    flags += '.'
-  if not status.dome.ShutterOpen:
-    flags += 'C'
-  else:
-    flags += '.'
-  tmp += trow(head("Flags") + data(flags))
+    tmp += trow(head("Limits") + data('None'))
   tmp += trow(head("UT Date") + data(str(status.current.Time.UT)[:10]))
   tmp += trow(head("UT Time") + data(str(status.current.Time.UT)[11:-7]))
   tmp += "</table> \n"

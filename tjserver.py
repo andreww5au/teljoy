@@ -83,6 +83,9 @@ class Telescope(object):
   def GetMotors(self):
     return motion.motors.__getstate__()
 
+  def GetLimits(self):
+    return motion.motors.limits.__getstate__()
+
   def GetCurrent(self):
     return detevent.current.__getstate__()
 
