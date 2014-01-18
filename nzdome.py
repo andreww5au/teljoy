@@ -7,7 +7,7 @@ import digio
 from globals import *
 
 DOMEPORT = '/dev/ttyUSB0'   # Serial port for dome encoder
-MAXDOMEMOVE = 120000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
+MAXDOMEMOVE = 180000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
 DENCODEROFFSET = 27    # Add this many counts to the encoder value (range 0-255) before converting to azimuth
                        # This value is the default, used if teljoy.ini is not found. The actual offset is taken
                        # from teljoy.ini.
