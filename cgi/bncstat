@@ -94,7 +94,7 @@ def TJParams(status):
       HA -= 24.0
     if HA < -12.0:
       HA += 24.0
-    airmass = '%6.4g' % 1/math.cos((90-status.current.Alt)/180*math.pi)
+    airmass = '%6.4g' % (1/math.cos((90-status.current.Alt)/180*math.pi), )
     tmp += trow(head("Alt") + data(sexstring(status.current.Alt)))
     tmp += trow(head("Azi") + data(sexstring(status.current.Azi)))
     tmp += trow(head("LST") + data(sexstring(status.current.Time.LST)))
