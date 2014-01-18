@@ -5,9 +5,9 @@ __author__ = 'andrew'
 import sys
 
 if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
-  print "Usage: %s <objectname>    or"
-  print "       %s <ra> <dec>      or"
-  print "       %s <ra> <dec> <epoch>"
+  print "Usage: %s <objectname>    or" % sys.argv[0]
+  print "       %s <ra> <dec>      or" % sys.argv[0]
+  print "       %s <ra> <dec> <epoch>" % sys.argv[0]
   print
   print "If one argument is given, it's looked up (in the local database, "
   print "solar system ephemeris, and SIMBAD/NED/Vizier) and used as a target."
@@ -21,10 +21,10 @@ if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "If you want spaces in an argument, enclose it in quotes."
   print
   print "Examples:"
-  print "%s ngc104"
-  print "%s 18:14:23 -27:43:22"
-  print '%s "alpha cantaurus"'
-  print '%s "12 34 56" "-43 21 09" 1950' % [sys.argv[0]]*7
+  print "%s ngc104"  % sys.argv[0]
+  print "%s 18:14:23 -27:43:22" % sys.argv[0]
+  print '%s "alpha cantaurus"' % sys.argv[0]
+  print '%s "12 34 56" "-43 21 09" 1950' % sys.argv[0]
 
 
 import tjclient
