@@ -9,8 +9,11 @@ if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "       %s <ra> <dec>      or" % sys.argv[0]
   print "       %s <ra> <dec> <epoch>" % sys.argv[0]
   print
-  print "If one argument is given, it's looked up (in the local database, "
-  print "solar system ephemeris, and SIMBAD/NED/Vizier) and used as a target."
+  print "Jumps the telescope to the specified object or position."
+  print
+  print "If one argument is given, it's assumed to be an object name. It's"
+  print "looked up (in the local database, solar system ephemeris, and "
+  print "SIMBAD/NED/Vizier online) and used as a target."
   print
   print "If two arguments are given, they are assumed to be RA and Dec, in "
   print "J2000 coordinates."
@@ -25,6 +28,7 @@ if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "%s 18:14:23 -27:43:22" % sys.argv[0]
   print '%s "alpha cantaurus"' % sys.argv[0]
   print '%s "12 34 56" "-43 21 09" 1950' % sys.argv[0]
+  sys.exit()
 
 
 import tjclient
