@@ -140,7 +140,7 @@ class TelClient(StatusObj):
       except Pyro4.errors.PyroError:
         msg += "Local traceback: \n" + traceback.format_exc() + "\n"
         msg += "Remote Traceback: \n" + "".join(Pyro4.util.getPyroTraceback()) + "\n"
-        return "Can't connect to Teljoy Pyro4 service - is Teljoy running?"
+        return msg + "Can't connect to Teljoy Pyro4 service - is Teljoy running?"
 
 
 def jump(*args, **kwargs):
