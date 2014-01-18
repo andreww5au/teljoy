@@ -60,7 +60,7 @@ class Telescope(object):
             pyro_daemon = Pyro4.Daemon(port=PYROPORT)     # Bind to the loopback address if we can't find an external interface
           # register the object in the daemon and let it get a new objectId
           # also need to register in name server because it's not there yet.
-          uri =  pyro_daemon.register(self)
+          uri =  pyro_daemon.register(self, objectId='Teljoy')
           if ns is not None:
             ns.register("Teljoy", uri)
         except:
