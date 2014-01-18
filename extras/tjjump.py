@@ -24,7 +24,7 @@ if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "%s ngc104"
   print "%s 18:14:23 -27:43:22"
   print '%s "alpha cantaurus"'
-  print '%s "12 34 56" "-43 21 09" 1950'
+  print '%s "12 34 56" "-43 21 09" 1950' % [sys.argv[0]]*7
 
 
 import tjclient
