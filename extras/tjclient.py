@@ -16,16 +16,15 @@ class StatusObj(object):
 
 class DomeStatus(StatusObj):
   def __init__(self):
+    self.DomeAzi = 0
     self.DomeInUse = False
-    self.ShutterInUse = False
-    self.DomeMoved = False
+    self.CommandSent = False
+    self.Command = ''
     self.ShutterOpen = False
-    self.DomeThere = False
     self.AutoDome = False
     self.DomeTracking = False
     self.DomeLastTime = 0
-    self.NewDomeAzi = -10
-    self.NewShutter = ''
+    self.EncoderOffset = 0
 
 
 class TimeStatus(StatusObj):
@@ -64,6 +63,19 @@ class MotorsStatus(StatusObj):
     self.Frozen = False
 
 
+class LimitStatus(object):
+  def __init__(self):
+    self.HWLimit = False          # True if any of the hardware limits are active. Should be method, not attribute
+    self.OldLim = False           # ?
+    self.PowerOff = False         # True if the telescope power is off (eg, switched off at the telescope)
+    self.HorizLim = False         # True if the mercury switch 'nest' horizon limit has tripper
+    self.MeshLim = False          # ?
+    self.EastLim = False          # RA axis eastward limit reached
+    self.WestLim = False          # RA axis westward limit reached
+    self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
+    self.LimOverride = False      # True if the limit has been overridden in software
+
+
 class PrefsStatus(StatusObj):
   def __init__(self):
     self.EastOfPier = False
@@ -81,12 +93,14 @@ class TelClient(StatusObj):
     self.dome = DomeStatus()
     self.current = CurrentStatus()
     self.motors = MotorsStatus()
+    self.limits = LimitStatus()
     self.prefs = PrefsStatus()
     self.info = ''
 
   def update(self):
     with self.proxy:
       self.motors.__dict__.update(self.proxy.GetMotors())
+      self.limits.__dict__.update(self.proxy.GetLimits())
       self.current.__dict__.update(self.proxy.GetCurrent())
       self.current.Time.__dict__.update(self.current.TimeDict)
       self.dome.__dict__.update(self.proxy.GetDome())

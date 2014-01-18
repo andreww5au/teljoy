@@ -25,9 +25,12 @@ else:
 #These really are constant, unless this code is still being used thousands of years from now...
 MSOLDY = 1.00273790931     # Mean solar day = MsolDy Mean sidereal days}
 MSIDDY = 0.99726956637     # Mean sidereal day = MSidDy mean solar days}
-DRASID = -15.04106868     # Default sidereal rate (multiplied by 'SidFudge' factor from ini file)
+DRASID = -15.04106868     # Sidereal rate, in arcseconds per SOLAR second
 
-#Fiddle with the values in teljoy.ini, these are just fallback values
+# Default telescope speeds. These are just fallback values if teljoy.ini is not found, the
+# actual speeds used are taken from teljoy.ini.
+# Note that unlike the numbers in teljoy.ini, these values are in
+# STEPS per second, not arcseconds per second.
 DFSLEWRATE = 108000                     # Default slew rate 1.5 deg/sec
 DFCOARSESETRATE = 3600                  # Default set rate 3arcmin/sec
 DFFINESETRATE = 1200                    # Default fine set rate 1arcmin/sec
@@ -41,9 +44,9 @@ DEBUG = False    # If true, print extra debugging info - eg motion control activ
 #DTABLE = 'ncurrent'      # Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
 DTABLE = 'current'      # Table to use for current position updates - 'ncurrent' for dummy, 'current' for real telescope.
 
-PULSE = 0.05                       # 50 milliseconds per 'tick'
+PULSE = 0.05                       # 50 milliseconds per 'frame' (sometimes referred to as a 'tick')
 
-REALMOTORS = True   # If true, we're driving the real PLAT telescope, if false, driving test motors.
+REALMOTORS = True   # If true, we're driving the real telescope, if false, driving test motors.
 
 if REALMOTORS:
   DIVIDER = 1   # Don't scale step values for real telescope
@@ -173,7 +176,7 @@ class Errors(object):
     self.RefError = False       # The refraction code failed (typically due to very low altitude)
     self.AltError = False       # Current altitude below defined threshold
     self.AltErrorTag = None     # Save the 'AltErr' safety interlock tag, if there is one
-    self.CalError = CP.getboolean('Alarms', 'OrigPosWarn')      # Current position is unknown
+    self.CalError = False       # Current position is unknown
     self.CalErrorTag = None     # Save the 'CalErr' safety interlock tag, if there is one
     self.TimeoutError = False   # Haven't heard from Prosp for a while, not safe to continue
 
@@ -217,7 +220,7 @@ class Prefs(object):
 
   def __init__(self):
     self.EastOfPier = CP.getboolean('Toggles', 'EastOfPier')
-    self.RAsid = DRASID * CP.getfloat('Rates', 'SidFudge')
+    self.RAsid = DRASID
     self.FlexureOn = CP.getboolean('Toggles', 'FlexureOn')          #flexure corrections on?
     self.HighHorizonOn = CP.getboolean('Toggles', 'HighHorizonOn')  #whether to use AltCutoffHi or AltCutoffLo
     self.RefractionOn = CP.getboolean('Toggles', 'RefractionOn')    #refraction corr. on?
@@ -454,10 +457,10 @@ def UpdateConfig():
   return lCP, lCPfile
 
 
-ConfigDefaults = {'OrigPosWarn':'True', 'FlexureOn':'True', 'HighHorizonOn':'False', 'RefractionOn':'True',
+ConfigDefaults = {'FlexureOn':'True', 'HighHorizonOn':'False', 'RefractionOn':'True',
                   'RealTimeOn':'True', 'AltWarning':'10', 'AltCutoffFrom':'6',
                   'AltCutoffHi':'30', 'AltCutoffLo':'15', 'ObsLat':`DOBSLAT`, 'ObsLong':`DOBSLONG`,
-                  'SidFudge':'-15.04106868', 'EastOfPier':'False', 'Slew':`DFSLEWRATE/20`,
+                  'EastOfPier':'False', 'Slew':`DFSLEWRATE/20`,
                   'CoarseSet':`DFCOARSESETRATE/20`, 'FineSet':`DFFINESETRATE/20`, 'GUIDE':`DFGUIDERATE/20`,
                   'Temp':`DFTEMP`,'Press':`DFPRESS`}
 

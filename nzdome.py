@@ -7,8 +7,10 @@ import digio
 from globals import *
 
 DOMEPORT = '/dev/ttyUSB0'   # Serial port for dome encoder
-MAXDOMEMOVE = 300000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
-ENCODEROFFSET = 27    # Add this many counts to the encoder value (range 0-255) before converting to azimuth
+MAXDOMEMOVE = 120000     # Milliseconds of dome travel time before a dome-failure timeout occurs}
+DENCODEROFFSET = 27    # Add this many counts to the encoder value (range 0-255) before converting to azimuth
+                       # This value is the default, used if teljoy.ini is not found. The actual offset is taken
+                       # from teljoy.ini.
 
 #Dome parameters:
 RD = 3.48                             #Dome radius, in metres
@@ -32,6 +34,7 @@ class Dome(object):
     self.DomeTracking = False       #True if the dome should dynamically track the current telescope position.
                                     #   if false, the dome will only be moved if AutoDome is True, and detevent.Jump is called.
     self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
+    self.EncoderOffset = CP.getint('Dome', 'DomeEncoderOffset')   # How much to add to the raw enccoder value before converting to degrees
     self.queue = []
     try:
       self.ser = serial.Serial(DOMEPORT, baudrate=9600, stopbits=serial.STOPBITS_ONE, timeout=1.0, rtscts=False, xonxoff=False, dsrdtr=False)
@@ -75,7 +78,7 @@ class Dome(object):
     self.ser.flushInput()      # Empty dome input buffer to get most recent position
     data = self.ser.read(1)
     if data:
-      raw = ord(data) + ENCODEROFFSET  # Value in range 0-255 for full circle
+      raw = ord(data) + self.EncoderOffset  # Value in range 0-255 for full circle
       if raw > 255:
         raw -= 256
       return (raw / 256.0) * 360    # Convert to degrees
@@ -239,13 +242,6 @@ class Dome(object):
 
 
 
-def GrayToBin(t=0):   # Converts 8 bit Gray code value from
-  b = 0
-  while t != 0:
-    b = b ^ t
-    t = t >> 1
-  return b
-
 
 def DegToRad(r):    #Originally in MATHS.PAS
   """Given an argument in degrees, return the value converted to radians.
@@ -261,10 +257,11 @@ def RadToDeg(r):    #Originally in MATHS.PAS
 
 dome = Dome()
 
-ConfigDefaults.update({'DomeTracking':'0', 'AskDomeStatus':0, 'DefaultAutoDome':0})
+ConfigDefaults.update({'DomeTracking':'0', 'DomeEncoderOffset':DENCODEROFFSET, 'DefaultAutoDome':0})
 CP,CPfile = UpdateConfig()
 
 dome.DomeTracking = CP.getboolean('Toggles','DomeTracking')
 dome.AutoDome = CP.getboolean('Toggles','DefaultAutoDome')
+dome.EncoderOffset = CP.getint('Dome', 'DomeEncoderOffset')
 
 
