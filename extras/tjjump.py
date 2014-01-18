@@ -3,6 +3,7 @@
 __author__ = 'andrew'
 
 import sys
+import Pyro4
 
 if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "Usage: %s <objectname>    or" % sys.argv[0]
@@ -40,4 +41,7 @@ if errmsg:
 else:
   s = tjclient.status
 
-  tjclient.jump(*sys.argv[1:])
+  try:
+    tjclient.jump(*sys.argv[1:])
+  except:
+    print "".join(Pyro4.util.getPyroTraceback())

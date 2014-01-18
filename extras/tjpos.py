@@ -13,18 +13,18 @@ if errmsg:
 else:
   s = tjclient.status
   if not s.current.posviolate:    # Original RA and Dec to standard epoch are valid
-    print "RA:      %14.11g" % (s.current.Ra/15/3600,)   # RA stored in arcseconds, convert to hours
-    print "DEC:     %14.11g" % (s.current.Dec/3600)      # Convert form arcseconds to degrees
-    print "EPOCH:   %8.3g" % (s.current.Epoch)           # eg, 2000.0
+    print "RA:      %14.11f" % (s.current.Ra/15/3600,)   # RA stored in arcseconds, convert to hours
+    print "DEC:     %14.11f" % (s.current.Dec/3600)      # Convert form arcseconds to degrees
+    print "EPOCH:   %8.3f" % (s.current.Epoch)           # eg, 2000.0
   else:       # The hand-paddle has been used, or the telescope has been frozen or switched off since the last
               # jump or reset to coordinates with a valid, standard epoch.
-    print "RA:      %14.11g" % (s.current.RaC/15/3600,)   # RA stored in arcseconds, convert to hours
-    print "DEC:     %14.11g" % (s.current.DecC/3600,)      # Convert form arcseconds to degrees
-    print "EPOCH:   0.0" % (s.current.Epoch,)              # Here, Epoch=0 means 'Epoch of Date', ie 'now'.
+    print "RA:      %14.11f" % (s.current.RaC/15/3600,)   # RA stored in arcseconds, convert to hours
+    print "DEC:     %14.11f" % (s.current.DecC/3600,)     # Convert form arcseconds to degrees
+    print "EPOCH:   0.0"                                  # Here, Epoch=0 means 'Epoch of Date', ie 'now'.
 
-  print "ALT:     %4.1g" % (s.current.Alt,)
-  print "AZI:     %5.1g" % (s.current.Azi,)
-  print "LST:     %14.11g" % (s.current.LST,)
+  print "ALT:     %4.1f" % (s.current.Alt,)
+  print "AZI:     %5.1f" % (s.current.Azi,)
+  print "LST:     %14.11f" % (s.current.Time.LST,)
   print "DomeAzi: %3d" % (s.dome.DomeAzi,)
   flags = []
   if s.current.posviolate:
