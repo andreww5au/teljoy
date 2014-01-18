@@ -56,8 +56,9 @@ class LimitStatus(object):
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
-    d = self.__dict__.copy()
-    del d['__setattr__']
+    d = {}
+    for n in ['HWLimit', 'PowerOff', 'HorizLim', 'MeshLim', 'EastLim', 'WestLim', 'LimOverride']:
+      d[n] = self.__dict__[n]
     return d
 
   def CanEast(self):
