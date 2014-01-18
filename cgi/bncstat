@@ -100,7 +100,7 @@ def TJParams(status):
     tmp += trow(head("LST") + data(sexstring(status.current.Time.LST)))
     tmp += trow(head("Hour Angle") + data(sexstring(HA)))
     tmp += trow(head("Airmass") + data(airmass))
-    tmp += trow(head("Dome Azi") + data('%3.0g' % (status.dome.DomeAzi,)))
+    tmp += trow(head("Dome Azi") + data('%d' % (status.dome.DomeAzi,)))
   else:
     tmp += trow(head("Alt") + data('--'))
     tmp += trow(head("Azi") + data('--'))
