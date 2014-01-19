@@ -1,7 +1,7 @@
 """Pyro4 RPC client library for Teljoy
 """
 
-DEFHOST = '132.181.49.137'
+DEFHOST = 'cynosure.canterbury.ac.nz'
 DEFPORT = 9696
 DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
 
@@ -150,7 +150,7 @@ def jump(*args, **kwargs):
         jump(id='plref', ra='17:47:28', dec='-27:49:49', epoch=1998.5)
   """
   with status.proxy:
-    status.proxy.jump(*args, **kwargs)
+    return status.proxy.jump(*args, **kwargs)
 
 
 def offset(offra=0, offdec=0):
@@ -159,7 +159,7 @@ def offset(offra=0, offdec=0):
     eg: jumpoff(2.45,-12.13)
   """
   with status.proxy:
-    status.proxy.offset(offra, offdec)
+    return status.proxy.offset(offra, offdec)
 
 jumpoff = offset
 
@@ -177,7 +177,7 @@ def dome(arg=90):
     elif arg.upper() in ['C','CLOSE']:
       ShutterAction = False
   with status.proxy:
-    status.proxy.dome(arg)
+    return status.proxy.dome(arg)
 
 
 def freeze(action=True):
@@ -193,10 +193,10 @@ def freeze(action=True):
   global FreezeAction
   with status.proxy:
     if action:
-      status.proxy.freeze()
+      return status.proxy.freeze()
       FreezeAction = True
     else:
-      status.proxy.unfreeze()
+      return status.proxy.unfreeze()
       FreezeAction = False
 
 

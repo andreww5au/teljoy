@@ -42,6 +42,6 @@ else:
   s = tjclient.status
 
   try:
-    tjclient.jump(*sys.argv[1:])
+    print tjclient.jump(*sys.argv[1:])
   except:
     print "".join(Pyro4.util.getPyroTraceback())
