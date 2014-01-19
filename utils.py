@@ -134,13 +134,13 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
     return pclass(ra=ra, dec=dec, epoch=epoch, objid=objid, domepos=domepos)
 
   if len(args) == 0:
-    if type(objid) == str:
-      return Lookup(objid=objid)
+    if type(objid) in [str, unicode]:
+      return Lookup(objid=str(objid))
     else:
       return None
   elif len(args) == 1:
-    if type(args[0]) == str:
-      return Lookup(objid=args[0])
+    if type(args[0]) in [str, unicode]:
+      return Lookup(objid=str(args[0]))
     else:
       return None
   elif len(args) == 2:
