@@ -31,6 +31,16 @@ from handpaddles import paddles
 
 TIMEOUT = 0   #Set to the number of seconds you want to wait without any contact from Prosp before closing down.
 
+MAXOFFSETSTEPS = 36000   # What is the maximum number of motors steps we can move in either axis with an 'Offset'
+                         # Note that the arguments to Offset (ra and dec shift in arcseconds) are in plate scale,
+                         # not coordinates. While the default (36000 steps = 10 arcmin) will correspond to
+                         # 10 arcminutes of RA on the sky in platescale at the equator, it will be a much smaller
+                         # offset in RA when close to the pole.
+                         #
+                         # If you make this too large, the coordinate positions will become increasingly in error
+                         # as precession calculated for the original position becomes less valid, as the offsets
+                         # are simply added to the coordinates.
+
 FASTLOOP = 0.2     #How often the 'fast event loop' will call each of the registered functions
 SLOWLOOP = 30      #How often the 'slow event loop' will call each of the registered functions
 
@@ -395,9 +405,12 @@ class CurrentPosition(correct.CalcPosition):
     """
     DelRA = 20*ora/math.cos(self.DecC/3600*math.pi/180)  #conv to motor steps
     DelDEC = 20*odec
+    if (abs(DelRA) > MAXOFFSETSTEPS) or (abs(DelDEC) > MAXOFFSETSTEPS):
+      logger.error('Offset() called with values resulting in too large a shift.')
+      return True
     with motion.motors.lock:
       if motion.motors.Moving or motion.motors.Paddling:
-        logger.error('detevent.Jump called while telescope in motion!')
+        logger.error('detevent.Offset called while telescope in motion!')
         return True
       motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
       if not self.posviolate:
