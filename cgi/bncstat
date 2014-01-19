@@ -162,7 +162,8 @@ if __name__ == '__main__':
   msg = tjclient.Init()
   status = tjclient.status
   if not status.connected:
-    print "Error message from Teljoy client: %s" % msg
+    print "Can't connect - is Teljoy running?"
+#    print "Error message from Teljoy client: %s" % msg
 
   print data(TJParams(status))                    #Teljoy parameters
   print "<br>"
