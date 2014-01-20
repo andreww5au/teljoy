@@ -432,7 +432,9 @@ class Driver(controller.Driver):
   def enable_guider(self):
     """Calls self.host.enable_guider with locking. Turns on the autoguider.
     """
+    logger.debug('acq in enable_guider')
     self.lock.acquire()
+    logger.debug('acq in enable_guider success')
     d = self.host.enable_guider()
     d.addCallback(self._guiderenable_done)
 
@@ -440,11 +442,14 @@ class Driver(controller.Driver):
     """The call to enable the guider has completed, so we can release the lock.
     """
     self.lock.release()
+    logger.debug('release in _guiderenable_done')
 
   def disable_guider(self):
     """Calls self.host.disable_guider with locking. Turns off the autoguider.
     """
+    logger.debug('acq in disable_guider')
     self.lock.acquire()
+    logger.debug('acq in disable_guider success')
     d = self.host.disable_guider()
     d.addCallback(self._guiderdisable_done)
 
@@ -452,6 +457,7 @@ class Driver(controller.Driver):
     """The call to disable the guider has completed, so we can release the lock.
     """
     self.lock.release()
+    logger.debug('release in _guiderdisable_done')
 
   def _get_exception_completed(self, details):
     """Called when we have any exception details after a state change.
@@ -529,6 +535,9 @@ class Driver(controller.Driver):
   def set_outputs(self, bitfield):
     """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
+    logger.debug('acq in set_outputs():')
+    self.lock.acquire()
+    logger.debug('acq in set_outputs() success:')
     d = self.host.set_outputs(bitfield)
     d.addCallback(self._set_outputs_done)
 
@@ -536,10 +545,14 @@ class Driver(controller.Driver):
     """Output setting is finished, release the lock.
     """
     self.lock.release()
+    logger.debug('release in _set_outputs_done():')
 
   def clear_outputs(self, bitfield):
     """Given a 64-bit number, turn OFF the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
+    logger.debug('acq in clear_outputs():')
+    self.lock.acquire()
+    logger.debug('acq in clear_outputs() success:')
     d = self.host.clear_outputs(bitfield)
     d.addCallback(self._clear_outputs_done)
 
@@ -547,6 +560,7 @@ class Driver(controller.Driver):
     """Output clearing is finished, release the lock.
     """
     self.lock.release()
+    logger.debug('release in _clear_outputs_done():')
 
   def stop(self):
     """Stop the controller loop, triggering creation of a new Driver and Controller.
