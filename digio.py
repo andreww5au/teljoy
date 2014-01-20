@@ -58,12 +58,14 @@ def set_outputs(n):
      bit). Bits in 'n' that are zero are left unchanged.
   """
   d = motion.motors.Driver.set_outputs(n)
+  return d
 
 def clear_outputs(n):
   """'n' is a 64 bit integer, and any bit set in 'n' is forced low (assuming it is configured as an output
      bit). Bits in 'n' that are zero are left unchanged.
   """
   d = motion.motors.Driver.clear_outputs(n)
+  return d
 
 
 

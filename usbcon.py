@@ -332,18 +332,6 @@ class Driver(controller.Driver):
     logger.debug('release in initialise_error_occurred()')
     self.host.stop()
 
-#  def _turn_output_on(self):
-#    # Turn the output on, and set the timer to turn it off later:
-#    self.host.set_outputs(1 << controller.PIN_GPIO_8)
-#
-#    self.host.add_timer(1.0, self._turn_output_off)
-
-#  def _turn_output_off(self):
-    # Turn the output off, and set the timer to turn it on later:
-#    self.host.clear_outputs(1 << controller.PIN_GPIO_8)
-
-#    self.host.add_timer(1.0, self._turn_output_on)
-
   def _check_counters(self):
     """Grab the counter data, and call _complete_check_counters when the
        data becomes available.
@@ -540,6 +528,7 @@ class Driver(controller.Driver):
     logger.debug('acq in set_outputs() success:')
     d = self.host.set_outputs(bitfield)
     d.addCallback(self._set_outputs_done)
+    return d
 
   def _set_outputs_done(self, _):
     """Output setting is finished, release the lock.
@@ -555,6 +544,7 @@ class Driver(controller.Driver):
     logger.debug('acq in clear_outputs() success:')
     d = self.host.clear_outputs(bitfield)
     d.addCallback(self._clear_outputs_done)
+    return d
 
   def _clear_outputs_done(self, _):
     """Output clearing is finished, release the lock.
