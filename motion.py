@@ -422,19 +422,21 @@ class MotorControl(object):
     """If the argument 'on' is True, turn the autoguider mode on, and start logging the
        guider steps taken. If the the argument is False, turn the autoguider mode off.
     """
-    if on:
+    if on and not (self.Autoguiding):
       self._guidelogfile = file(prefs.LogDirName + '/guider.log', 'a')
       self.Driver.enable_guider()
       self._guidelogfile.write('%f ON\n' % time.time())
       self._guidelogfile.flush()
       self.guidelog = (0,0)
       self.Autoguiding = True
-    else:
+    elif (not on) and (self.Autoguiding):
       self.Driver.disable_guider()
       self._guidelogfile.write('%f OFF\n' % time.time())
       self._guidelogfile.close()
       self.guidelog = (0,0)
       self.Autoguiding = False
+    else:   #tried to turn it off when it's already off, or on when it's already on.
+      pass
 
   def Jump(self, delRA, delDEC, Rate, force=False):
     """This procedure calculates the profile parameters for a telescope jump.
