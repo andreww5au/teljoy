@@ -767,7 +767,7 @@ def Init():
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
 
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
-  if SITE === 'PERTH':
+  if SITE == 'PERTH':
     slowloop.register('Weather', weather._background)
   slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
   slowloop.register("CheckErrors", CheckErrors)
