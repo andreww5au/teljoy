@@ -18,7 +18,9 @@ else:
   TESTHOST = 'www.google.com.au'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 import utils
 
-hmac = "ShiverMeTimbers"
+KEYFILE = '~/Pyro4.key'
+
+hmac = file(KEYFILE, 'r').read().strip()
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696

@@ -10,7 +10,9 @@ import time
 import datetime
 import traceback
 
-hmac = "ShiverMeTimbers"
+KEYFILE = '~/Pyro4.key'
+
+hmac = file(KEYFILE, 'r').read().strip()
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 status = None
