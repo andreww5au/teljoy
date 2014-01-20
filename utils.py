@@ -253,19 +253,20 @@ def shutdown():
     return
   if not dome.AutoDome:
     print "Dome not in automatic mode - can't park dome or close shutter"
-  jump(CAP, force=True)
-  print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
-  ans = raw_input()
-  if dome.AutoDome:
-    while dome.DomeInUse:
-      print "Waiting for dome to finish moving..."
-      time.sleep(2)
-    print "Closing dome."
-    dome.close(force=True)
+  if SITE == 'PERTH':
+    jump(CAP, force=True)
+    print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
+    ans = raw_input()
+    if dome.AutoDome:
+      while dome.DomeInUse:
+        print "Waiting for dome to finish moving..."
+        time.sleep(2)
+      print "Closing dome."
+      dome.close(force=True)
   jump(STOW, force=True)
   time.sleep(2)
   while motion.motors.Moving or dome.DomeInUse:
-    print "Waiting for telescope to park and shutter to close."
+    print "Waiting for telescope to park and dome to finish moving."
     time.sleep(5)
   sys.exit()
 
