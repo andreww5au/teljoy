@@ -387,14 +387,15 @@ class MotorControl(object):
     self.Driver = None
     self.CutFrac = 0            # Fraction of steps to throw away during emergency stop - 0 (none) to 100 (100%)
     self.Autoguiding = False    # True if the autoguider has been enabled
-    self._guidelog = None       # File to log guide motion to
+    self.guidelog = (0,0)       # Occasionally (~ every 30 seconds) log of the total number of autoguider steps.
+    self._guidelogfile = None       # File to log guide motion to
     logger.debug('motion.MotorControl.__init__: finished global vars')
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['Jumping','Paddling','Moving','PosDirty','ticks','Frozen', 'Autoguiding']:
+    for n in ['Jumping', 'Paddling', 'Moving', 'PosDirty', 'ticks', 'Frozen', 'Autoguiding', 'guidelog']:
       d[n] = self.__dict__[n]
     return d
 
@@ -422,15 +423,17 @@ class MotorControl(object):
        guider steps taken. If the the argument is False, turn the autoguider mode off.
     """
     if on:
-      self._guidelog = file(prefs.LogDirName + '/guider.log', 'a')
+      self._guidelogfile = file(prefs.LogDirName + '/guider.log', 'a')
       self.Driver.enable_guider()
-      self._guidelog.write('%f ON' % time.time())
+      self._guidelogfile.write('%f ON\n' % time.time())
+      self._guidelogfile.flush()
+      self.guidelog = (0,0)
       self.Autoguiding = True
     else:
-      self._guidelog.close()
       self.Driver.disable_guider()
-      self._guidelog.write('%f OFF' % time.time())
-      self._guidelog.close()
+      self._guidelogfile.write('%f OFF\n' % time.time())
+      self._guidelogfile.close()
+      self.guidelog = (0,0)
       self.Autoguiding = False
 
   def Jump(self, delRA, delDEC, Rate, force=False):

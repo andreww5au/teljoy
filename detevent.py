@@ -735,8 +735,9 @@ def LogGuider():
   if motion.motors.Autoguiding:
     guidelog_ra = motion.motors.Driver.counters.a_guider_steps
     guidelog_dec  = motion.motors.Driver.counters.b_guider_steps
-    motion.motors._guidelog.write('%f %d %d\n' % (time.time(), guidelog_ra, guidelog_dec))
-    motion.motors._guidelog.flush()
+    motion.motors.guidelog = (guidelog_ra, guidelog_dec)
+    motion.motors._guidelogfile.write('%f %d %d\n' % (time.time(), guidelog_ra, guidelog_dec))
+    motion.motors._guidelogfile.flush()
 
 
 def Init():
