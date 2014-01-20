@@ -79,6 +79,8 @@ class Dome(object):
     data = self.ser.read(1)
     if data:
       raw = ord(data) + self.EncoderOffset  # Value in range 0-255 for full circle
+      if raw < 0:
+        raw += 256
       if raw > 255:
         raw -= 256
       return (raw / 256.0) * 360    # Convert to degrees
