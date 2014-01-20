@@ -5,7 +5,7 @@ __author__ = 'andrew'
 import sys
 import Pyro4
 
-if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
+if (len(sys.argv) < 3) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "Usage: %s <EWoffset> <NSoffset>" % sys.argv[0]
   print
   print "Given a pair of offsets in arcseconds (of plate scale east and "

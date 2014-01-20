@@ -163,6 +163,16 @@ def jump(*args, **kwargs):
     return status.proxy.jump(*args, **kwargs)
 
 
+def reset(*args, **kwargs):
+  """Takes the arguments given, and sends a command to Teljoy
+    to reset the telescope coordinates to that position.
+    eg: reset('frog','12:34:56','-32:00:00',1998.5)
+        reset(id='plref', ra='17:47:28', dec='-27:49:49', epoch=1998.5)
+  """
+  with status.proxy:
+    return status.proxy.reset(*args, **kwargs)
+
+
 def offset(offra=0, offdec=0):
   """Moves the telescope by offra,offdec arcseconds.
     Silently fails if Teljoy isn't ready to be remote-controlled.
@@ -171,7 +181,16 @@ def offset(offra=0, offdec=0):
   with status.proxy:
     return status.proxy.offset(offra, offdec)
 
+
 jumpoff = offset
+
+
+def autoguide(on=True):
+  """Turns autoguiding on (on=True) or off (on=False).
+    eg: jumpoff(2.45,-12.13)
+  """
+  with status.proxy:
+    return status.proxy.autoguide(on)
 
 
 def dome(arg=90):
