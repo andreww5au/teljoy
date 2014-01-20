@@ -56,8 +56,8 @@ DUMMYPADDLES = []
 
 CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']    # Initialisation file path
 
-LOGLEVEL_CONSOLE = logging.DEBUG     # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
-LOGLEVEL_LOGFILE = logging.DEBUG      # Logging level for logfile
+LOGLEVEL_CONSOLE = logging.INFO     # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
+LOGLEVEL_LOGFILE = logging.INFO      # Logging level for logfile
 LOGFILE = "/tmp/teljoy.log"
 
 # create global logger object for Facility Controller
