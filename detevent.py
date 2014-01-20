@@ -26,12 +26,12 @@ import traceback
 from globals import *
 if SITE == 'PERTH':
   import pdome as dome
+  import weather
 elif SITE == 'NZ':
   import nzdome as dome
 import correct
 import motion
 import sqlint
-import weather
 from handpaddles import paddles
 
 TIMEOUT = 0   # Set to the number of seconds you want to wait without any contact via the tjbox table before closing down.
@@ -767,7 +767,8 @@ def Init():
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
 
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
-  slowloop.register('Weather', weather._background)
+  if SITE === 'PERTH':
+    slowloop.register('Weather', weather._background)
   slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
   slowloop.register("CheckErrors", CheckErrors)
   slowloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
