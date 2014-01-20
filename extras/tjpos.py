@@ -28,6 +28,7 @@ else:
   print "AZI:     %5.1f" % (s.current.Azi,)
   print "LST:     %14.11f" % (s.current.Time.LST,)
   print "DomeAzi: %3d" % (s.dome.DomeAzi,)
+  print "AGsteps: %d, %d" % s.motors.guidelog
   flags = []
   if s.current.posviolate:
     flags.append('PosViolate')
