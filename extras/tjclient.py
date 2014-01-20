@@ -12,7 +12,7 @@ import os
 import time
 import traceback
 
-KEYFILE = '~/teljoy.pyrokey'
+KEYFILE = '~mjuo/teljoy.pyrokey'
 
 hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY

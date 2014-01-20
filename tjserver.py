@@ -20,7 +20,7 @@ else:
   TESTHOST = 'www.google.com.au'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 import utils
 
-KEYFILE = '~/teljoy.pyrokey'
+KEYFILE = '~mjuo/teljoy.pyrokey'
 
 hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
