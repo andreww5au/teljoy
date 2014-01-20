@@ -6,13 +6,15 @@ DEFPORT = 9696
 DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
 
 import Pyro4
-import time
+
 import datetime
+import os
+import time
 import traceback
 
 KEYFILE = '~/Pyro4.key'
 
-hmac = file(KEYFILE, 'r').read().strip()
+hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 status = None

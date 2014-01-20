@@ -2,6 +2,8 @@
 """
 
 import Pyro4
+
+import os
 import threading
 import time
 import traceback
@@ -20,7 +22,7 @@ import utils
 
 KEYFILE = '~/Pyro4.key'
 
-hmac = file(KEYFILE, 'r').read().strip()
+hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696
