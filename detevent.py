@@ -3,13 +3,18 @@
    This module contains the code needed to support higher-level telescope control, 
    including maintaining the current telescope coordinates, as well as checking and
    acting on external inputs (hand-paddle buttons, commanded actions via the SQL 
-   'mailbox' table', etc) and publishing the state to the outside world (maintaining
-   the current state in an SQL table and a position file).
+   'mailbox' table', etc) and maintaining the current state in an SQL table.
    
-   The core of the module is the 'DetermineEvent' function, which runs continuously,
-   and never exits once called apart from non-recoverable errors. The init() function
-   in this module will start this function in a separate thread.
+   The activities in this module are all carried out by functions or methods called
+   at regular intervals by an 'event loop' object. An event loop maintains a register
+   of functions that must be called at regular intervals, and handles calling them and
+   recovering from any errors they give.
 
+   Each event loop has a different cycle time. This module uses two event loops - the
+   'fastloop' calls each function registered approximately five times per second. The
+   'slowloo' calls each function registered once every 30 seconds. The fastloop is for
+   functions that do hand paddle sensing, writing the current position record, etc. THe
+   slowloop is for weather sensing and other less time-critical actions.
 """
 
 import math
@@ -29,7 +34,8 @@ import sqlint
 import weather
 from handpaddles import paddles
 
-TIMEOUT = 0   #Set to the number of seconds you want to wait without any contact from Prosp before closing down.
+TIMEOUT = 0   # Set to the number of seconds you want to wait without any contact via the tjbox table before closing down.
+              # In NZ, nothing uses tjbox, so the timeout is set to zero (disabled).
 
 MAXOFFSETSTEPS = 36000   # What is the maximum number of motors steps we can move in either axis with an 'Offset'
                          # Note that the arguments to Offset (ra and dec shift in arcseconds) are in plate scale,
@@ -103,7 +109,7 @@ class EventLoop(object):
     """Loop forever iterating over the registered functions. Use time.sleep
        to make sure the loop is run no more often than once every 'looptime'
        seconds. Maintain 'self.runtime' as the measured time, in seconds,
-       the last time the loop was run.
+       that the loop took to execute, the last time it was run.
 
        Set self.exit to True to exit the loop
     """
@@ -127,8 +133,10 @@ class EventLoop(object):
 
 
 class CurrentPosition(correct.CalcPosition):
-  """A special position object that's used only to store the current telescope coordinates, and
-     allow jumps from this position.
+  """A special position object that's used only to store the current telescope coordinates, and defines methods
+     that allow you to reset this position, jump from this position to a new one, etc.
+
+     Only one instance of this class can ever exist.
   """
   def __repr__(self):
     if self.posviolate:
@@ -152,9 +160,9 @@ class CurrentPosition(correct.CalcPosition):
     return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
 
   def UpdatePosition(self):
-    """Update Current sky coordinates from paddle and refraction motion
+    """Update Current sky coordinates from paddle and refraction motion.
 
-       This function is called at regular intervals by the DetermineEvent loop.
+       This function is called at regular intervals by the 'fastloop'.
     """
     #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
     if motion.motors.Frozen or motion.limits.HWLimit or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
@@ -202,7 +210,10 @@ class CurrentPosition(correct.CalcPosition):
        These velocities are mixed into the telescope motion by the low-level control loop
        in motion.motors.TimeInt.
 
-       This function is called at regular intervals by the DetermineEvent loop.
+       Real time flexure and refraction are derived by calculating them at now-WINDOW and
+       now+WINDOW, then taking the difference to turn into a velocity.
+
+       This function is called at regular intervals by the 'slowloop'.
     """
     WINDOW = 30.0            #Window time in seconds. Calculate refraction and
                              # flexure at T-WINDOW and T+WINDOW, then use the
@@ -276,7 +287,7 @@ class CurrentPosition(correct.CalcPosition):
       motion.motors.DEC.refraction = DEC_ref
 
   def Jump(self, FObj, Rate=None, force=False):
-    """Jump to new position.
+    """Jump the telescope to new position.
 
        Inputs:
          FObj - a correct.CalcPosition object containing the destination position
@@ -285,8 +296,9 @@ class CurrentPosition(correct.CalcPosition):
        Slews in RA by (FObj.RaC-Current.RaC), and slews in DEC by (FObj.DecC-Current.DecC).
        Returns 'True' if Alt of initial or final object is too low, 'False' if the slew proceeded OK.
 
-       This method is called by DoTJBox (that handles external commands) as well as by
-       the user from the command line.
+       Every action that results in a telescope slew (Pyro4 remote calls, the user on the command line,
+       tjbox table processing, etc) ends up in a call to this method. The only exceptions are hand-paddle
+       motion (in handpaddle.py) and small offsets (the 'Offset' method below).
     """
     global LastObj
     if Rate is None:
@@ -402,6 +414,11 @@ class CurrentPosition(correct.CalcPosition):
 
   def Offset(self, ora, odec):
     """Make a tiny slew from the current position, by ora,odec arcseconds.
+
+       The maximum coordinate shift allowed is defined in the MAXOFFSETSTEPS constant at the
+       top of this module - this will be reached with quite large offsets in plate-scale
+       near the equator, but relatively small east-west shifts in plate scale near the pole
+       can result in large differences in RA between initial and final position.
     """
     DelRA = 20*ora/math.cos(self.DecC/3600*math.pi/180)  #conv to motor steps
     DelDEC = 20*odec
@@ -434,7 +451,7 @@ def CheckDirtyPos():
      If more than prefs.WaitBeforePosUpdate seconds have passed since the end of the last
      move, flag the current position as new and stable by clearing the PosDirty flag.
      
-     This function is called at regular intervals by the DetermineEvent loop.
+     This function is called at regular intervals by the 'fastloop'.
   """
   global DirtyTime
   if motion.motors.PosDirty and (DirtyTime==0):
@@ -454,6 +471,8 @@ def CheckLimitClear():
   """Periodically check to see if a hardware limit state has been cleared. If it has,
      and it's now safe to resume motion (we aren't moving, etc), then clear the
      global limit flag.
+
+     This function is called at regular intervals by the 'fastloop'.
   """
   if motion.limits.HWLimit and ( (not motion.motors.Moving) and
                                  (not motion.limits.PowerOff) and
@@ -472,7 +491,7 @@ def CheckDirtyDome():
      far enough since the last dome move that the dome azimuth is more than 6 degrees
      off. 
 
-     This function is called at regular intervals by the DetermineEvent loop.
+     This function is called at regular intervals by the 'fastloop'.
   """
   if ( (abs(dome.dome.CalcAzi(current)-dome.dome.DomeAzi) > 6) and
        ((time.time()-dome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
@@ -493,7 +512,7 @@ def CheckDBUpdate():
      and also used by Teljoy to set the initial position on startup, using the last
      recorded RA, DEC and LST.
 
-     This function is called at regular intervals by the DetermineEvent loop.
+     This function is called at regular intervals by the 'fastloop'.
   """
   global db, DBLastTime
   if sqlint.SQLActive and ( (time.time()-DBLastTime) > 1.0):
@@ -637,7 +656,7 @@ def CheckTJbox():
      Check the progress of any previous commands still being acted on.
      Exits without an error if the SQL connection isn't available.     
 
-     This function is called at regular intervals by the DetermineEvent loop.
+     This function is called at regular intervals by the 'fastloop'.
   """
   global db, TJboxAction
   if not sqlint.SQLActive:
@@ -660,7 +679,7 @@ def CheckTJbox():
 
 
 def CheckTimeout():
-  """This function checks the time since the last command received via the database from the command table.
+  """This function checks the time since the last command received via the database from the tjbox table.
      If it exceeds ten minutes, the shutter is closed and the telescope is frozen.
      
      This is a safety mechanism, as the CCD camera control software (Prosp) also currently handles 
@@ -669,7 +688,7 @@ def CheckTimeout():
      When this Python Teljoy code is stable, the weather and end-of-night handling can be moved here,
      and this function removed.
      
-     This function is called at regular intervals by the DetermineEvent loop.
+     This function is called at regular intervals by the 'slowloop'.
   """
   if TIMEOUT == 0:
     errors.TimeoutError = False
@@ -709,8 +728,21 @@ def CheckErrors():
     errors.CalErrorTag = None
 
 
+def LogGuider():
+  """This function logs the autoguider steps to a file in /tmp.
+     It's called at regular intervals by the 'slowloop'.
+  """
+  if motion.motors.Autoguiding:
+    guidelog_ra = motion.motors.Driver.counters.a_guider_steps
+    guidelog_dec  = motion.motors.Driver.counters.b_guider_steps
+    motion.motors._guidelog.write('%f %d %d\n' % (time.time(), guidelog_ra, guidelog_dec))
+    motion.motors._guidelog.flush()
+
 
 def Init():
+  """Open up a database connection, initialise the current telescope coordinates using the teljoy.current
+     table, and start the fast and slow event loops in two separate threads, to handle all the high-level actions.
+  """
   global db, fastloop, slowloop, fastthread, slowthread, paddles, current, LastObj
   logger.debug('Detevent unit init started')
 
@@ -731,13 +763,14 @@ def Init():
   fastloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
   fastloop.register('CheckLimitClear', CheckLimitClear)          # Test to see if the hardware limits are clear now, and if safe, clear the global limit flag
   fastloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
-  fastloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
   fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
 
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
   slowloop.register('Weather', weather._background)
   slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
   slowloop.register("CheckErrors", CheckErrors)
+  slowloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
+  slowloop.register('LogGuider', LogGuider)             # If Autoguiding is true, log the guider step counters to a file.
 
   logger.debug('Detevent unit init finished')
   fastthread = threading.Thread(target=fastloop.runloop, name='detevent-fastloop-thread')

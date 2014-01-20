@@ -1,6 +1,12 @@
 
 """This module defines the TimeRec and CalcPosition classes, containing attributes and
    methods for astrometric corrections (JD, LST, precession, nutation, refraction, etc).
+
+   The pyephem module defines subclasses of TimeRec and CalcPosition, but the subclasses
+   duplicate almost all of the astrometric code and LST calculation here, using routines in
+   the ephem library(wrapping Elwood P Downey's code). The routines in here are the original
+   Teljoy astrometric code, ported from Pascal, but after some more testing, most of this code
+   could be deleted and the classes merged.
 """
 
 import time
@@ -30,7 +36,8 @@ class TimeRec(object):
     self.update()                        #Calculate JD and LST values
 
   def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
+    """This object is 'pickled' when sending it over the wire via Pyro4, and we only want to pickle attributes,
+       not functions.
     """
     d = {}
     for n in ['UT','JD','LST']:
@@ -129,7 +136,8 @@ class CalcPosition(Position):        #Position class defined in globals.py
       self.update()
 
   def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
+    """This object is 'pickled' when sending it over the wire via Pyro4, and we only want to pickle attributes,
+       not functions.
     """
     d = {}
     for n in ['Ra','Dec','Epoch','RaA','DecA','RaC','DecC','Alt','Azi','ObjID','TraRA','TraDEC','posviolate','DomePos']:

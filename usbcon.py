@@ -115,6 +115,7 @@ class Driver(controller.Driver):
     self.FrameLog = []   # Log of the last few seconds of frame data, as a list of tuples
     self.dropped_frames = None
     self.limits = limits
+    self.counters = None    # Last values read from the controller counters
     self.lock = threading.RLock()
 
   def get_expected_controller_version(self):
@@ -199,50 +200,28 @@ class Driver(controller.Driver):
       controller.MC_PIN_FLAG_MCA_O_FUNCTION_LOW | \
       controller.MC_PIN_FLAG_MCB_O_FUNCTION_LOW
 
-    if REALMOTORS:   #If using the real, micro-stepped telescope motors:
-      # Set the length of a frame, in cycles of the controller clock frequency. In
-      # this example a frame is 50ms, or 1/20th of a second:
-      configuration.mc_frame_period = self.host.clock_frequency / 20
+    # Set the length of a frame, in cycles of the controller clock frequency. In
+    # this example a frame is 50ms, or 1/20th of a second:
+    configuration.mc_frame_period = self.host.clock_frequency / 20
 
-      # Set the velocity limit (in steps per frame) on each axis:
-      configuration.mc_a_velocity_limit = 6000
-      configuration.mc_b_velocity_limit = 6000
+    # Set the velocity limit (in steps per frame) on each axis:
+    configuration.mc_a_velocity_limit = 6000
+    configuration.mc_b_velocity_limit = 6000
 
-      # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 800   #Should be at least three times the maximum add_to_vel,
-      configuration.mc_b_acceleration_limit = 800   #  so up to six times MOTOR_ACCEL
+    # Set the acceleration limit (in steps per frame per frame) on each axis:
+    configuration.mc_a_acceleration_limit = 800   #Should be at least three times the maximum add_to_vel,
+    configuration.mc_b_acceleration_limit = 800   #  so up to six times MOTOR_ACCEL
 
-      # Set the deceleration (in steps per frame per frame) to use when shutting down:
-      configuration.mc_a_shutdown_acceleration = 250
-      configuration.mc_b_shutdown_acceleration = 250
+    # Set the deceleration (in steps per frame per frame) to use when shutting down:
+    configuration.mc_a_shutdown_acceleration = 250
+    configuration.mc_b_shutdown_acceleration = 250
 
-      # Set the pulse width, in cycles of the clock frequency (12MHz). In this
-      # example the pulse width is 50 clock cycles, and the off time is 50 clock
-      # cycles, for a 100 clock cycle period. At the maximum velocity of 6000
-      # steps per frame, this would be a 120kHz square wave:
-      configuration.mc_pulse_width = self.host.clock_frequency / 240000
-      configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 240000
-    else:   #If using the slow, non-microstepped test rig
-      # Set the length of a frame, in cycles of the controller clock frequency. In
-      # this example a frame is 50ms, or 1/20th of a second:
-      configuration.mc_frame_period = self.host.clock_frequency / 20
-
-      # Set the velocity limit (in steps per frame) on each axis:
-      configuration.mc_a_velocity_limit = 100
-      configuration.mc_b_velocity_limit = 100
-
-      # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 5
-      configuration.mc_b_acceleration_limit = 5
-
-      # Set the deceleration (in steps per frame per frame) to use when shutting down:
-      configuration.mc_a_shutdown_acceleration = 5
-      configuration.mc_b_shutdown_acceleration = 5
-
-      # Set the pulse width, in cycles of the controller clock frequency. In this
-      # example the pulse width is 500us:
-      configuration.mc_pulse_width = self.host.clock_frequency / 10000
-      configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
+    # Set the pulse width, in cycles of the clock frequency (12MHz). In this
+    # example the pulse width is 50 clock cycles, and the off time is 50 clock
+    # cycles, for a 100 clock cycle period. At the maximum velocity of 6000
+    # steps per frame, this would be a 120kHz square wave:
+    configuration.mc_pulse_width = self.host.clock_frequency / 240000
+    configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 240000
 
     # Invert all the GPIO inputs, so they are active when pulled low:
     for pin in configuration.pins[0:40]:
@@ -258,26 +237,26 @@ class Driver(controller.Driver):
     # configuration.mc_b_positive_limit_input = controller.PIN_GPIO_2
     # configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
 
-    # Set the guider input pins:
-#    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_0
-#    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_1
-#    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_2
-#    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_3
+    # Set the guider input pins. The SBIG socket has pins: 1=+RA, 2=+DEC, 3=-DEC, 4=-RA, 5=ground:
+    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_32     # +RA
+    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_35     # -RA
+    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_33     # +DEC
+    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_34     # -DEC
 
     # Set the guider sample interval, in cycles of the controller clock frequency.
     # In this example, the guider is polled every 1ms, giving a maximum of
     # 100 for the guider value in each 100ms frame:
-#    self.mc_guider_counter_divider = self.host.clock_frequency / 1000
+    self.mc_guider_counter_divider = self.host.clock_frequency / 1000
 
     # Each guider value is multiplied by a fractional scale factor to get
     # the number of steps. The resulting value then has a maximum applied before
     # being added to the next available frame:
-#    configuration.mc_guider_a_numerator = 4
-#    configuration.mc_guider_a_denominator = 50   #4 steps per 50ms slot
-#    configuration.mc_guider_a_limit = 20
-#    configuration.mc_guider_b_numerator = 4
-#    configuration.mc_guider_b_denominator = 50
-#    configuration.mc_guider_b_limit = 20
+    configuration.mc_guider_a_numerator = 4
+    configuration.mc_guider_a_denominator = 50   #4 steps per 50ms slot
+    configuration.mc_guider_a_limit = 20
+    configuration.mc_guider_b_numerator = 4
+    configuration.mc_guider_b_denominator = 50
+    configuration.mc_guider_b_limit = 20
 
     if SITE == 'NZ':
       # Set 8 pins to outputs, the rest to inputs, with values reported (paddles, limits, power state):
@@ -398,6 +377,7 @@ class Driver(controller.Driver):
                    counters.b_guider_steps,
                    counters.a_measured_steps,
                    counters.b_measured_steps))
+    self.counters = counters
 
     self.host.add_timer(60.0, self._check_counters)
 
@@ -448,6 +428,30 @@ class Driver(controller.Driver):
       logger.debug('acq in state_changed() success')
       d = self.host.get_exception()
       d.addCallback(self._get_exception_completed)
+
+  def enable_guider(self):
+    """Calls self.host.enable_guider with locking. Turns on the autoguider.
+    """
+    self.lock.acquire()
+    d = self.host.enable_guider()
+    d.addCallback(self._guiderenable_done)
+
+  def _guiderenable_done(self, _):
+    """The call to enable the guider has completed, so we can release the lock.
+    """
+    self.lock.release()
+
+  def disable_guider(self):
+    """Calls self.host.disable_guider with locking. Turns off the autoguider.
+    """
+    self.lock.acquire()
+    d = self.host.disable_guider()
+    d.addCallback(self._guiderdisable_done)
+
+  def _guiderdisable_done(self, _):
+    """The call to disable the guider has completed, so we can release the lock.
+    """
+    self.lock.release()
 
   def _get_exception_completed(self, details):
     """Called when we have any exception details after a state change.
@@ -526,13 +530,23 @@ class Driver(controller.Driver):
     """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
     d = self.host.set_outputs(bitfield)
-    return d
+    d.addCallback(self._set_outputs_done)
+
+  def _set_outputs_done(self, _):
+    """Output setting is finished, release the lock.
+    """
+    self.lock.release()
 
   def clear_outputs(self, bitfield):
     """Given a 64-bit number, turn OFF the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
     d = self.host.clear_outputs(bitfield)
-    return d
+    d.addCallback(self._clear_outputs_done)
+
+  def _clear_outputs_done(self, _):
+    """Output clearing is finished, release the lock.
+    """
+    self.lock.release()
 
   def stop(self):
     """Stop the controller loop, triggering creation of a new Driver and Controller.

@@ -1,8 +1,6 @@
 """
-    Functions to read the digital inputs from the 8255 card (and in this
-    Python version added functions for 'faking' button presses).
-    
-    To be replaced by USB interface code.
+    Functions to read the digital inputs, originally from the 8255 card and now using the
+    USB controller. For testing, a few functions are defined for for 'faking' button presses.
     
     ReadCoarse   -           Read the coarse paddle of the telescope.
     ReadFine     -           Read the fine paddle of the telescope.
@@ -15,9 +13,10 @@
     'dome right' paddle buttons, which control the motors. This module contains
     the port IO for that task, while NZDOME.PAS contains the rest of the logic.    
 
-    The constants and types given below are the locations of buffers,
+    The constants and types given below are the old (ISA bus) locations of buffers,
     control registers or board address.  The Perth 8255 I/O board is assumed
-    to be at 0x1b0 = 432.
+    to be at 0x1b0 = 432, and the base address of the New Zealand board (a PC-711B)
+    is at 0x216 = 534.
 """
 
 from globals import *
@@ -28,38 +27,48 @@ CSouth    = 0x02                        #Mask for south (green on test cable)
 CEast     = 0x04                        #Mask for east (blue on test cable
 CWest     = 0x08                        #Mask for west (yellow on test cable)
 
-FNorth    = 0x01                        #Mask for north on fine paddle
+FNorth    = 0x01                        #Mask for north on fine paddle (Fine paddle doesn't exist on NZ telescope)
 FSouth    = 0x02                        #Mask for south
 FEast     = 0x04                        #Mask for east
 FWest     = 0x08                        #Mask for west
 
+# Speed bits for Perth telescope, with a two position toggle switch on each paddle
 CSlewMsk  = 0x10                        #This bit is set if the coarse paddle is set to 'Slew' speed
 FGuideMsk = 0x10                        #This bit is set if the fine paddle is set to 'Guide' speed
 
 
-#Only used on NZ telescope which only uses one paddle, with a three-position speed toggle switch
-LeftBit = 8    # Output bit number for driving dome motor 'left' - bit 0 of port 2_C
-RightBit = 9   # Output bit number for driving dome motor 'right' - bit 1 of port 2_C
+# NZ telescope only uses one paddle, with a three-position speed toggle switch requiring two bits.
 CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
 CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
 
+# Output bits used in NZ for dome motor control
+LeftBit = 8    # Output bit number for driving dome motor 'left' - bit 0 of port 2_C
+RightBit = 9   # Output bit number for driving dome motor 'right' - bit 1 of port 2_C
 
-CB = 0           #Defauly to Coarse-set speed
-FB = 0           #Default to Fine-set speed (ignore fine-guide)
+# Paddle switch emulation for testing:
+CB = 0           # 'Coarse paddle' value used to emulate button presses for testing
+FB = 0           # 'Fine paddle' value used to emulate button presses for testing
 LastDirn = ''
 LastPaddle = ''
 
 
+# Wrappers for actual bit IO functions
 def set_outputs(n):
+  """'n' is a 64 bit integer, and any bit set in 'n' is forced high (assuming it is configured as an output
+     bit). Bits in 'n' that are zero are left unchanged.
+  """
   d = motion.motors.Driver.set_outputs(n)
 
 def clear_outputs(n):
+  """'n' is a 64 bit integer, and any bit set in 'n' is forced low (assuming it is configured as an output
+     bit). Bits in 'n' that are zero are left unchanged.
+  """
   d = motion.motors.Driver.clear_outputs(n)
 
 
 
 def ReadCoarse():
-  """Return either the 6 bits of data from the IO bits, or a dummy value if
+  """Return either the 6 bits of data from the coarse paddle bits, or a dummy value if
      we're emulating the paddle in software.
      In NZ, on the old card, this was port $216 = DI-low
   """
@@ -95,7 +104,10 @@ def ReadFine():
 def ReadLimit(inputs = None):
   """Read the state of the limit switch input bits, and return a list of
      active limit states (each a string). An empty list means no limits are
-     active. On old card, this was port $217 = DI-high
+     active. On old card, this was port $217 = DI-high.
+
+     Note that if the power switch is off (0x20 is set), then all the other
+     limit inputs will go high as well, as the relays all open.
   """
   if SITE == 'PERTH':
     return []     # Hardware limits can't be read in Perth
@@ -117,6 +129,8 @@ def ReadLimit(inputs = None):
 
 
 def DomeGoingLeft():
+  """Returns true if the dome motor is moving left. This happens if the user presses the 'Dome Left' button on the paddle.
+  """
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
@@ -125,6 +139,8 @@ def DomeGoingLeft():
 
 
 def DomeGoingRight():
+  """Returns true if the dome motor is moving right. This happens if the user presses the 'Dome Right' button on the paddle.
+  """
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
@@ -141,6 +157,8 @@ def DomeStop():
 
 
 def DomeLeft():
+  """Move the dome left.
+  """
   if SITE == 'PERTH':
     return      # No digital IO for dome in Perth
   if DomeGoingRight():
@@ -152,6 +170,8 @@ def DomeLeft():
 
 
 def DomeRight():
+  """Move the dome right.
+  """
   if SITE == 'PERTH':
     return      # No digital IO for dome in Perth
   if DomeGoingLeft():
@@ -252,7 +272,7 @@ def press(dirn, paddle='F'):
   """Flag a button as 'pressed'. Args are 'dirn' which must equal 'N','S','E', or 'W',
      and 'paddle' which must be 'C' or 'F' (default 'F')
      
-     Code to emulate button presses until actual hardware IO is working.
+     Code to emulate button presses for testing.
   """
   global CB,FB,LastDirn,LastPaddle
   dirn = dirn.upper().strip()
@@ -293,7 +313,7 @@ def release(dirn=None, paddle=None):
      and 'paddle' which must be 'C' or 'F'. If neither 'dirn' nor 'paddle' are given,
      then 'release' the last button 'press'ed.
      
-     Code to emulate button presses until actual hardware IO is working.
+     Code to emulate button presses for testing.
   """
   global CB,FB,LastDirn,LastPaddle
   if dirn is None and paddle is None:
@@ -337,7 +357,7 @@ def release(dirn=None, paddle=None):
 def cset():
   """Set the Coarse paddle to 'set' speed.
      
-     Code to emulate button presses until actual hardware IO is working.
+     Code to emulate button presses for testing.
   """
   global CB
   CB &= ~ CSlewMsk
@@ -345,7 +365,7 @@ def cset():
 def cslew():
   """Set the Coarse paddle to 'slew' speed.
      
-     Code to emulate button presses until actual hardware IO is working.
+     Code to emulate button presses for testing.
   """
   global CB
   CB |= CSlewMsk

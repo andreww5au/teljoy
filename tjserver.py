@@ -135,6 +135,16 @@ class Telescope(object):
     detevent.current.Offset(ora=ora, odec=odec)
     return "Moved small offset distance: %4.1f,%4.1f" % (ora,odec)
 
+  def autoguide(self, on):
+    """Turn the autoguider mode on or off.
+    """
+    if on:
+      motion.motors.Autoguide(True)
+      return "Autoguiding turned ON"
+    else:
+      motion.motors.Autoguide(False)
+      return "Autoguiding turned OFF"
+
   def freeze(self):
     """Freeze the telescope
     """

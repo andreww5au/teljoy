@@ -46,6 +46,8 @@ else:
     flags.append('DomeTracking')
   if s.motors.Frozen:
     flags.append('Frozen')
+  if s.motors.Autoguiding:
+    flags.append('Autoguiding')
   print "Flags:   %s" % (', '.join(flags))
   if s.limits.HWLimit:
     limits = []

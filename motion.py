@@ -347,10 +347,6 @@ class Axis(object):
           send += self.track            #Add in non-sidereal motion for moving targets
           self.padlog += self.track     #Log non-sidereal motion as paddle movement
 
-      # TODO - handle autoguider log here, using counter data?
-
-      send = send / DIVIDER     # TODO - remove this hack for use on the actual telescope, only needed for test motors.
-
       #Add any 'held' values for this axis, containing small offsets that can bypass the ramp calculations
       if self.hold <> 0:
         send += self.hold
@@ -390,13 +386,15 @@ class MotorControl(object):
     self.lock = threading.RLock()
     self.Driver = None
     self.CutFrac = 0            # Fraction of steps to throw away during emergency stop - 0 (none) to 100 (100%)
+    self.Autoguiding = False    # True if the autoguider has been enabled
+    self._guidelog = None       # File to log guide motion to
     logger.debug('motion.MotorControl.__init__: finished global vars')
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['Jumping','Paddling','Moving','PosDirty','ticks','Frozen']:
+    for n in ['Jumping','Paddling','Moving','PosDirty','ticks','Frozen', 'Autoguiding']:
       d[n] = self.__dict__[n]
     return d
 
@@ -418,6 +416,22 @@ class MotorControl(object):
     mesg += "Dec:\n%s" % self.DEC
     mesg += '>\n'
     return mesg
+
+  def Autoguide(self, on):
+    """If the argument 'on' is True, turn the autoguider mode on, and start logging the
+       guider steps taken. If the the argument is False, turn the autoguider mode off.
+    """
+    if on:
+      self._guidelog = file(prefs.LogDirName + '/guider.log', 'a')
+      self.Driver.enable_guider()
+      self._guidelog.write('%f ON' % time.time())
+      self.Autoguiding = True
+    else:
+      self._guidelog.close()
+      self.Driver.disable_guider()
+      self._guidelog.write('%f OFF' % time.time())
+      self._guidelog.close()
+      self.Autoguiding = False
 
   def Jump(self, delRA, delDEC, Rate, force=False):
     """This procedure calculates the profile parameters for a telescope jump.

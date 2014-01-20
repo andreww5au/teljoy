@@ -15,6 +15,7 @@ SITE = 'NZ'
 
 INIF = 'teljoy.ini'
 
+# Default position values used if we can't find teljoy.ini on startup.
 if SITE == 'NZ':
   DOBSLAT = -43.9866666667               # Lat: -43 59.2
   DOBSLONG = -170.465                    # Long: -170 27.9
@@ -22,7 +23,7 @@ else:
   DOBSLAT = -32.008083333               # Lat: -32 00 29.1
   DOBSLONG = -116.13501944               # Long: -116 08 06.07
 
-#These really are constant, unless this code is still being used thousands of years from now...
+# These really are constant, unless this code is still being used thousands of years from now...
 MSOLDY = 1.00273790931     # Mean solar day = MsolDy Mean sidereal days}
 MSIDDY = 0.99726956637     # Mean sidereal day = MSidDy mean solar days}
 DRASID = -15.04106868     # Sidereal rate, in arcseconds per SOLAR second
@@ -46,25 +47,12 @@ DTABLE = 'current'      # Table to use for current position updates - 'ncurrent'
 
 PULSE = 0.05                       # 50 milliseconds per 'frame' (sometimes referred to as a 'tick')
 
-REALMOTORS = True   # If true, we're driving the real telescope, if false, driving test motors.
-
-if REALMOTORS:
-  DIVIDER = 1   # Don't scale step values for real telescope
-  MOTOR_ACCEL = 50000     # 2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
-else:
-  DIVIDER = 20   # Scale down step values for testing with non-microstepped driver boards
-  MOTOR_ACCEL = 6000        # For test motors, this is 15 steps/frame/frame
+MOTOR_ACCEL = 50000     # 2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
 
 # Which paddles to simulate using press, release functions
 # DUMMYPADDLES = ['C','F']
 DUMMYPADDLES = []
-#DUMMY = ['C', 'F']  #List of paddles to  be simulated.
 
-# Which paddle the test-rig should operate (using input bits 8-15)
-TESTPADDLE = None
-#TESTPADDLE = 'C'
-
-FILTERS = ['Clear', 'Red', 'NCN', 'Blue', 'Visual', 'Infrared', 'Empty', 'Hole']
 
 CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']    # Initialisation file path
 
@@ -256,7 +244,7 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
   """Convert the floating point 'value' into a sexagecimal string.
      The character in 'sp' is used as a spacer between components. Useful for
      within functions, not on its own.
-     eg: sexstring(status.TJ.ObjRA,' ')
+     eg: sexstring(current.ObjRA/3600,' ')
   """
   if fixed:
     dp = 0
@@ -304,9 +292,9 @@ def stringsex(value="", compressed=False):
   """Convert the sexagesimal coordinate 'value' into a floating point
      result. Handles either a colon or a space as seperator, but currently
      requires all three components (H:M:S not H:M or H:M.mmm).
-     If 'compressed' is true, then no seperator is used, and the argument
+     If 'compressed' is true, then no separator is used, and the argument
      must have all three components, two digits for deg/minutes, and optional
-     fractional seconds.
+     fractional seconds (eg '123456.78' == 12:34:56.78.
   """
   try:
     value = value.strip()

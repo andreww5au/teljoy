@@ -66,6 +66,7 @@ class MotorsStatus(StatusObj):
     self.PosDirty = False
     self.ticks = 0
     self.Frozen = False
+    self.Autoguiding = False
 
 
 class LimitStatus(object):
