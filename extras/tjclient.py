@@ -10,6 +10,9 @@ import time
 import datetime
 import traceback
 
+hmac = "ShiverMeTimbers"
+Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
+
 status = None
 ShutterAction = None
 FreezeAction = None
@@ -123,6 +126,7 @@ class TelClient(StatusObj):
 
     try:
       self.proxy = Pyro4.Proxy(DEFURL)   # Use hardwired host/port first
+      self.proxy.Ping()   # Check to see we can connect
       ok = True
     except Pyro4.errors.PyroError:
       msg += "Can't find teljoy using default URL, trying nameserver.\n"

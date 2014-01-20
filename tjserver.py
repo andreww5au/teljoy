@@ -18,8 +18,8 @@ else:
   TESTHOST = 'www.google.com.au'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 import utils
 
-#hmac = "ShiverMeTimbers"
-#Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
+hmac = "ShiverMeTimbers"
+Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696
 
@@ -36,7 +36,7 @@ class Telescope(object):
       try:
         ns = Pyro4.locateNS()
       except:
-        logger.info("Can't locate Pyro nameserver - continuing on port %d" % PYROPORT)
+        logger.debug("Can't locate Pyro nameserver - continuing on port %d" % PYROPORT)
         ns = None
 
       try:
