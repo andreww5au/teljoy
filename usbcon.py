@@ -336,7 +336,7 @@ class Driver(controller.Driver):
     """Grab the counter data, and call _complete_check_counters when the
        data becomes available.
 
-       Called every 60 seconds, using a timer set up for the first time in
+       Called every 10 seconds, using a timer set up for the first time in
        _initialise_outputs_set above, and re-called by _complete_check_counters
        below.
     """
@@ -367,7 +367,7 @@ class Driver(controller.Driver):
                    counters.b_measured_steps))
     self.counters = counters
 
-    self.host.add_timer(60.0, self._check_counters)
+    self.host.add_timer(10.0, self._check_counters)
 
   def enqueue_frame_available(self, details):
     """This method is called when the queue changes (for example, when 
