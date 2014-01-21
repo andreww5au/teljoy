@@ -146,14 +146,14 @@ class Position(object):
     return d
 
   def __repr__(self):
-    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra/15.0/3600, fixed=True), sexstring(self.Dec/3600, fixed=True), self.Epoch)
+    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra / 15.0 / 3600, fixed=True), sexstring(self.Dec / 3600, fixed=True), self.Epoch)
     return s
 
   def __str__(self):
     return "{%s}: Org=[%s, %s EQ %6.1f]" % (self.ObjID,
-                                            sexstring(self.Ra/15.0/3600,fixed=True),
-                                            sexstring(self.Dec/3600,fixed=True),
-                                            self.Epoch )
+                                            sexstring(self.Ra / 15.0 / 3600, fixed=True),
+                                            sexstring(self.Dec / 3600, fixed=True),
+                                            self.Epoch)
 
 
 class Errors(object):
@@ -209,10 +209,10 @@ class Prefs(object):
   def __init__(self):
     self.EastOfPier = CP.getboolean('Toggles', 'EastOfPier')
     self.RAsid = DRASID
-    self.FlexureOn = CP.getboolean('Toggles', 'FlexureOn')          #flexure corrections on?
-    self.HighHorizonOn = CP.getboolean('Toggles', 'HighHorizonOn')  #whether to use AltCutoffHi or AltCutoffLo
-    self.RefractionOn = CP.getboolean('Toggles', 'RefractionOn')    #refraction corr. on?
-    self.RealTimeOn = CP.getboolean('Toggles', 'RealTimeOn')      #real-time refraction and/or flexure corrections if on
+    self.FlexureOn = CP.getboolean('Toggles', 'FlexureOn')          # flexure corrections on?
+    self.HighHorizonOn = CP.getboolean('Toggles', 'HighHorizonOn')  # whether to use AltCutoffHi or AltCutoffLo
+    self.RefractionOn = CP.getboolean('Toggles', 'RefractionOn')    # refraction corr. on?
+    self.RealTimeOn = CP.getboolean('Toggles', 'RealTimeOn')      # real-time refraction and/or flexure corrections if on
     self.AltWarning = CP.getint('Alarms', 'AltWarning')
     self.AltCutoffFrom = CP.getint('Alarms', 'AltCutoffFrom')
     self.AltCutoffHi = CP.getint('Alarms', 'AltCutoffHi')
@@ -266,9 +266,9 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
     outs = ''
   D = int(aval)
   M = int((aval - float(D)) * 60)
-  S = (aval - float(D) - float(M)/60) * 3600
+  S = (aval - float(D) - (float(M) / 60)) * 3600
   Si = int(S)
-  Sf = round(S-Si, dp)
+  Sf = round(S - Si, dp)
   if Sf == 1.0:
     Si += 1
     if Si == 60:
@@ -281,7 +281,7 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
   outs += '%02i%s%02i%s%02i' % (D, sp, M, sp, Si)
   if dp > 0:
     fstr = ".%%0%id" % dp
-    outs += fstr % int(Sf*(10**dp))
+    outs += fstr % int(Sf * (10**dp))
   if error:
     return ''
   else:
@@ -308,7 +308,7 @@ def stringsex(value="", compressed=False):
       sign = 1
       if h[0] == "-":
         sign = -1
-      return float(h) + (sign*float(m)/60.0) + (sign*float(s)/3600.0)
+      return float(h) + (sign * float(m) / 60.0) + (sign * float(s) / 3600.0)
     else:
       if value[0].isdigit():
         sign = 1
@@ -320,7 +320,7 @@ def stringsex(value="", compressed=False):
       h = value[:2]
       m = value[2:4]
       s = value[4:]
-      return (sign*float(h)) + (sign*float(m)/60.0) + (sign*float(s)/3600.0)
+      return (sign * float(h)) + (sign * float(m) / 60.0) + (sign * float(s) / 3600.0)
   except:
     return None
 
@@ -374,8 +374,7 @@ class SafetyInterlock(object):
             now = time.time()
             error = traceback.format_exc()
             self.Errors[name][now] = error
-            logger.error(
-              "Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
+            logger.error("Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
     return tag
 
   def remove_tag(self, tag=None):
@@ -397,8 +396,7 @@ class SafetyInterlock(object):
             now = time.time()
             error = traceback.format_exc()
             self.Errors[name][now] = error
-            logger.error(
-              "Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
+            logger.error("Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
         self.Active.set()
 
   def register_stopfunction(self, name, function, args=None, kwargs=None):
@@ -438,6 +436,8 @@ class SafetyInterlock(object):
 
 
 def UpdateConfig():
+  """Load the .ini file and populate the ConfigParser object with the contents.
+  """
   lCP = ConfigParser.SafeConfigParser(defaults=ConfigDefaults)
   lCPfile = lCP.read(CPPATH)
   if not lCPfile:
@@ -447,10 +447,10 @@ def UpdateConfig():
 
 ConfigDefaults = {'FlexureOn':'True', 'HighHorizonOn':'False', 'RefractionOn':'True',
                   'RealTimeOn':'True', 'AltWarning':'10', 'AltCutoffFrom':'6',
-                  'AltCutoffHi':'30', 'AltCutoffLo':'15', 'ObsLat':`DOBSLAT`, 'ObsLong':`DOBSLONG`,
-                  'EastOfPier':'False', 'Slew':`DFSLEWRATE/20`,
-                  'CoarseSet':`DFCOARSESETRATE/20`, 'FineSet':`DFFINESETRATE/20`, 'GUIDE':`DFGUIDERATE/20`,
-                  'Temp':`DFTEMP`,'Press':`DFPRESS`}
+                  'AltCutoffHi':'30', 'AltCutoffLo':'15', 'ObsLat':str(DOBSLAT), 'ObsLong':str(DOBSLONG),
+                  'EastOfPier':'False', 'Slew':str(DFSLEWRATE/20),
+                  'CoarseSet':str(DFCOARSESETRATE/20), 'FineSet':str(DFFINESETRATE/20), 'GUIDE':str(DFGUIDERATE/20),
+                  'Temp':str(DFTEMP), 'Press':str(DFPRESS)}
 
 ConfigDefaults.update( {'WaitTime':'0.5', 'MinBetween':'5', 'LogDirName':'/tmp'} )
 
@@ -462,5 +462,3 @@ prefs = Prefs()
 safety = SafetyInterlock()   # Create a safety interlock object
 
 DirtyTime = 0
-
-

@@ -47,10 +47,10 @@ MAXOFFSETSTEPS = 36000   # What is the maximum number of motors steps we can mov
                          # as precession calculated for the original position becomes less valid, as the offsets
                          # are simply added to the coordinates.
 
-FASTLOOP = 0.2     #How often the 'fast event loop' will call each of the registered functions
-SLOWLOOP = 30      #How often the 'slow event loop' will call each of the registered functions
+FASTLOOP = 0.2     # How often the 'fast event loop' will call each of the registered functions
+SLOWLOOP = 30      # How often the 'slow event loop' will call each of the registered functions
 
-detthread = None     #Contains the thread object running DetermineEvent after the init() function is called
+detthread = None     # Contains the thread object running DetermineEvent after the init() function is called
 
 fastloop = None
 slowloop = None
@@ -74,6 +74,8 @@ class EventLoop(object):
     self.Functions = {}
     self.Errors = {}
     self.exit = False
+    self._Tlast = 0
+    self.runtime = 0
 
   def register(self, name, function):
     """Register a new function to be called in the loop.
@@ -81,7 +83,7 @@ class EventLoop(object):
     self.Functions[name] = function
     self.Errors[name] = {}
 
-  def remove(self,name):
+  def remove(self, name):
     """Remove a function from the call list.
     """
     if name in self.Functions:
@@ -95,7 +97,7 @@ class EventLoop(object):
   def runall(self):
     """Run all functions once, catching any errors.
     """
-    for name,function in self.Functions.iteritems():
+    for name, function in self.Functions.iteritems():
       try:
         function()
       except:
@@ -118,7 +120,7 @@ class EventLoop(object):
     while not self.exit:
       self._Tlast = time.time()
       self.runall()
-      self.runtime = time.time()-self._Tlast
+      self.runtime = time.time() - self._Tlast
       sleeptime = self.looptime - self.runtime
       if sleeptime <= 0:
         pass
@@ -140,66 +142,66 @@ class CurrentPosition(correct.CalcPosition):
   """
   def __repr__(self):
     if self.posviolate:
-      l1 = "Top RA:  %s    LST: %s         ObjID:   --" % (sexstring(self.RaC/15.0/3600,dp=1), sexstring(self.Time.LST, dp=0))
-      l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,dp=0), self.Time.UT.time().isoformat()[:-4])
-      l3 = "Alt:     %s      HA:  %s        ObjRA:   --" %  (sexstring(self.Alt, dp=0), sexstring(self.RaC/15/3600-self.Time.LST, dp=0))
-      l4 = "Airmass: %6.4f                              ObjDec:  --" % (1/math.cos((90-self.Alt)/180*math.pi) )
+      l1 = "Top RA:  %s    LST: %s         ObjID:   --" % (sexstring(self.RaC / 15.0 / 3600, dp=1), sexstring(self.Time.LST, dp=0))
+      l2 = "Top Dec: %s     UT:  %s" % (sexstring(self.DecC / 3600, dp=0), self.Time.UT.time().isoformat()[:-4])
+      l3 = "Alt:     %s      HA:  %s        ObjRA:   --" % (sexstring(self.Alt, dp=0), sexstring(self.RaC / 15 / 3600 - self.Time.LST, dp=0))
+      l4 = "Airmass: %6.4f                              ObjDec:  --" % (1 / math.cos((90 - self.Alt) / 180 * math.pi))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch: --" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen])
     else:
-      l1 = "Top RA:  %s    LST: %s         ObjID:   %s" % (sexstring(self.RaC/15.0/3600,dp=1), sexstring(self.Time.LST, dp=0), self.ObjID)
-      l2 = "Top Dec: %s     UT:  %s" %                      (sexstring(self.DecC/3600,dp=0), self.Time.UT.time().isoformat()[:-4])
-      l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, dp=0), sexstring(self.RaC/15/3600-self.Time.LST, dp=0),
-                                                            sexstring(self.Ra/15/3600, dp=1))
-      l4 = "Airmass: %6.4f                              ObjDec:  %s" % (1/math.cos((90-self.Alt)/180*math.pi),
-                                                                       sexstring(self.Dec/3600, dp=0))
+      l1 = "Top RA:  %s    LST: %s         ObjID:   %s" % (sexstring(self.RaC / 15.0 / 3600, dp=1), sexstring(self.Time.LST, dp=0), self.ObjID)
+      l2 = "Top Dec: %s     UT:  %s" % (sexstring(self.DecC / 3600, dp=0), self.Time.UT.time().isoformat()[:-4])
+      l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, dp=0), sexstring(self.RaC / 15 / 3600 - self.Time.LST, dp=0),
+                                                            sexstring(self.Ra / 15 / 3600, dp=1))
+      l4 = "Airmass: %6.4f                              ObjDec:  %s" % (1 / math.cos((90 - self.Alt) / 180 * math.pi),
+                                                                        sexstring(self.Dec / 3600, dp=0))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
     l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[dome.dome.DomeInUse],
                                                               {False:" No", True:"Yes"}[dome.dome.DomeTracking],
                                                               str(errors))
-    return '\n'.join([l1,l2,l3,l4,l5,l6])+'\n'
+    return '\n'.join([l1, l2, l3, l4, l5, l6]) + '\n'
 
   def UpdatePosition(self):
     """Update Current sky coordinates from paddle and refraction motion.
 
        This function is called at regular intervals by the 'fastloop'.
     """
-    #invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
-    if motion.motors.Frozen or motion.limits.HWLimit or (motion.motors.RA.padlog<>0) or (motion.motors.DEC.padlog<>0):
+    # invalidate orig RA and Dec if frozen, or paddle move, or non-sidereal move}
+    if motion.motors.Frozen or motion.limits.HWLimit or (motion.motors.RA.padlog != 0) or (motion.motors.DEC.padlog != 0):
       self.posviolate = True
 
     with motion.motors.RA.lock:
-      #account for paddle and non-sid. motion, and limit encounters}
-      self.RaA += motion.motors.RA.padlog/20
-      #above, plus real-time refraction+flexure+guide in the fully corrected coords}
-      self.RaC += motion.motors.RA.padlog/20 + motion.motors.RA.reflog/20 + motion.motors.RA.guidelog/20
-      paddles.RA_GuideAcc += motion.motors.RA.guidelog/20
+      # account for paddle and non-sid. motion, and limit encounters}
+      self.RaA += motion.motors.RA.padlog / 20
+      # above, plus real-time refraction+flexure+guide in the fully corrected coords}
+      self.RaC += motion.motors.RA.padlog / 20 + motion.motors.RA.reflog / 20 + motion.motors.RA.guidelog / 20
+      paddles.RA_GuideAcc += motion.motors.RA.guidelog / 20
       motion.motors.RA.padlog = 0
       motion.motors.RA.reflog = 0
       motion.motors.RA.guidelog = 0
 
     with motion.motors.DEC.lock:
-      #account for paddle and non-sid. motion, and limit encounters}
-      self.DecA += motion.motors.DEC.padlog/20
-      #above, plus real-time refraction+flexure+guide in the fully corrected coords}
-      self.DecC += motion.motors.DEC.padlog/20 + motion.motors.DEC.reflog/20 + motion.motors.DEC.guidelog/20
-      paddles.DEC_GuideAcc += motion.motors.DEC.guidelog/20
+      # account for paddle and non-sid. motion, and limit encounters}
+      self.DecA += motion.motors.DEC.padlog / 20
+      # above, plus real-time refraction+flexure+guide in the fully corrected coords}
+      self.DecC += motion.motors.DEC.padlog / 20 + motion.motors.DEC.reflog / 20 + motion.motors.DEC.guidelog / 20
+      paddles.DEC_GuideAcc += motion.motors.DEC.guidelog / 20
       motion.motors.DEC.padlog = 0
       motion.motors.DEC.reflog = 0
       motion.motors.DEC.guidelog = 0
 
-    if self.RaA > (24*60*60*15):
-      self.RaA -= (24*60*60*15)
+    if self.RaA > (24 * 60 * 60 * 15):
+      self.RaA -= (24 * 60 * 60 * 15)
     if self.RaA < 0:
-      self.RaA += (24*60*60*15)
+      self.RaA += (24 * 60 * 60 * 15)
 
-    if self.RaC > (24*60*60*15):
-      self.RaC -= (24*60*60*15)
+    if self.RaC > (24 * 60 * 60 * 15):
+      self.RaC -= (24 * 60 * 60 * 15)
     if self.RaC < 0:
-      self.RaC += (24*60*60*15)
+      self.RaC += (24 * 60 * 60 * 15)
 
     self.Time.update()
-    self.AltAziConv()           #Calculate Alt/Az now
+    self.AltAziConv()           # Calculate Alt/Az now
     if self.Alt < prefs.AltWarning:
       errors.AltError = True
     else:
@@ -215,12 +217,12 @@ class CurrentPosition(correct.CalcPosition):
 
        This function is called at regular intervals by the 'slowloop'.
     """
-    WINDOW = 30.0            #Window time in seconds. Calculate refraction and
+    WINDOW = 30.0            # Window time in seconds. Calculate refraction and
                              # flexure at T-WINDOW and T+WINDOW, then use the
-                             #(difference/(2*WINDOW) as the velocity
+                             # (difference/(2*WINDOW) as the velocity
 
     if (not prefs.RealTimeOn) or (not prefs.RefractionOn and not prefs.FlexureOn):
-      #**Stop the refraction correction**
+      # **Stop the refraction correction**
       with motion.motors.RA.lock:
         motion.motors.RA.refraction = 0.0
       with motion.motors.DEC.lock:
@@ -228,56 +230,56 @@ class CurrentPosition(correct.CalcPosition):
       errors.RefError = False
       return
 
-    curpos = copy.copy(self)   #Take a copy of the object to avoid corrupting internal attributes.
+    curpos = copy.copy(self)   # Take a copy of the object to avoid corrupting internal attributes.
     curpos.Time = correct.TimeRec()
     #Calculate the values WINDOW seconds ago:
-    curpos.Time.update()        #Get current time now
-    curpos.Time.LST -= WINDOW/3600   #Calculate values WINDOW seconds in the past
-    curpos.AltAziConv()              #Calculate Alt/Az
+    curpos.Time.update()        # Get current time now
+    curpos.Time.LST -= WINDOW / 3600   # Calculate values WINDOW seconds in the past
+    curpos.AltAziConv()              # Calculate Alt/Az
 
     if prefs.RefractionOn:
-      oldRAref,oldDECref = curpos.Refrac()   #Calculate and save refraction correction now
+      oldRAref, oldDECref = curpos.Refrac()   # Calculate and save refraction correction now
     else:
       oldRAref = 0
       oldDECref = 0
 
     if prefs.FlexureOn:
-      oldRAflex,oldDECflex = curpos.Flex()   #Calculate and save flexure correction now
+      oldRAflex, oldDECflex = curpos.Flex()   # Calculate and save flexure correction now
     else:
       oldRAflex = 0
       oldDECflex = 0
 
-    #Calculate the values WINDOW seconds in the future:
-    curpos.Time.LST += 2*WINDOW/3600   #Calculate values WINDOW seconds in the future
-    curpos.AltAziConv()             #Calculate the alt/az at that future LST
+    # Calculate the values WINDOW seconds in the future:
+    curpos.Time.LST += 2 * WINDOW / 3600   # Calculate values WINDOW seconds in the future
+    curpos.AltAziConv()             # Calculate the alt/az at that future LST
 
     if prefs.RefractionOn:
-      newRAref,newDECref = curpos.Refrac()  #Calculate refraction for future time
+      newRAref, newDECref = curpos.Refrac()  # Calculate refraction for future time
     else:
       newRAref = 0.0
       newDECref = 0.0
 
     if prefs.FlexureOn:
-      newRAflex,newDECflex = curpos.Flex()  #Calculate flexure for new time
+      newRAflex, newDECflex = curpos.Flex()  # Calculate flexure for new time
     else:
       newRAflex = 0.0
       newDECflex = 0.0
 
-    deltaRA = (newRAref-oldRAref) + (newRAflex-oldRAflex)
-    deltaDEC = (newDECref-oldDECref) + (newDECflex-oldDECflex)
+    deltaRA = (newRAref - oldRAref) + (newRAflex - oldRAflex)
+    deltaDEC = (newDECref - oldDECref) + (newDECflex - oldDECflex)
 
-    #Calculate refraction/flexure correction velocities in steps/50ms
-    RA_ref = 20.0*(deltaRA/(2*WINDOW*20))       #The difference in arcsec is divided by the total time (2*WINDOW) in ticks (*20)
-    DEC_ref = 20.0*(deltaDEC/(2*WINDOW*20))     #   and then multiplied by 20 to convert it to arcseconds per tick.
+    # Calculate refraction/flexure correction velocities in steps/50ms
+    RA_ref = 20.0 * (deltaRA / (2 * WINDOW * 20))       # The difference in arcsec is divided by the total time (2*WINDOW) in ticks (*20)
+    DEC_ref = 20.0 * (deltaDEC / (2 * WINDOW * 20))     # and then multiplied by 20 to convert it to arcseconds per tick.
 
-    #Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
-    #and flag RefError if we've reached that cap.
+    # Cap refraction/flexure correction at 200 arcsec/second (~ 3.3 deg/minute)
+    # and flag RefError if we've reached that cap.
     errors.RefError = False
     if abs(RA_ref) > 200:
-      RA_ref = 200*(RA_ref/abs(RA_ref))
+      RA_ref = 200 * (RA_ref / abs(RA_ref))
       errors.RefError = True
     if abs(DEC_ref) > 200:
-      DEC_ref = 200*(DEC_ref/abs(DEC_ref))
+      DEC_ref = 200 * (DEC_ref / abs(DEC_ref))
       errors.RefError = True
 
     #Set the actual refraction/flexure correction velocities in steps/50ms
@@ -303,8 +305,8 @@ class CurrentPosition(correct.CalcPosition):
     global LastObj
     if Rate is None:
       Rate = prefs.SlewRate
-    self.UpdatePosition()             #Apply accumulated paddle and guide movement to current position
-    FObj.update()                      #Correct final object coordinates
+    self.UpdatePosition()             # Apply accumulated paddle and guide movement to current position
+    FObj.update()                      # Correct final object coordinates
 
     if prefs.HighHorizonOn:
       AltCutoffTo = prefs.AltCutoffHi
@@ -315,7 +317,7 @@ class CurrentPosition(correct.CalcPosition):
       logger.error('Teljoy uncalibrated! - do a Reset() to set the position before slewing')
       return True
     elif (self.Alt < prefs.AltCutoffFrom) or (FObj.Alt < AltCutoffTo):
-      logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (self.Alt,FObj.Alt))
+      logger.error('detevent.Jump: Invalid jump, too low for safety! Aborted! AltF=%4.1f, AltT=%4.1f' % (self.Alt, FObj.Alt))
       return True
     elif (not safety.Active.is_set()) and (not force):
       logger.error('detevent.Jump: safety interlock - no jumping allowed.')
@@ -328,38 +330,38 @@ class CurrentPosition(correct.CalcPosition):
         logger.info('detevent.Jump: safety interlock forced - jumping anyway')
       DelRA = FObj.RaC - self.RaC
 
-      if abs(DelRA) > (3600*15*12):
+      if abs(DelRA) > (3600 * 15 * 12):
         if DelRA < 0:
-          DelRA += (3600*15*24)
+          DelRA += (3600 * 15 * 24)
         else:
-          DelRA -= (3600*15*24)
+          DelRA -= (3600 * 15 * 24)
       DelDEC = FObj.DecC - self.DecC
 
-      DelRA = DelRA*20        #Convert to number of motor steps}
-      DelDEC = DelDEC*20
+      DelRA = DelRA * 20        # Convert to number of motor steps}
+      DelDEC = DelDEC * 20
 
       with motion.motors.lock:
         if motion.motors.Moving or motion.motors.Paddling:
           logger.error('detevent.Jump called while telescope in motion!')
           return True
 
-        jumperror = motion.motors.Jump(DelRA,DelDEC,Rate, force=force)  #Calculate the profile and start the actual slew
+        jumperror = motion.motors.Jump(DelRA, DelDEC, Rate, force=force)  # Calculate the profile and start the actual slew
         if jumperror:
           return True
         else:
-          LastObj = copy.deepcopy(self)                    #Save the current position
-          self.RaC, self.DecC = FObj.RaC, FObj.DecC     #Copy the coordinates to the current position record
+          LastObj = copy.deepcopy(self)                    # Save the current position
+          self.RaC, self.DecC = FObj.RaC, FObj.DecC     # Copy the coordinates to the current position record
           self.RaA, self.DecA = FObj.RaA, FObj.DecA
           self.Ra, self.Dec = FObj.Ra, FObj.Dec
           self.Epoch = FObj.Epoch
-          self.TraRA = FObj.TraRA                          #Copy the non-sidereal trackrate to the current position record
-          self.TraDEC = FObj.TraDEC                        #   Non-sidereal tracking will only start when the profiled jump finishes
+          self.TraRA = FObj.TraRA                          # Copy the non-sidereal trackrate to the current position record
+          self.TraDEC = FObj.TraDEC                        # Non-sidereal tracking will only start when the profiled jump finishes
           self.ObjID = FObj.ObjID
           with motion.motors.RA.lock:
-            motion.motors.RA.track = self.TraRA              #Set the actual hardware trackrate in the motion controller
+            motion.motors.RA.track = self.TraRA              # Set the actual hardware trackrate in the motion controller
           with motion.motors.DEC.lock:
             motion.motors.DEC.track = self.TraDEC
-          self.posviolate = False    #signal a valid original RA and Dec
+          self.posviolate = False    # signal a valid original RA and Dec
 
   def IniPos(self):
     """This function is called on startup to set the 'Current' position
@@ -370,25 +372,25 @@ class CurrentPosition(correct.CalcPosition):
        once per second.
     """
     info, HA, LastMod = sqlint.ReadSQLCurrent(self)
-    if info is None:            #Flag a Calibration Error if there was no valid data in the table
+    if info is None:            # Flag a Calibration Error if there was no valid data in the table
       errors.CalError = True
       logger.error('DANGER - no initial position, you MUST check and reset the position before slewing!')
-      #If there's no saved position, assume telescope is pointed straight up
+      # If there's no saved position, assume telescope is pointed straight up
       HA = 0
-      self.DecC = prefs.ObsLat*3600
+      self.DecC = prefs.ObsLat * 3600
     else:
       errors.CalError = False
       dome.dome.IsShutterOpen = info.ShutterOpen
       prefs.EastOfPier = info.EastOfPier
 
-    motion.motors.Frozen = False    #Always start out not frozen
+    motion.motors.Frozen = False    # Always start out not frozen
 
     self.Time.update()
-    rac = (self.Time.LST+HA)*15*3600
-    if rac > 24*15*3600:
-      rac -= 24*15*3600
+    rac = (self.Time.LST + HA) * 15 * 3600
+    if rac > 24 * 15 * 3600:
+      rac -= 24 * 15 * 3600
     elif rac < 0.0:
-      rac += 24*15*3600
+      rac += 24 * 15 * 3600
     self.RaC = rac
 
     self.Ra = self.RaC
@@ -420,8 +422,8 @@ class CurrentPosition(correct.CalcPosition):
        near the equator, but relatively small east-west shifts in plate scale near the pole
        can result in large differences in RA between initial and final position.
     """
-    DelRA = 20*ora/math.cos(self.DecC/3600*math.pi/180)  #conv to motor steps
-    DelDEC = 20*odec
+    DelRA = 20 * ora / math.cos(self.DecC / 3600 * math.pi / 180)  # conv to motor steps
+    DelDEC = 20 * odec
     if (abs(DelRA) > MAXOFFSETSTEPS) or (abs(DelDEC) > MAXOFFSETSTEPS):
       logger.error('Offset() called with values resulting in too large a shift.')
       return True
@@ -429,13 +431,13 @@ class CurrentPosition(correct.CalcPosition):
       if motion.motors.Moving or motion.motors.Paddling:
         logger.error('detevent.Offset called while telescope in motion!')
         return True
-      motion.motors.Jump(DelRA,DelDEC,prefs.SlewRate)  #Calculate the motor profile and jump
+      motion.motors.Jump(DelRA, DelDEC, prefs.SlewRate)  # Calculate the motor profile and jump
       if not self.posviolate:
-        self.Ra +=ora/math.cos(self.DecC/3600*math.pi/180)
+        self.Ra += ora / math.cos(self.DecC / 3600 * math.pi / 180)
         self.Dec += odec
-      self.RaA += ora/math.cos(self.DecC/3600*math.pi/180)
+      self.RaA += ora / math.cos(self.DecC / 3600 * math.pi / 180)
       self.DecA += odec
-      self.RaC += ora/math.cos(self.DecC/3600*math.pi/180)
+      self.RaC += ora / math.cos(self.DecC / 3600 * math.pi / 180)
       self.DecC += odec
 
 
@@ -454,13 +456,13 @@ def CheckDirtyPos():
      This function is called at regular intervals by the 'fastloop'.
   """
   global DirtyTime
-  if motion.motors.PosDirty and (DirtyTime==0):
-    DirtyTime = time.time()                 #just finished move}
+  if motion.motors.PosDirty and (DirtyTime == 0):
+    DirtyTime = time.time()                 # just finished move}
 
   if ( (DirtyTime != 0) and
-       (time.time()-DirtyTime > prefs.WaitBeforePosUpdate) and
+       (time.time() - DirtyTime > prefs.WaitBeforePosUpdate) and
        not motion.motors.Moving and
-       not errors.CalError):
+       not errors.CalError ):
     DirtyTime = 0
     motion.motors.PosDirty = False
     paddles.RA_GuideAcc = 0.0
@@ -493,14 +495,14 @@ def CheckDirtyDome():
 
      This function is called at regular intervals by the 'fastloop'.
   """
-  if ( (abs(dome.dome.CalcAzi(current)-dome.dome.DomeAzi) > 6) and
-       ((time.time()-dome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
+  if ( (abs(dome.dome.CalcAzi(current) - dome.dome.DomeAzi) > 6) and
+       ((time.time() - dome.dome.DomeLastTime) > prefs.MinWaitBetweenDomeMoves) and
        (not dome.dome.DomeInUse) and
        dome.dome.DomeTracking and
        (not motion.motors.Moving) and
        dome.dome.AutoDome and
        (not motion.motors.PosDirty) and
-       not errors.CalError):
+       not errors.CalError ):
     dome.dome.move(dome.dome.CalcAzi(current))
 
 
@@ -515,7 +517,7 @@ def CheckDBUpdate():
      This function is called at regular intervals by the 'fastloop'.
   """
   global db, DBLastTime
-  if sqlint.SQLActive and ( (time.time()-DBLastTime) > 1.0):
+  if sqlint.SQLActive and ((time.time() - DBLastTime) > 1.0):
     foo = sqlint.Info() 
     foo.posviolate = current.posviolate
     foo.moving = motion.motors.Moving
@@ -545,12 +547,12 @@ def DoTJbox():
   if BObj is None or other is None:
     return
   ProspLastTime = time.time()
-  if (other.LastMod<0) or (other.LastMod>5) or motion.motors.Moving:
+  if (other.LastMod < 0) or (other.LastMod > 5) or motion.motors.Moving:
     other.action = 'none'
     sqlint.ClearTJbox(db=db)
     TJboxAction = 'none'
   else:
-    if other.action in ['error','none']:
+    if other.action in ['error', 'none']:
       sqlint.ClearTJbox(db=db)
       TJboxAction = 'none'
 
@@ -565,7 +567,7 @@ def DoTJbox():
           found = True
       if found and (not motion.limits.HWLimit):
         if safety.Active.is_set():
-          AltErr = current.Jump(JObj, prefs.SlewRate)  #Goto new position}
+          AltErr = current.Jump(JObj, prefs.SlewRate)  # Goto new position}
           logger.info("detevent.DoTJbox: Remote control jump to object: %s" % JObj)
           if dome.dome.AutoDome and (not AltErr):
             dome.dome.move(dome.dome.CalcAzi(JObj))
@@ -625,7 +627,7 @@ def DoTJbox():
     elif other.action == 'shutter':
       if other.Shutter:
         if safety.Active.is_set():
-          dome.dome.open()           #True for open}
+          dome.dome.open()           # True for open}
           logger.info("detevent.DoTJbox: remote control - shutter opened")
           TJboxAction = other.action
         else:
@@ -647,7 +649,7 @@ def DoTJbox():
           logger.info("detevent.DoTJbox: remote control - telescope un-frozen")
         else:
           logger.error('detevent.DoTJbox: ERROR - safety interlock, telescope NOT un-frozen')
-      TJboxAction = 'none'    #Action complete}
+      TJboxAction = 'none'    # Action complete}
       sqlint.ClearTJbox(db=db)
 
 
@@ -664,7 +666,7 @@ def CheckTJbox():
   if TJboxAction == 'none':
     if sqlint.ExistsTJbox(db=db):
       DoTJbox()
-  elif TJboxAction in ['jumpid','jumprd','jumpaa','offset']:
+  elif TJboxAction in ['jumpid', 'jumprd', 'jumpaa', 'offset']:
     if (not motion.motors.Moving) and (not dome.dome.DomeInUse):
       TJboxAction = 'none'
       sqlint.ClearTJbox(db=db)
@@ -692,10 +694,10 @@ def CheckTimeout():
   """
   if TIMEOUT == 0:
     errors.TimeoutError = False
-  elif ((time.time()-ProspLastTime) > TIMEOUT) and dome.dome.IsShutterOpen and (not dome.dome.DomeInUse):
+  elif ((time.time() - ProspLastTime) > TIMEOUT) and dome.dome.IsShutterOpen and (not dome.dome.DomeInUse):
     logger.critical('detevent.CheckTimeout: No communication with Prosp for over %d seconds!\nClosing Shutter, Freezing Telescope.' % TIMEOUT)
     errors.TimeoutError = True
-    safety.add_tag('Prosp communications time out - shutting down')  #Discard tag, we don't want to try to recover from this
+    safety.add_tag('Prosp communications time out - shutting down')  # Discard tag, we don't want to try to recover from this
   else:
     errors.TimeoutError = False
 
@@ -720,8 +722,7 @@ def CheckErrors():
 
   if errors.CalError:
     if (errors.CalErrorTag is None):
-      errors.CalErrorTag = safety.add_tag(
-        "CalError - current telescope position unknown, do a 'reset()' position.\nClosing Shutter, Freezing Telescope.")
+      errors.CalErrorTag = safety.add_tag("CalError - current telescope position unknown, do a 'reset()' position.\nClosing Shutter, Freezing Telescope.")
   elif errors.CalErrorTag is not None:
     logger.info("Current position now calibrated, removing safety interlock tag.")
     safety.remove_tag(errors.CalErrorTag)
@@ -734,8 +735,7 @@ def LogGuider():
   """
   if motion.motors.Autoguiding:
     guidelog_ra = motion.motors.Driver.counters.a_guider_steps
-    guidelog_dec  = motion.motors.Driver.counters.b_guider_steps
-    motion.motors.guidelog = (guidelog_ra, guidelog_dec)
+    guidelog_dec = motion.motors.Driver.counters.b_guider_steps
     motion.motors._guidelogfile.write('%f %d %d\n' % (time.time(), guidelog_ra, guidelog_dec))
     motion.motors._guidelogfile.flush()
 
@@ -744,10 +744,10 @@ def Init():
   """Open up a database connection, initialise the current telescope coordinates using the teljoy.current
      table, and start the fast and slow event loops in two separate threads, to handle all the high-level actions.
   """
-  global db, fastloop, slowloop, fastthread, slowthread, paddles, current, LastObj
+  global db, fastloop, slowloop, fastthread, slowthread, current, LastObj
   logger.debug('Detevent unit init started')
 
-  db = sqlint.InitSQL()    #Get a new db object and use it for this detevent thread
+  db = sqlint.InitSQL()    # Get a new db object and use it for this detevent thread
   if db is None:
     logger.warn('detevent.DetermineEvent: Detevent loop started, but with no SQL access.')
 
@@ -756,22 +756,22 @@ def Init():
   current.IniPos()
 
   fastloop = EventLoop(name='FastLoop', looptime=FASTLOOP)
-  fastloop.register('UpdateCurrent', current.UpdatePosition)         #add all motion to 'current' object coordinates
-  fastloop.register('CheckDBUpdate', CheckDBUpdate)              #Update database at intervals with saved state information
-  fastloop.register('CheckDirtyPos', CheckDirtyPos)         #Check to see if the PosDirty flag needs to be cleared
-  fastloop.register('CheckDirtyDome', CheckDirtyDome)       #Check to see if dome needs moving if DomeTracking is on
-  fastloop.register('dome.dome.check', dome.dome.check)  #Check to see if dome has reached destination azimuth
-  fastloop.register('motion.limits.check', motion.limits.check)  #Test to see if any hardware limits are active (doesn't do much for Perth telescope)
+  fastloop.register('UpdateCurrent', current.UpdatePosition)         # add all motion to 'current' object coordinates
+  fastloop.register('CheckDBUpdate', CheckDBUpdate)              # Update database at intervals with saved state information
+  fastloop.register('CheckDirtyPos', CheckDirtyPos)         # Check to see if the PosDirty flag needs to be cleared
+  fastloop.register('CheckDirtyDome', CheckDirtyDome)       # Check to see if dome needs moving if DomeTracking is on
+  fastloop.register('dome.dome.check', dome.dome.check)  # Check to see if dome has reached destination azimuth
+  fastloop.register('motion.limits.check', motion.limits.check)  # Test to see if any hardware limits are active (doesn't do much for Perth telescope)
   fastloop.register('CheckLimitClear', CheckLimitClear)          # Test to see if the hardware limits are clear now, and if safe, clear the global limit flag
-  fastloop.register('CheckTJbox', CheckTJbox)               #Look for a new database record in the command table for automatic control events
-  fastloop.register('paddles.check', paddles.check)         #Check and act on changes to hand-paddle buttons and switch state.
+  fastloop.register('CheckTJbox', CheckTJbox)               # Look for a new database record in the command table for automatic control events
+  fastloop.register('paddles.check', paddles.check)         # Check and act on changes to hand-paddle buttons and switch state.
 
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
   if SITE == 'PERTH':
     slowloop.register('Weather', weather._background)
-  slowloop.register('RelRef', current.RelRef)              #calculate refraction+flexure velocities, check alt, set 'AltError' if low
+  slowloop.register('RelRef', current.RelRef)              # calculate refraction+flexure velocities, check alt, set 'AltError' if low
   slowloop.register("CheckErrors", CheckErrors)
-  slowloop.register('CheckTimeout', CheckTimeout)           #Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
+  slowloop.register('CheckTimeout', CheckTimeout)           # Check to see if Prosp (CCD camera controller) is still alive and monitoring weather
   slowloop.register('LogGuider', LogGuider)             # If Autoguiding is true, log the guider step counters to a file.
 
   logger.debug('Detevent unit init finished')
@@ -790,5 +790,5 @@ LastObj = None
 ProspLastTime = time.time()
 DBLastTime = 0
 TJboxAction = 'none'
-LastError = ""                  #Meant to contain the last reported error string - #TODO - implement in the logger handler.
+LastError = ""                  # Meant to contain the last reported error string - #TODO - implement in the logger handler.
 

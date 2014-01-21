@@ -22,24 +22,24 @@
 from globals import *
 import motion            # Current state of input buts are in motion.motors.Driver.inputs
 
-CNorth    = 0x01                        #Mask for north on coarse paddles (red on test cable)
-CSouth    = 0x02                        #Mask for south (green on test cable)
-CEast     = 0x04                        #Mask for east (blue on test cable
-CWest     = 0x08                        #Mask for west (yellow on test cable)
+CNorth    = 0x01                        # Mask for north on coarse paddles (red on test cable)
+CSouth    = 0x02                        # Mask for south (green on test cable)
+CEast     = 0x04                        # Mask for east (blue on test cable
+CWest     = 0x08                        # Mask for west (yellow on test cable)
 
-FNorth    = 0x01                        #Mask for north on fine paddle (Fine paddle doesn't exist on NZ telescope)
-FSouth    = 0x02                        #Mask for south
-FEast     = 0x04                        #Mask for east
-FWest     = 0x08                        #Mask for west
+FNorth    = 0x01                        # Mask for north on fine paddle (Fine paddle doesn't exist on NZ telescope)
+FSouth    = 0x02                        # Mask for south
+FEast     = 0x04                        # Mask for east
+FWest     = 0x08                        # Mask for west
 
 # Speed bits for Perth telescope, with a two position toggle switch on each paddle
-CSlewMsk  = 0x10                        #This bit is set if the coarse paddle is set to 'Slew' speed
-FGuideMsk = 0x10                        #This bit is set if the fine paddle is set to 'Guide' speed
+CSlewMsk  = 0x10                        # This bit is set if the coarse paddle is set to 'Slew' speed
+FGuideMsk = 0x10                        # This bit is set if the fine paddle is set to 'Guide' speed
 
 
 # NZ telescope only uses one paddle, with a three-position speed toggle switch requiring two bits.
-CspaMsk   = 0x10                        #Speed bit A on coarse paddle (16)}
-CspbMsk   = 0x20                        #Speed bit B on coarse paddle (32)}
+CspaMsk   = 0x10                        # Speed bit A on coarse paddle (16)}
+CspbMsk   = 0x20                        # Speed bit B on coarse paddle (32)}
 
 # Output bits used in NZ for dome motor control
 LeftBit = 8    # Output bit number for driving dome motor 'left' - bit 0 of port 2_C
@@ -60,13 +60,13 @@ def set_outputs(n):
   d = motion.motors.Driver.set_outputs(n)
   return d
 
+
 def clear_outputs(n):
   """'n' is a 64 bit integer, and any bit set in 'n' is forced low (assuming it is configured as an output
      bit). Bits in 'n' that are zero are left unchanged.
   """
   d = motion.motors.Driver.clear_outputs(n)
   return d
-
 
 
 def ReadCoarse():
@@ -82,9 +82,10 @@ def ReadCoarse():
   else:
     val = (inputs >> 0) & 0x3F     # bits 0-5 of port 2_A
   if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
-    return 0    #more than one button pressed, so ignore inputs
+    return 0    # more than one button pressed, so ignore inputs
   else:
     return val
+
 
 def ReadFine():
   """Return the byte of data from the fine hand paddle port, or a dummy value if
@@ -96,14 +97,14 @@ def ReadFine():
   inputs = motion.motors.Driver.inputs
   if 'F' in DUMMYPADDLES:
     return FB
-  val = (inputs >> 40) & 0xFF         #bits 40-44, not inverted for real fine paddle
+  val = (inputs >> 40) & 0xFF         # bits 40-44, not inverted for real fine paddle
   if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
-    return 0    #N+S pressed at the same time, or E+W
+    return 0    # N+S pressed at the same time, or E+W
   else:
     return val
 
 
-def ReadLimit(inputs = None):
+def ReadLimit(inputs=None):
   """Read the state of the limit switch input bits, and return a list of
      active limit states (each a string). An empty list means no limits are
      active. On old card, this was port $217 = DI-high.
@@ -115,7 +116,7 @@ def ReadLimit(inputs = None):
     return []     # Hardware limits can't be read in Perth
   if inputs is None:
     inputs = motion.motors.Driver.inputs
-  val = (inputs >> 16) & 0x7F                 #bits 0,1,2,5,6 of port 2_B
+  val = (inputs >> 16) & 0x7F                 # bits 0,1,2,5,6 of port 2_B
   limits = []
   if (val & 0x01) == 0x01:
     limits.append('EAST')
@@ -136,7 +137,7 @@ def DomeGoingLeft():
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
-  val = (inputs >> 0) & 0xFF                 #bit 6 of port 2_A
+  val = (inputs >> 0) & 0xFF                 # bit 6 of port 2_A
   return (val & 0x40) == 0x40
 
 
@@ -146,7 +147,7 @@ def DomeGoingRight():
   if SITE == 'PERTH':
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
-  val = (inputs >> 0) & 0xFF                 #bit 7 of port 2_A
+  val = (inputs >> 0) & 0xFF                 # bit 7 of port 2_A
   return (val & 0x80) == 0x80
 
 
@@ -184,91 +185,8 @@ def DomeRight():
     set_outputs(1 << RightBit)
 
 
-#$IFDEF NZ:
-#Procedure ReadCoarse(var CB:byte)
-#var b:byte
-#begin
-#     b = Port[$216]
-#     b = b and port[$216]
-#     b = not b
-#     CB = b and 63
-#end-with-semicolon
-
-#Procedure ReadFine(var FB:byte)
-#begin
-#       FB = 0
-#end-with-semicolon
-
-#Procedure ReadLimit(var LB:byte)
-#var pw,hl,ms,el,wl:0..1
-#    b:byte
-#begin
-#     b = Port[$217]
-#     b = b and port[$217]
-#     el = (b and 1)
-#     wl = (b and 2) div 2
-#     ms = (b and 4) div 4
-#     pw = (b and 32) div 32
-#     hl = (b and 64) div 64
-#     LB = pw + 2*hl + 4*ms + 8*el + 16*wl
-#end-with-semicolon
-
-#Function DomeGoingLeft:boolean
-#var b:byte
-#begin
-#     b = port[$216]
-#     b = b and port[$216]
-#     DomeGoingLeft = ((b and 64)=64)
-#end-with-semicolon
-
-#Procedure DomeLeft
-#begin
-#     if DomeGoingRight:
-#        begin
-#             DomeStop #Open the relay so we can read the paddle button}
-#             delay(500)
-#        end-with-semicolon
-#     if not DomeGoingRight:  #Right paddle button isn't pressed}
-#        begin
-#             CurrentOut = (CurrentOut or LeftMsk) and (not RightMsk)
-#             Port[$21D] = CurrentOut
-#        end-with-semicolon
-#end-with-semicolon
-
-#Function DomeGoingRight:boolean
-#var b:byte
-#begin
-#     b = port[$216]
-#     b = b and port[$216]
-#     DomeGoingRight = ((b and 128)=128)
-#end-with-semicolon
-
-#Procedure DomeRight
-#begin
-#     if DomeGoingLeft:
-#        begin
-#             DomeStop #Open the relay so we can read the paddle button}
-#             delay(500)
-#        end-with-semicolon
-#     if not DomeGoingLeft:  #Left paddle button isn't pressed}
-#        begin
-#             CurrentOut = (CurrentOut or RightMsk) and (not LeftMsk)
-#             Port[$21D] = CurrentOut
-#        end-with-semicolon
-#end-with-semicolon
-
-#Procedure DomeStop
-#begin
-#     CurrentOut = CurrentOut and (not (LeftMsk or RightMsk))
-#     Port[$21D] = CurrentOut
-#end-with-semicolon
-
-#$ELSE}
-
-
-#################
+############################################################
 # Dummy button-push routines, used for testing
-
 
 def press(dirn, paddle='F'):
   """Flag a button as 'pressed'. Args are 'dirn' which must equal 'N','S','E', or 'W',
@@ -276,7 +194,7 @@ def press(dirn, paddle='F'):
      
      Code to emulate button presses for testing.
   """
-  global CB,FB,LastDirn,LastPaddle
+  global CB, FB, LastDirn, LastPaddle
   dirn = dirn.upper().strip()
   paddle = paddle.upper().strip()
   if paddle == 'C':
@@ -363,7 +281,8 @@ def cset():
   """
   global CB
   CB &= ~ CSlewMsk
-  
+
+
 def cslew():
   """Set the Coarse paddle to 'slew' speed.
      
@@ -371,12 +290,3 @@ def cslew():
   """
   global CB
   CB |= CSlewMsk
-
-#$ENDIF}
-
-#$IFDEF NZ}
-#CurrentOut = 0      #No outputs high on startup, so the dome won't start moving.
-#     Port[$21D] = 0
-#     Port[$21E] = 0
-#$ENDIF}
-

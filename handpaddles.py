@@ -5,6 +5,7 @@ from globals import *
 import motion
 import digio
 
+
 class Paddles(object):
   """An instance of this class is used to store the state of the hand paddle
      buttons, current motion, and speed settings.
@@ -17,14 +18,14 @@ class Paddles(object):
        -The Coarse paddle speed can be one of 'Guide', 'Set', or 'Slew'
   """
   def __init__(self):
-    self.RA_GuideAcc = 0.0         #Accumulated guide motion, from motion.motors.RA_guidelog
+    self.RA_GuideAcc = 0.0         # Accumulated guide motion, from motion.motors.RA_guidelog
     self.DEC_GuideAcc = 0.0
-    self.ButtonPressedRA = False   #True if one of the RA direction buttons is pressed
-    self.ButtonPressedDEC = False  #True if one of the DEC direction buttons is pressed
-    self.FineMode = 'FSet'         #one of 'FSet' or 'FGuide', depending on 'Fine' paddle speed toggle switch
-    self.CoarseMode = 'CSet'       #one of 'CSet' or 'CSlew' or 'CGuide', depending on 'Coarse' paddle speed toggle switch
-    self.RAdir = ''                #one of 'fineEast',  'fineWest',  'CoarseEast', or  'CoarseWest'
-    self.DECdir = ''               #one of 'fineNorth', 'fineSouth', 'CoarseNorth', or 'CoarseSouth'
+    self.ButtonPressedRA = False   # True if one of the RA direction buttons is pressed
+    self.ButtonPressedDEC = False  # True if one of the DEC direction buttons is pressed
+    self.FineMode = 'FSet'         # one of 'FSet' or 'FGuide', depending on 'Fine' paddle speed toggle switch
+    self.CoarseMode = 'CSet'       # one of 'CSet' or 'CSlew' or 'CGuide', depending on 'Coarse' paddle speed toggle switch
+    self.RAdir = ''                # one of 'fineEast',  'fineWest',  'CoarseEast', or  'CoarseWest'
+    self.DECdir = ''               # one of 'fineNorth', 'fineSouth', 'CoarseNorth', or 'CoarseSouth'
 
   def __repr__(self):
     s = "<PaddleStatus: GuideAcc=(%f,%f) " % (self.RA_GuideAcc, self.DEC_GuideAcc)
@@ -43,11 +44,11 @@ class Paddles(object):
 
        This method is called at regular intervals by the DetermineEvent loop.
     """
-    #Read the Hand-paddle inputs}
+    # Read the Hand-paddle input
     cb = digio.ReadCoarse()
     fb = digio.ReadFine()
 
-    #check the Fine paddle speed switches and set appropriate mode and velocity
+    # check the Fine paddle speed switches and set appropriate mode and velocity
     if (fb & digio.FGuideMsk) == digio.FGuideMsk:
       self.FineMode = 'FGuide'
       FinePaddleRate = prefs.GuideRate
@@ -55,48 +56,48 @@ class Paddles(object):
       self.FineMode = 'FSet'
       FinePaddleRate = prefs.FineSetRate
 
-    #* Check the fine paddle by comparing fb to a set of masks}
-    if (fb & digio.FNorth) == digio.FNorth:        #Compare with the north mask}
-      if not self.ButtonPressedDEC:          #The button has just been pressed}
+    # Check the fine paddle by comparing fb to a set of mask
+    if (fb & digio.FNorth) == digio.FNorth:        # Compare with the north mask
+      if not self.ButtonPressedDEC:          # The button has just been pressed
         self.ButtonPressedDEC = True
         self.DECdir = 'fineNorth'
         Paddle_max_vel = FinePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='fineNorth'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedDEC and (self.DECdir == 'fineNorth'):
+      # Mask does not match but the motor is running
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
-    if (fb & digio.FSouth) == digio.FSouth:            #Check with South Mask}
+    if (fb & digio.FSouth) == digio.FSouth:            # Check with South Mask
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'fineSouth'
         Paddle_max_vel = -FinePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='fineSouth'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedDEC and (self.DECdir == 'fineSouth'):
+      # Mask does not match but the motor is runnin
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
-    if (fb & digio.FEast) == digio.FEast:              #Check the Eastmask}
+    if (fb & digio.FEast) == digio.FEast:              # Check the Eastmask
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
         self.RAdir = 'fineEast'
         Paddle_max_vel = FinePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='fineEast'):
+    elif self.ButtonPressedRA and (self.RAdir == 'fineEast'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 
-    if (fb & digio.FWest) == digio.FWest:               #Check the West mask}
+    if (fb & digio.FWest) == digio.FWest:               # Check the West mask
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True
         self.RAdir = 'fineWest'
         Paddle_max_vel = -FinePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='fineWest'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedRA and (self.RAdir == 'fineWest'):
+      # Mask does not match but the motor is running
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 
@@ -115,58 +116,53 @@ class Paddles(object):
     else:
       if (cb & digio.CSlewMsk) == digio.CSlewMsk:
         self.CoarseMode = 'CSlew'
-  #      logger.info('SLEW')
         CoarsePaddleRate = prefs.SlewRate
       else:
         self.CoarseMode = 'CSet'
         CoarsePaddleRate = prefs.CoarseSetRate
 
-    # **Check the Coarse paddle by comparing cb to a set of masks}
+    # **Check the Coarse paddle by comparing cb to a set of mask
     if (cb & digio.CNorth) == digio.CNorth:
-#      logger.info('N')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'coarseNorth'
         Paddle_max_vel = CoarsePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='coarseNorth'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedDEC and (self.DECdir == 'coarseNorth'):
+      #Mask does not match but the motor is running
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
     if (cb & digio.CSouth) == digio.CSouth:
-#      logger.info('S')
       if not self.ButtonPressedDEC:
         self.ButtonPressedDEC = True
         self.DECdir = 'coarseSouth'
         Paddle_max_vel = -CoarsePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedDEC and (self.DECdir=='coarseSouth'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedDEC and (self.DECdir == 'coarseSouth'):
+      # Mask does not match but the motor is running
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
 
     if (cb & digio.CEast) == digio.CEast:
-#      logger.info('E')
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
         self.ButtonPressedRA = True
         self.RAdir = 'coarseEast'
         Paddle_max_vel = CoarsePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='coarseEast'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedRA and (self.RAdir == 'coarseEast'):
+      # Mask does not match but the motor is running
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 
     if (cb & digio.CWest) == digio.CWest:
-#      logger.info('W')
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
         self.ButtonPressedRA = True
         self.RAdir = 'coarseWest'
         Paddle_max_vel = -CoarsePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
-    elif self.ButtonPressedRA and (self.RAdir=='coarseWest'):
-      #Mask does not match but the motor is running}
+    elif self.ButtonPressedRA and (self.RAdir == 'coarseWest'):
+      # Mask does not match but the motor is running
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
 

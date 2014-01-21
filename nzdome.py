@@ -13,9 +13,10 @@ DENCODEROFFSET = 27    # Add this many counts to the encoder value (range 0-255)
                        # from teljoy.ini.
 
 #Dome parameters:
-RD = 3.48                             #Dome radius, in metres
-ABSP = 0.55/RD                        #Distance from centre of telescope tube to dome center, in metres
-ETA = 0.2/RD                          #?
+RD = 3.48                             # Dome radius, in metres
+ABSP = 0.55 / RD                        # Distance from centre of telescope tube to dome center, in metres
+ETA = 0.2 / RD                          # ?
+
 
 class Dome(object):
   """An instance of this class is used to store the current dome motion
@@ -23,18 +24,18 @@ class Dome(object):
      move) allow control.
   """
   def __init__(self):
-    self.DomeAzi = -10              #Current dome azimuth
-    self.DomeInUse = False          #True if the dome is moving
-    self.CommandSent = False        #True if the current command has been sent to the dome controller
-    self.Command = None             #True if the dome movement has finished
-    self.ShutterOpen = False        #True if the shutter is open (set after a successful open or close command)
-    self.IsShutterOpen = False      #True if the shutter is open (set as a response from the actual dome controller)
-    self.DomeFailed = False         #True if the controller has sent a 'Dome Failed' message, because rotation has failed.
-    self.AutoDome = True            #True if the dome can be controlled, False if it's in 'Manual only' mode
-    self.DomeTracking = False       #True if the dome should dynamically track the current telescope position.
-                                    #   if false, the dome will only be moved if AutoDome is True, and detevent.Jump is called.
-    self.DomeLastTime = 0           #Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
-    self.EncoderOffset = CP.getint('Dome', 'DomeEncoderOffset')   # How much to add to the raw enccoder value before converting to degrees
+    self.DomeAzi = -10              # Current dome azimuth
+    self.DomeInUse = False          # True if the dome is moving
+    self.CommandSent = False        # True if the current command has been sent to the dome controller
+    self.Command = None             # True if the dome movement has finished
+    self.ShutterOpen = False        # True if the shutter is open (set after a successful open or close command)
+    self.IsShutterOpen = False      # True if the shutter is open (set as a response from the actual dome controller)
+    self.DomeFailed = False         # True if the controller has sent a 'Dome Failed' message, because rotation has failed.
+    self.AutoDome = True            # True if the dome can be controlled, False if it's in 'Manual only' mode
+    self.DomeTracking = False       # True if the dome should dynamically track the current telescope position.
+                                      # if false, the dome will only be moved if AutoDome is True, and detevent.Jump is called.
+    self.DomeLastTime = 0           # Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
+    self.EncoderOffset = CP.getint('Dome', 'DomeEncoderOffset')   # How much to add to the raw encoder value before converting to degrees
     self.queue = []
     try:
       self.ser = serial.Serial(DOMEPORT, baudrate=9600, stopbits=serial.STOPBITS_ONE, timeout=1.0, rtscts=False, xonxoff=False, dsrdtr=False)
@@ -43,10 +44,11 @@ class Dome(object):
       print "Error opening serial port, no dome communication"
 
   def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
+    """This object is 'pickled' when sending it over the wire via Pyro4, and we only want to pickle attributes,
+       not functions.
     """
     d = {}
-    for n in ['DomeAzi','DomeInUse','CommandSent','Command','IsShutterOpen','DomeFailed','AutoDome','DomeTracking','DomeLastTime','queue']:
+    for n in ['DomeAzi', 'DomeInUse', 'CommandSent', 'Command', 'IsShutterOpen', 'DomeFailed', 'AutoDome', 'DomeTracking', 'DomeLastTime', 'queue']:
       d[n] = self.__dict__[n]
     return d
 
@@ -62,19 +64,23 @@ class Dome(object):
        This is purely for the convenience of the human at the command line, you can
        also simply call dome.move(123), dome.open() or dome.close().
     """
-    if type(arg)==int or type(arg)==float:
+    if type(arg) in [int, float]:
       self.move(arg)
-    elif type(arg)==str:
-      if arg.upper() in ['O','OPEN']:
+    elif type(arg) == str:
+      if arg.upper() in ['O', 'OPEN']:
         self.open()
-      elif arg.upper() in ['C','CLOSE']:
+      elif arg.upper() in ['C', 'CLOSE']:
         self.close()
       else:
         print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
     else:
       print "Unknown argument: specify an azimuth in degrees, or 'open', or 'close'"
 
-  def getDomeAzi(self):   # Return current Dome azimuth from encoder
+  def getDomeAzi(self):
+    """Grab encoder value from the serial power (a single byte, 0-255), and convert to
+       azimuth in degrees. In theory, an encoder value of zero should be due north, but
+       in practice there's an offset. Return the converted azimuth in degrees.
+    """
     self.ser.flushInput()      # Empty dome input buffer to get most recent position
     data = self.ser.read(1)
     if data:
@@ -91,7 +97,7 @@ class Dome(object):
     """
     if not self.AutoDome:
       return                 # Don't do anything if we aren't in automatic mode
-    if self.queue and not self.Command: # If we aren't already processing a command, and there's one in the queue, do it now.
+    if self.queue and not self.Command:   # If we aren't already processing a command, and there's one in the queue, do it now.
       self.Command = self.queue.pop(0)
       self.DomeLastTime = time.time()
 
@@ -168,7 +174,7 @@ class Dome(object):
       return
     if safety.Active.is_set() or force:
       self.queue.append('O')
-      self.queue.append('I')    #Check shutter status after the open command
+      self.queue.append('I')    # Check shutter status after the open command
     else:
       logger.error('nzdome.Dome.move: no dome activity until safety tags cleared.')
 
@@ -181,7 +187,7 @@ class Dome(object):
       return
     if safety.Active.is_set() or force:
       self.queue.append('C')
-      self.queue.append('I')    #Check shutter status after the close command
+      self.queue.append('I')    # Check shutter status after the close command
     else:
       logger.error('System stopped, no dome activity until safety tags cleared.')
 
@@ -202,37 +208,37 @@ class Dome(object):
        Returns the calculated dome azimuth, in degrees.
     """
     if (type(Obj.DomePos) == float) or (type(Obj.DomePos) == int):
-      return float(Obj.DomePos)     #Hard-wired dome azimuth in position record.
+      return float(Obj.DomePos)     # Hard-wired dome azimuth in position record.
     if prefs.EastOfPier:
       p = -ABSP
     else:
       p = ABSP
-    ObjRA = Obj.Ra/54000                     #in hours
+    ObjRA = Obj.Ra / 54000                     # in hours
     AziRad = DegToRad(Obj.Azi)
     AltRad = DegToRad(Obj.Alt)
-    ha = DegToRad((Obj.Time.LST-ObjRA)*15)   #in rads
+    ha = DegToRad((Obj.Time.LST - ObjRA) * 15)   # in rads
 
-    y0 = -p*math.sin(ha)*math.sin(DegToRad(prefs.ObsLat))    #N-S component of scope centre displacement from dome centre
-    x0 = p*math.cos(ha)                                      #E-W component of scope centre displacement from dome centre
-    z0 = ETA-p*math.sin(ha)*math.cos(DegToRad(prefs.ObsLat)) #up-down component of scope centre displacement from dome centre
-    a = -math.cos(AltRad)*math.sin(AziRad)
-    b = -math.cos(AltRad)*math.cos(AziRad)
+    y0 = -p * math.sin(ha) * math.sin(DegToRad(prefs.ObsLat))          # N-S component of scope centre displacement from dome centre
+    x0 = p * math.cos(ha)                                              # E-W component of scope centre displacement from dome centre
+    z0 = ETA - (p * math.sin(ha) * math.cos(DegToRad(prefs.ObsLat)))   # up-down component of scope centre displacement from dome centre
+    a = -math.cos(AltRad) * math.sin(AziRad)
+    b = -math.cos(AltRad) * math.cos(AziRad)
     c = math.sin(AltRad)
-    Alpha = (a*a+c*c)/(b*b)
-    Beta = 2*(a*x0+c*z0)/b
+    Alpha = ((a * a) + (c * c)) / (b * b)
+    Beta = 2 * ((a * x0) + (c * z0)) / b
     Aye = Alpha + 1
-    Bee = Beta - 2*Alpha*y0
-    Cee = Alpha*y0*y0 - Beta*y0 + x0*x0 + z0*z0 - 1
-    Why1 = ( -Bee + math.sqrt(Bee*Bee-4*Aye*Cee) )/(2*Aye)
-    Exx1 = ((Why1-y0)*a/b + x0)
-    Zee1 = (Why1-y0)*c/b + z0
-    Why2 = ( -Bee - math.sqrt(Bee*Bee-4*Aye*Cee) )/(2*Aye)
-    Exx2 = ((Why2-y0)*a/b + x0)
-  #  Zee2 = (Why2-y0)*c/b + z0                         #Not necessary as we only want the corrected Azimuth, not elevation
-    if Zee1>0:
-      Azi = RadToDeg(math.atan2(Exx1,Why1))
+    Bee = Beta - (2 * Alpha * y0)
+    Cee = (Alpha * y0 * y0) - (Beta * y0) + (x0 * x0) + (z0 * z0) - 1
+    Why1 = (-Bee + math.sqrt((Bee * Bee) - (4 * Aye * Cee))) / (2 * Aye)
+    Exx1 = ((Why1 - y0) * a / b) + x0
+    Zee1 = ((Why1 - y0) * c / b) + z0
+    Why2 = (-Bee - math.sqrt((Bee * Bee) - (4 * Aye * Cee))) / (2 * Aye)
+    Exx2 = ((Why2 - y0) * a / b) + x0
+  #  Zee2 = (Why2-y0)*c/b + z0                         # Not necessary as we only want the corrected Azimuth, not elevation
+    if Zee1 > 0:
+      Azi = RadToDeg(math.atan2(Exx1, Why1))
     else:
-      Azi = RadToDeg(math.atan2(Exx2,Why2))
+      Azi = RadToDeg(math.atan2(Exx2, Why2))
 
     Azi += 180
     if Azi > 360:
@@ -241,27 +247,23 @@ class Dome(object):
     return Azi
 
 
-
-
-def DegToRad(r):    #Originally in MATHS.PAS
+def DegToRad(r):
   """Given an argument in degrees, return the value converted to radians.
   """
-  return (float(r)/180)*math.pi
+  return (float(r) / 180) * math.pi
 
 
-def RadToDeg(r):    #Originally in MATHS.PAS
+def RadToDeg(r):
   """Given an argument in radians, return the value converted to degrees.
   """
-  return (r/math.pi)*180
+  return (r / math.pi) * 180
 
 
 dome = Dome()
 
 ConfigDefaults.update({'DomeTracking':'0', 'DomeEncoderOffset':DENCODEROFFSET, 'DefaultAutoDome':0})
-CP,CPfile = UpdateConfig()
+CP, CPfile = UpdateConfig()
 
-dome.DomeTracking = CP.getboolean('Toggles','DomeTracking')
-dome.AutoDome = CP.getboolean('Toggles','DefaultAutoDome')
+dome.DomeTracking = CP.getboolean('Toggles', 'DomeTracking')
+dome.AutoDome = CP.getboolean('Toggles', 'DefaultAutoDome')
 dome.EncoderOffset = CP.getint('Dome', 'DomeEncoderOffset')
-
-
