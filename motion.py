@@ -413,8 +413,9 @@ class MotorControl(object):
        not functions.
     """
     d = {}
-    for n in ['Jumping', 'Paddling', 'Moving', 'PosDirty', 'ticks', 'Frozen', 'Autoguiding', 'guidelog']:
+    for n in ['Jumping', 'Paddling', 'Moving', 'PosDirty', 'ticks', 'Frozen', 'Autoguiding']:
       d[n] = self.__dict__[n]
+    d['guidelog'] = (self.RA.guidelog, self.DEC.guidelog)
     return d
 
   def __repr__(self):
