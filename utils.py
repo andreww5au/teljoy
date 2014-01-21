@@ -256,6 +256,8 @@ def domecal():
   newoff = -enc
   if newoff > 128:
     newoff -= 256
+  if newoff < -128:
+    newoff += 256
   print "Setting dome encoder offset to %d" % newoff
   dome.EncoderOffset = newoff
 
