@@ -213,7 +213,7 @@ def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
   """
   detevent.current.Offset(ora=ora, odec=odec)
-  logger.info("Moved small offset distance: %4.1f,%4.1f" % ora, odec)
+  logger.info("Moved small offset distance: %4.1f,%4.1f" % (ora, odec))
 
 
 Offset = offset
