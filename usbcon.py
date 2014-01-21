@@ -104,9 +104,10 @@ class Driver(controller.Driver):
   """To use the controller, a driver class with callbacks must be
      defined to handle the asynchronous events:
   """
-  def __init__(self, getframe=None, limits=None):
+  def __init__(self, getframe=None, newcounters=None, limits=None):
     # (Keep some values to generate test steps)
     self._getframe = getframe
+    self._newcounters = newcounters
     self.frame_number = 0
     self.inputs = 0L
     self.configuration = None
@@ -353,6 +354,9 @@ class Driver(controller.Driver):
   def _complete_check_counters(self, counters):
     """Update the counter log data using the values returned from the controller.
        Set up another call to update the counters in 60 seconds.
+
+       If the self._newcounters attribute was set in __init__, call that function with the
+       new counter data, to pass it up to the code that created this driver.
     """
     self.lock.release()
     logger.debug('release in _complete_check_counters')
@@ -366,6 +370,8 @@ class Driver(controller.Driver):
                    counters.a_measured_steps,
                    counters.b_measured_steps))
     self.counters = counters
+    if self._newcounters is not None:
+      self._newcounters(counters)     # Pass the new counter values up to the higher level code
 
     self.host.add_timer(10.0, self._check_counters)
 

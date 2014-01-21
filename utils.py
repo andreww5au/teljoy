@@ -239,6 +239,27 @@ def unfreeze(force=False):
   logger.info("Telescope un-frozen")
 
 
+def domecal():
+  """Call this function when the dome is pointing due North. It will calculate a
+     current value for the dome encoder offset, and set the current encoder offset
+     in the dome object.
+  """
+  print "Assuming dome is due north!"
+  azi = dome.getDomeAzi()
+  enc = int(azi*256.0/360.0)
+  enc -= dome.EncoderOffset
+  if enc < 0:
+    enc += 256
+  if enc > 255:
+    enc -= 256
+  print "Raw dome encoder value = %d" % enc
+  newoff = -enc
+  if newoff > 128:
+    newoff -= 256
+  print "Setting dome encoder offset to %d" % newoff
+  dome.EncoderOffset = newoff
+
+
 def shutdown():
   """Go through a telescope and dome shutdown - move the telescope to the cap replacement
      position and rotate the dome to the park position.
