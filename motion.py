@@ -1,9 +1,25 @@
 
 """This module handles the low-level motion control - velocity ramping in each axis and sending 
-   velocity pairs to the motor queue for each 50ms time step. The core of this motion control
-   system is the TimeInt method of the MotorControl class, which runs in a thread checking the
-   motor queue and sending pairs of RA and DEC velocities for each 50ms 'tick' as required to 
-   keep the motor queue filled.
+   velocity pairs to the motor queue for each 50ms time step. It's handled by a single instance of the
+   'MotorControl' class, stored in a module global called 'motors'. That motor control object contains
+   two instances of the 'Axis' class, one for RA and the other for DEC.
+
+   The low-level driver (defined in the 'Driver' class in usbcon.py) handles all of the USB
+   communication, and is available here as the .Driver attribute in the MotorControl class. The motion
+   control, and most of the methods here are called asynchronously by the controller.
+
+   As each 'frame' is pulled from the internal queue on the controller card and turned into motor steps,
+   the 'enqueue_frame_available()' method is called on the MotorControl object. That function is called
+   aysnchronously, by the USB interrupt handler code in controller.py, through usbcon.Driver().
+
+   When MotorControl.enqueue_frame_available is called, that code calls getframe() on both the RA and DEC
+   'Axis' objects, and it is this getframe() method that does the hand paddle and jump velocity ramping,
+   adds the non-sidereal and sidereal track rates (if not 'Frozen'), and handles emergency stops when
+   the limits are active using the CutFrac variable.
+
+   The getframe() method on each axis returns the number of steps to travel in that axis, for that frame, and
+   these numbers are aggregated, converted to integer (aggregating any fractional part to add in on the next
+   frame), and sent to the controller.
 """
 
 import math
@@ -36,8 +52,10 @@ def KickStart():
 
 class Axis(object):
   """Represents the motor control flags and variables controlling motion on
-     a single axis. Replaces RA_variable and DEC_variable type attributes of the
-     MotorControl class.
+     a single axis. The getframe() method is called asynchronously by the USB
+     interrupt handling thread when there is an empty spot in the input queue on
+     the controller board, and that in turns calls CalcJump and CalcPaddle to
+     do the velocity ramping for each type of motion.
   """
   def __init__(self, sidereal=0.0):
     """Set up empty attributes for a new axis record.
@@ -59,7 +77,8 @@ class Axis(object):
     self.refraction = 0.0      #Non sidereal trackrate used to correct for atmospheric refraction and telescope flexure - steps/50m
     self.padlog = 0.0          #Accumulated motion from hand paddle movement
     self.reflog = 0            #Accumulated motion from refraction tracking
-    self.guidelog = 0          #Accumulated motion from autoguider
+    self.guidelog = 0          #Accumulated motion from autoguider since the last time detevent.currentUpdatePosition read and cleared this variable
+    self._guidersteps_last = 0 #Previous value for the accumulated guider steps value in Driver.counters for this axis.
     self.hold = 0              #These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
     self.frac = 0.0            #These store the accumulated fractional ticks, left over from previous frames
     self.Jumping = False       #True if a pre-calculated slew is in progress for this axis.
@@ -427,13 +446,15 @@ class MotorControl(object):
       self.Driver.enable_guider()
       self._guidelogfile.write('%f ON\n' % time.time())
       self._guidelogfile.flush()
-      self.guidelog = (0,0)
+      with self.RA.lock:
+        self.RA._guidelog_last = 0
+      with self.DEC.lock:
+        self.DEC._guidelog_last = 0
       self.Autoguiding = True
     elif (not on) and (self.Autoguiding):
       self.Driver.disable_guider()
       self._guidelogfile.write('%f OFF\n' % time.time())
       self._guidelogfile.close()
-      self.guidelog = (0,0)
       self.Autoguiding = False
     else:   #tried to turn it off when it's already off, or on when it's already on.
       pass
@@ -494,7 +515,17 @@ class MotorControl(object):
     #Now send word_RA and word_DEC to the controller queue!
     return (int_RA, int_DEC)
 
+  def newcounters(self, counters):
+    """Called aynchronously whenever new counter data is available from the controller
+       hardware. Updates the autoguider logs.
+    """
+    with self.RA.lock:
+      self.RA.guidelog += counters.a_guider_steps - self.RA._guidersteps_last
+      self.RA._guidersteps_last = counters.a_guider_steps
 
+    with self.DEC.lock:
+      self.DEC.guidelog += counters.b_guider_steps - self.DEC._guidersteps_last
+      self.DEC._guidersteps_last = counters.b_guider_steps
 
 def RunQueue():
   """Starts the motion control queue running.
@@ -509,7 +540,7 @@ def RunQueue():
     try:
       oldmotors = motors    # Keep a  reference to the old object around, in case it takes time to clean itself up on exit
       motors = MotorControl(limits=limits)
-      motors.Driver = usbcon.Driver(getframe=motors.getframe, limits=limits)
+      motors.Driver = usbcon.Driver(getframe=motors.getframe, newcounters=motors.newcounters, limits=limits)
       motors.Driver.run()
     except:
       print "controller.Controller.stop() was called with an exception:"
