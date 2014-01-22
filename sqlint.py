@@ -35,8 +35,6 @@
    Django models.
 """
 
-"""
-
 import MySQLdb as dblib
 
 import os
