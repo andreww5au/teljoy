@@ -1,56 +1,34 @@
-../controller.py*
-../correct.py
-../detevent.py
-../digio.py
-../globals.py
-../handpaddles.py
-../__init__.py
-../motion.py
-../nzdome.py
-../pdome.py
-../pyephem.py
-../sqlint.py
-../teljoy.py*
-../tjserver.py
-../usbcon.py
-../utils.py
-../weather.py
-../extras/__init__.py
-../extras/reset.py*
-../extras/tjclient.py
-../extras/tjguide.py*
-../extras/tjjump.py*
-../extras/tjoffset.py*
-../extras/tjpos.py*
-../extras/tjreset.py*
-../cgi/__init__.py
-../cgi/objects.py
-../cgi/bncstat*
-../cgi/__init__.py
-../cgi/objects.py
-../cgi/README
-
-../cgi/al:
-aobjlist*
-aobjlist.html
-
-../cgi/secure:
-htmlutil.py
-__init__.py
-nobjedit*
-nobjedithtml.py
-nobjedit.py
-../cgi/al/aobjlist*
-../cgi/al/aobjlist.html
-../cgi/secure/htmlutil.py
-../cgi/secure/__init__.py
-../cgi/secure/nobjedit*
-../cgi/secure/nobjedithtml.py
-../cgi/secure/nobjedit.py
-../extras/tjclient.py
-../extras/tjclient.pyc
-../extras/tjguide.py*
-../extras/tjjump.py*
-../extras/tjoffset.py*
-../extras/tjpos.py*
-../extras/tjreset.py*
+#!/bin/sh
+export PYTHONPATH=..:../extras
+pydoc -w ../controller.py*
+pydoc -w ../correct.py
+pydoc -w ../detevent.py
+pydoc -w ../digio.py
+pydoc -w ../globals.py
+pydoc -w ../handpaddles.py
+pydoc -w ../motion.py
+pydoc -w ../nzdome.py
+pydoc -w ../pdome.py
+pydoc -w ../pyephem.py
+pydoc -w ../sqlint.py
+pydoc -w ../teljoy.py*
+pydoc -w ../tjserver.py
+pydoc -w ../usbcon.py
+pydoc -w ../utils.py
+pydoc -w ../weather.py
+pydoc -w ../extras/reset.py*
+pydoc -w ../extras/tjclient.py
+pydoc -w ../extras/tjguide.py*
+pydoc -w ../extras/tjjump.py*
+pydoc -w ../extras/tjoffset.py*
+pydoc -w ../extras/tjpos.py*
+pydoc -w ../extras/tjreset.py*
+pydoc -w ../cgi/objects.py
+pydoc -w ../cgi/bncstat*
+pydoc -w ../cgi/al/aobjlist*
+pydoc -w ../cgi/al/aobjlist.html
+pydoc -w ../cgi/secure/htmlutil.py
+pydoc -w ../cgi/secure/__init__.py
+pydoc -w ../cgi/secure/nobjedit*
+pydoc -w ../cgi/secure/nobjedithtml.py
+pydoc -w ../cgi/secure/nobjedit.py

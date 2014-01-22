@@ -14,12 +14,18 @@ import traceback
 
 KEYFILE = '~mjuo/teljoy.pyrokey'
 
-hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
+try:
+  hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
+except IOError:
+  print 'Pyro4 key file not found: %s' % KEYFILE
+  hmac = ''
+
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 status = None
 ShutterAction = None
 FreezeAction = None
+
 
 class StatusObj(object):
   def __repr__(self):

@@ -3,6 +3,8 @@
 
    Reads current weather data from misc.weather table in database, and keeps status object
    up to date.
+
+   Only used in Perth system, no weather sensors available at Mt John in New Zealand.
 """
 
 from globals import *

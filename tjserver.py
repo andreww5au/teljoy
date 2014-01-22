@@ -22,7 +22,12 @@ import utils
 
 KEYFILE = '~mjuo/teljoy.pyrokey'
 
-hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
+try:
+  hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
+except IOError:
+  logger.error('Pyro4 key file not found: %s' % KEYFILE)
+  hmac = ''
+
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696

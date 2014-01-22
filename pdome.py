@@ -1,5 +1,9 @@
 
-"""Arie's dome controller API:
+"""
+   Dome control module for  Perth telescope. All dome control is via a serial port to the
+   dome controller.
+
+   Arie's dome controller API for Perth telescope:
 
    interface is 1200 baud, 8 bits, two stop bits, no handshaking (HW or SW)
 

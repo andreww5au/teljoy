@@ -43,7 +43,11 @@ PWFILE = '~mjuo/teljoy.dbpass'
 USER = 'honcho'
 if SITE == 'NZ':
   HOST = 'localhost'
-  PASSWORD = file(os.path.expanduser(PWFILE), 'r').read().strip()
+  try:
+    PASSWORD = file(os.path.expanduser(PWFILE), 'r').read().strip()
+  except IOError:
+    logger.error("Can't load MySQL database pasword file: %s" % PWFILE)
+    PASSWORD = ''
 elif SITE == 'PERTH':
   HOST = 'mysql'
   PASSWORD = ''

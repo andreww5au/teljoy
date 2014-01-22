@@ -442,14 +442,18 @@ def UpdateConfig():
   lCPfile = lCP.read(CPPATH)
   if not lCPfile:
     logger.error("None of the specified configuration files found by globals.py: %s" % (CPPATH,))
+
+  for section in ['Toggles', 'Environment', 'Presets', 'Paths', 'FlexureEast', 'FlexureWest', 'Alarms', 'Rates', 'Dome']:
+    if not lCP.has_section(section):
+      lCP.add_section(section)
   return lCP, lCPfile
 
 
 ConfigDefaults = {'FlexureOn':'True', 'HighHorizonOn':'False', 'RefractionOn':'True',
                   'RealTimeOn':'True', 'AltWarning':'10', 'AltCutoffFrom':'6',
                   'AltCutoffHi':'30', 'AltCutoffLo':'15', 'ObsLat':str(DOBSLAT), 'ObsLong':str(DOBSLONG),
-                  'EastOfPier':'False', 'Slew':str(DFSLEWRATE/20),
-                  'CoarseSet':str(DFCOARSESETRATE/20), 'FineSet':str(DFFINESETRATE/20), 'GUIDE':str(DFGUIDERATE/20),
+                  'EastOfPier':'False', 'Slew':str(DFSLEWRATE / 20),
+                  'CoarseSet':str(DFCOARSESETRATE / 20), 'FineSet':str(DFFINESETRATE / 20), 'GUIDE':str(DFGUIDERATE / 20),
                   'Temp':str(DFTEMP), 'Press':str(DFPRESS)}
 
 ConfigDefaults.update( {'WaitTime':'0.5', 'MinBetween':'5', 'LogDirName':'/tmp'} )
