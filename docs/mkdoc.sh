@@ -47,3 +47,10 @@ nobjedit.py
 ../cgi/secure/nobjedit*
 ../cgi/secure/nobjedithtml.py
 ../cgi/secure/nobjedit.py
+../extras/tjclient.py
+../extras/tjclient.pyc
+../extras/tjguide.py*
+../extras/tjjump.py*
+../extras/tjoffset.py*
+../extras/tjpos.py*
+../extras/tjreset.py*
