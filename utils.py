@@ -36,6 +36,8 @@ def Lookup(objid=''):
      anywhere else that seems reasonable. Return a position object for that name,
      or None if it can't be found. Try both the name as given, and if that fails,
      the name converted to all upper case.
+
+     This function is intended to be called manually, by the user at the command line.
   """
   obj = sqlint.GetObject(name=objid)
 
@@ -55,6 +57,8 @@ def Lookup(objid=''):
 def GetSesame(name=''):
   """Given an object name, use the Sesame web service to look up the object in
      SIMBAD, Vizier, and NED. Returns a position object.
+
+     This function is intended to be called manually, by the user at the command line.
   """
   try:
     data = urllib2.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib2.quote(name)).read()
@@ -168,6 +172,12 @@ p = Pos
 
 
 def jump(*args, **kws):
+  """Jump the telescope to a new object, specified by an obect name string, or ra=, dec= and epoch= arguments,
+     where ra and dec can be strings (containing H:M:S or D:M:S values) or numbers.
+
+
+       This function is intended to be called manually, by the user at the command line.
+  """
   if 'force' in kws.keys():
     force = kws['force']
   else:
@@ -197,6 +207,9 @@ def reset(*args, **kws):
      'ra' and 'dec' can be sexagesimal strings (in hours:minutes:seconds for RA and degrees:minutes:seconds
      for DEC), or numeric values (fractional hours for RA, fractional degrees for DEC). Epoch is in decimal 
      years, and objid is an optional short string with an ID.
+
+     This function is intended to be called manually, by the user at the command line.
+
   """
   ob = Pos(*args, **kws)
   if ob is None:
@@ -211,6 +224,8 @@ Reset = reset
 
 def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   detevent.current.Offset(ora=ora, odec=odec)
   logger.info("Moved small offset distance: %4.1f,%4.1f" % (ora, odec))
@@ -220,14 +235,18 @@ Offset = offset
 
 
 def freeze(force=False):
-  """Freeze the telescope
+  """Freeze the telescope. Stops all sidereal and non-sidereal tracking, but maintain position accuracy.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   motion.motors.Frozen = True
   logger.info("Telescope frozen")
 
 
 def unfreeze(force=False):
-  """Un-Freeze the telescope
+  """Un-Freeze the telescope. Resume tracking.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   if not safety.Active.is_set():
     if not force:
@@ -243,6 +262,8 @@ def domecal():
   """Call this function when the dome is pointing due North. It will calculate a
      current value for the dome encoder offset, and set the current encoder offset
      in the dome object.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   print "Assuming dome is due north!"
   azi = dome.getDomeAzi()
@@ -268,6 +289,8 @@ def shutdown():
 
      Then wait for a keypress indicating that the cap is on, and move the telescope to the
      STOW position, while closing the chutter.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   print "About to shut down the system and close+park the dome - are you sure?"
   ans = raw_input()

@@ -14,7 +14,7 @@ DENCODEROFFSET = 27    # Add this many counts to the encoder value (range 0-255)
 
 #Dome parameters:
 RD = 3.48                             # Dome radius, in metres
-ABSP = 0.55 / RD                        # Distance from centre of telescope tube to dome center, in metres
+ABSP = 0.55 / RD                        # Distance from centre of telescope tube to dome center, as a fraction of the dome radius
 ETA = 0.2 / RD                          # ?
 
 

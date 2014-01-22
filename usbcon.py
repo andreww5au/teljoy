@@ -51,13 +51,14 @@ class LimitStatus(object):
     self.EastLim = False          # RA axis eastward limit reached
     self.WestLim = False          # RA axis westward limit reached
     self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
+    self.WantsOverride = False    # True if the user has requested a limit override, but it's not uet safe to do so (still moving).
     self.LimOverride = False      # True if the limit has been overridden in software
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['HWLimit', 'PowerOff', 'HorizLim', 'MeshLim', 'EastLim', 'WestLim', 'LimOverride']:
+    for n in ['HWLimit', 'PowerOff', 'HorizLim', 'MeshLim', 'EastLim', 'WestLim', 'WantsOverride', 'LimOverride']:
       d[n] = self.__dict__[n]
     return d
 
@@ -72,6 +73,22 @@ class LimitStatus(object):
        we can still move West to escape the limit.
     """
     return (not self.HWLimit) or (self.LimOverride and self.EastLim)
+
+  def override(self):
+    """Request a temporary override for the cable wrap limit. This method will set a flag
+       requesting that the hardware limit be overridden as soon as the telescope finishes
+       moving. When that happens, you can use the paddles to move east (if you have hit the
+       west limit), or west (if you have hit the east limit).
+
+       This function is only ever to be called manually, by the user at the command line.
+    """
+    if self.EastLim or self.WestLim:
+      self.WantsOverride = True
+      logger.error("Cable wrap limit will be overridden as soon as the telescope slew finishes.")
+    elif not self.HWLimit:
+      logger.error("Cable wrap limit can only be overridden when it is active, not in advance.")
+    else:
+      logger.error("Only East/West cable wrap limits can be overridden in software.")
 
   def check(self, inputs=None):
     """Test the limit states asynchronously, in the motor control thread, as we are notified

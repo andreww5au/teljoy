@@ -87,6 +87,7 @@ class LimitStatus(object):
     self.EastLim = False          # RA axis eastward limit reached
     self.WestLim = False          # RA axis westward limit reached
     self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
+    self.WantsOverride = False    # True if the user has requested an ovveride to the cable wrap limit
     self.LimOverride = False      # True if the limit has been overridden in software
 
 

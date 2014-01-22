@@ -485,6 +485,19 @@ def CheckLimitClear():
     logger.info('Hardware limit cleared or power restored.')
     motion.limits.HWLimit = False
     motion.limits.LimOverride = False
+    motion.limits.WantsOverride = False
+
+  if (motion.limits.WantsOverride or motion.limits.LimOverride):
+    if not motion.limits.HWLimit:    # Clear any override flag if there's no limit active now
+      motion.limits.WantsOverride = False
+      motion.limits.LimOverride = False
+
+  if motion.limits.WantsOverride and (not motion.motors.Moving):
+    motion.limits.LimOverride = True
+    motion.limits.WantsOverride = False
+    logger.error("Hardware cable wrap limit overriden in software.")
+    logger.error("Use paddles to move slowly away from the limit.")
+
 
 
 def CheckDirtyDome():
