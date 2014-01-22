@@ -9,7 +9,16 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>usbcon</strong></big></big></font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/usbcon.py">/home/andrew/PyDevel/teljoy/usbcon.py</a></font></td></tr></table>
-    <p><tt>Low&nbsp;level&nbsp;interface&nbsp;to&nbsp;the&nbsp;USB&nbsp;motion&nbsp;controller&nbsp;code.</tt></p>
+    <p><tt>Low&nbsp;level&nbsp;interface&nbsp;to&nbsp;the&nbsp;USB&nbsp;motion&nbsp;controller&nbsp;code.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;by&nbsp;default,&nbsp;the&nbsp;USB&nbsp;controller&nbsp;device&nbsp;will&nbsp;be&nbsp;created&nbsp;with&nbsp;permissions&nbsp;that&nbsp;only<br>
+allow&nbsp;access&nbsp;by&nbsp;the&nbsp;root&nbsp;user.&nbsp;Running&nbsp;Teljoy&nbsp;as&nbsp;root&nbsp;is&nbsp;undesirable,&nbsp;so&nbsp;the&nbsp;following&nbsp;text<br>
+should&nbsp;be&nbsp;copied&nbsp;to&nbsp;a&nbsp;new&nbsp;file&nbsp;called&nbsp;'teljoy.rules'&nbsp;in&nbsp;/etc/udev/rules.d:<br>
+&nbsp;<br>
+ATTRS{idVendor}=="1bad",&nbsp;MODE="0666"<br>
+&nbsp;<br>
+This&nbsp;will&nbsp;ensure&nbsp;that&nbsp;each&nbsp;time&nbsp;the&nbsp;Bit&nbsp;Plantation&nbsp;controller&nbsp;is&nbsp;plugged&nbsp;in,&nbsp;the&nbsp;USB&nbsp;device&nbsp;will<br>
+be&nbsp;made&nbsp;world-readable&nbsp;and&nbsp;world-writeable.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">

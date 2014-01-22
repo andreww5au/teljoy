@@ -9,15 +9,20 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>teljoy</strong></big></big></font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/teljoy.py">/home/andrew/PyDevel/teljoy/teljoy.py</a></font></td></tr></table>
-    <p><tt>Crude&nbsp;command-line&nbsp;telescope&nbsp;control&nbsp;program.<br>
+    <p><tt>Telescope&nbsp;control&nbsp;software&nbsp;using&nbsp;a&nbsp;'velocity&nbsp;streaming'&nbsp;controller,&nbsp;where&nbsp;every&nbsp;frame<br>
+(typically&nbsp;50ms)&nbsp;a&nbsp;pair&nbsp;of&nbsp;integers&nbsp;are&nbsp;read&nbsp;by&nbsp;the&nbsp;control&nbsp;hardware,&nbsp;and&nbsp;the&nbsp;control&nbsp;hardware<br>
+generates&nbsp;exactly&nbsp;that&nbsp;many&nbsp;motor&nbsp;steps&nbsp;over&nbsp;the&nbsp;next&nbsp;50ms.<br>
 &nbsp;<br>
-Imports&nbsp;the&nbsp;relevant&nbsp;modules,&nbsp;puts&nbsp;useful&nbsp;functions&nbsp;into&nbsp;the<br>
-global&nbsp;namespace&nbsp;to&nbsp;use&nbsp;on&nbsp;the&nbsp;command&nbsp;line,&nbsp;starts&nbsp;the&nbsp;appropriate<br>
-background&nbsp;threads&nbsp;(motion.TimeInt,&nbsp;dummycon.runtel&nbsp;and&nbsp;<br>
-detevent.DetermineEvent)&nbsp;and&nbsp;drops&nbsp;into&nbsp;an&nbsp;interactive&nbsp;Python&nbsp;prompt.<br>
+This&nbsp;file&nbsp;is&nbsp;the&nbsp;main&nbsp;executable.&nbsp;It&nbsp;mports&nbsp;the&nbsp;relevant&nbsp;modules,&nbsp;puts<br>
+useful&nbsp;functions&nbsp;into&nbsp;the&nbsp;global&nbsp;namespace&nbsp;to&nbsp;use&nbsp;on&nbsp;the&nbsp;command&nbsp;line,&nbsp;starts<br>
+the&nbsp;appropriate&nbsp;background&nbsp;threads&nbsp;and&nbsp;drops&nbsp;into&nbsp;an&nbsp;interactive&nbsp;Python&nbsp;prompt.&nbsp;Signal<br>
+handlers&nbsp;and&nbsp;cleanup&nbsp;functions&nbsp;are&nbsp;also&nbsp;set&nbsp;up,&nbsp;to&nbsp;shut&nbsp;down&nbsp;the&nbsp;motor&nbsp;controller&nbsp;cleanly<br>
+when&nbsp;teljoy&nbsp;exits&nbsp;(either&nbsp;intentionally&nbsp;or&nbsp;unintentionally).<br>
 &nbsp;<br>
-The&nbsp;utils&nbsp;module&nbsp;contains&nbsp;functions&nbsp;that&nbsp;will&nbsp;probably&nbsp;only&nbsp;be&nbsp;used<br>
-from&nbsp;the&nbsp;command&nbsp;line.<br>
+All&nbsp;user&nbsp;control&nbsp;of&nbsp;the&nbsp;telescope&nbsp;is&nbsp;by&nbsp;typing&nbsp;functions&nbsp;at&nbsp;the&nbsp;Python&nbsp;command&nbsp;prompt,<br>
+like&nbsp;'jump()',&nbsp;'reset()',&nbsp;etc.<br>
+&nbsp;<br>
+Most&nbsp;of&nbsp;the&nbsp;functions&nbsp;designed&nbsp;to&nbsp;be&nbsp;called&nbsp;directly&nbsp;by&nbsp;the&nbsp;user&nbsp;are&nbsp;in&nbsp;the&nbsp;'utils.py'&nbsp;module.<br>
 &nbsp;<br>
 Typical&nbsp;use:<br>
 &nbsp;&nbsp;&gt;&gt;&gt;&nbsp;reset(ra='12:34:56',&nbsp;dec='-32:00:00')&nbsp;&nbsp;&nbsp;#Set&nbsp;initial&nbsp;position<br>
@@ -83,8 +88,8 @@ Waits&nbsp;for&nbsp;any&nbsp;hand&nbsp;paddle&nbsp;motion&nbsp;or&nbsp;slews&nbs
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(00:40:19.734, 30:00:00.00,  ...zi= 0.00
-      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(06:03:21.460, 30:00:00.00,  ...zi= 0.01
+      Time: [UT:10:34:40 LST:06:03:21] &gt;<br>
 <strong>CLEANUP_FUNCTION</strong> = None<br>
 <strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
 <strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
@@ -99,8 +104,8 @@ Waits&nbsp;for&nbsp;any&nbsp;hand&nbsp;paddle&nbsp;motion&nbsp;or&nbsp;slews&nbs
 <strong>DFTEMP</strong> = 0<br>
 <strong>DOBSLAT</strong> = -43.9866666667<br>
 <strong>DOBSLONG</strong> = -170.465<br>
-<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(00:40:19.735, 17:45:00....zi= 0.00
-      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(06:03:21.461, 17:45:00....zi= 0.01
+      Time: [UT:10:34:40 LST:06:03:21] &gt;<br>
 <strong>DRASID</strong> = -15.04106868<br>
 <strong>DTABLE</strong> = 'current'<br>
 <strong>DUMMYPADDLES</strong> = []<br>
@@ -115,10 +120,10 @@ Waits&nbsp;for&nbsp;any&nbsp;hand&nbsp;paddle&nbsp;motion&nbsp;or&nbsp;slews&nbs
 <strong>PULSE</strong> = 0.05<br>
 <strong>SIGNAL_HANDLERS</strong> = {}<br>
 <strong>SITE</strong> = 'NZ'<br>
-<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(00:40:19.736, -44:00:00....i=185.21
-      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
-<strong>STOW</strong> = &lt;Position Stowed: Org=(00:40:19.733, 30:00:00.00...zi= 0.00
-      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(06:03:21.461, -44:00:00....i=163.54
+      Time: [UT:10:34:40 LST:06:03:21] &gt;<br>
+<strong>STOW</strong> = &lt;Position Stowed: Org=(06:03:21.459, 30:00:00.00...zi= 0.01
+      Time: [UT:10:34:40 LST:06:03:21] &gt;<br>
 <strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
 <strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
 <strong>dome</strong> = {'DomeInUse': False, 'queue': [], 'CommandSent':...zi': -10, 'Command': None, 'DomeTracking': False}<br>

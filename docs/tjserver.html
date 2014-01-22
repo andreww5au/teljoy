@@ -9,7 +9,17 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>tjserver</strong></big></big></font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/tjserver.py">/home/andrew/PyDevel/teljoy/tjserver.py</a></font></td></tr></table>
-    <p><tt>Handle&nbsp;RPC&nbsp;comms&nbsp;with&nbsp;other&nbsp;components&nbsp;of&nbsp;the&nbsp;observing&nbsp;system,&nbsp;using&nbsp;Pyro4</tt></p>
+    <p><tt>Pyro4&nbsp;RPC&nbsp;server,&nbsp;allowing&nbsp;teljoy&nbsp;to&nbsp;be&nbsp;controller&nbsp;over&nbsp;the&nbsp;network.&nbsp;Runs&nbsp;a&nbsp;Pyro4&nbsp;proxy&nbsp;server&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.<br>
+&nbsp;<br>
+This&nbsp;server&nbsp;is&nbsp;used&nbsp;by&nbsp;the&nbsp;included&nbsp;client&nbsp;programs&nbsp;(the&nbsp;tjclient.py&nbsp;library,&nbsp;and&nbsp;utilities&nbsp;like&nbsp;tjjump.py,&nbsp;that&nbsp;use&nbsp;it)<br>
+as&nbsp;well&nbsp;as&nbsp;the&nbsp;web&nbsp;status&nbsp;page&nbsp;CGI&nbsp;script,&nbsp;to&nbsp;load&nbsp;the&nbsp;current&nbsp;telescope&nbsp;state&nbsp;whenever&nbsp;the&nbsp;page&nbsp;refreshed.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;communications&nbsp;are&nbsp;encrypted&nbsp;using&nbsp;a&nbsp;key&nbsp;(password)&nbsp;found&nbsp;in&nbsp;a&nbsp;file&nbsp;called&nbsp;'teljoy.pyrokey'&nbsp;in&nbsp;the<br>
+telescope&nbsp;user&nbsp;home&nbsp;directory&nbsp;(file&nbsp;name&nbsp;and&nbsp;path&nbsp;in&nbsp;the&nbsp;constant&nbsp;KEYFILE&nbsp;defined&nbsp;below.)<br>
+&nbsp;<br>
+Make&nbsp;sure&nbsp;that&nbsp;the&nbsp;same&nbsp;key&nbsp;is&nbsp;present&nbsp;in&nbsp;a&nbsp;corresponding&nbsp;file&nbsp;on&nbsp;any&nbsp;remote&nbsp;machines&nbsp;running&nbsp;the&nbsp;tjclient.py<br>
+library&nbsp;or&nbsp;the&nbsp;programs&nbsp;that&nbsp;use&nbsp;it&nbsp;(tjjump.py,&nbsp;tjpos.py,&nbsp;etc),&nbsp;and&nbsp;that&nbsp;the&nbsp;tjclient.py&nbsp;file&nbsp;has&nbsp;been&nbsp;edited<br>
+so&nbsp;that&nbsp;the&nbsp;path&nbsp;ane&nbsp;file&nbsp;name&nbsp;of&nbsp;this&nbsp;key&nbsp;file&nbsp;are&nbsp;correct.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
