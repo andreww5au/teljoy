@@ -2,6 +2,12 @@
 
 __author__ = 'andrew'
 
+"""
+   When run, prints a machine-readable summary of the telescope position and status to standard output.
+   Designed to be used inside other (eg, camera control) software - it you want to see a human readable
+   version of the output, look at the status web page (http://localhost/cgi-bin/bncstat).
+"""
+
 import sys
 
 import tjclient

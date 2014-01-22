@@ -2,6 +2,18 @@
 
 __author__ = 'andrew'
 
+"""
+  Given a pair of offsets in arcseconds (of plate scale east and
+  west on the sky, not RA and DEC coordinates), shift the
+  telescope by that small amount.
+
+  Offsets are positive for East and North, Negative for West and South.
+
+  Note that near the pole, a small offset in plate scale E/W
+  can translate to a very large difference in the RA coordinate
+
+"""
+
 import sys
 import Pyro4
 

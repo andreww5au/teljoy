@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+"""
+  Turns the autoguide mode on or off, depending on the argument
+  If the argument is '1', 'on', 'ON', 'y', etc, turn autoguiding on.
+  If the argument is '0', 'off', 'OFF', 'n', etc, turn autoguiding off.
+
+"""
 __author__ = 'andrew'
 
 import sys

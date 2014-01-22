@@ -2,6 +2,13 @@
 
     This server is used by the included client programs (the tjclient.py library, and utilities like tjjump.py, that use it)
     as well as the web status page CGI script, to load the current telescope state whenever the page refreshed.
+
+    Note that communications are encrypted using a key (password) found in a file called 'teljoy.pyrokey' in the
+    telescope user home directory (file name and path in the constant KEYFILE defined below.)
+
+    Make sure that the same key is present in a corresponding file on any remote machines running the tjclient.py
+    library or the programs that use it (tjjump.py, tjpos.py, etc), and that the tjclient.py file has been edited
+    so that the path ane file name of this key file are correct.
 """
 
 import Pyro4

@@ -1,5 +1,14 @@
 
 """Low level interface to the USB motion controller code.
+
+   Note that by default, the USB controller device will be created with permissions that only
+   allow access by the root user. Running Teljoy as root is undesirable, so the following text
+   should be copied to a new file called 'teljoy.rules' in /etc/udev/rules.d:
+
+   ATTRS{idVendor}=="1bad", MODE="0666"
+
+   This will ensure that each time the Bit Plantation controller is plugged in, the USB device will
+   be made world-readable and world-writeable.
 """
 
 import controller

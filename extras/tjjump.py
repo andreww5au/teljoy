@@ -2,6 +2,24 @@
 
 __author__ = 'andrew'
 
+"""
+  Jumps the telescope to the specified object or position.
+
+  If one argument is given, it's assumed to be an object name. It's
+  looked up (in the local database, solar system ephemeris, and
+  SIMBAD/NED/Vizier online) and used as a target.
+
+  If two arguments are given, they are assumed to be RA and Dec, in
+  J2000 coordinates.
+
+  If three arguments are given, the first two are RA and Dec, the third
+  is the Epoch (strictly equinox) of the coordinates.
+
+  If you want spaces in an argument, enclose it in quotes.
+
+"""
+
+
 import sys
 import Pyro4
 

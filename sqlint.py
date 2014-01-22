@@ -33,6 +33,89 @@
    for legacy reasons (compatibility with other code running at Perth Observatory). Don't use this as a model
    for new code - instead, read the Python database API, or better, use a higher level abstraction like
    Django models.
+
+   Note that these functions depend on existing tables in the MySQL database. SQL code that creates the
+   required database, user and tables is given below. Choose a secure password, and save it in a file called
+   'teljoy.dbpass' in the telescope user home directory (the PWFILE constant defined below sets the file name)
+
+--------------------------
+create database teljoy
+
+create user 'honcho'@'localhost' identified by 'somepassword';
+create user 'honcho'@'%' identified by 'somepassword';
+
+grant select, insert, update, delete on teljoy.* to 'honcho'@'localhost';
+grant select, insert, update, delete on teljoy.* to 'honcho'@'%';
+
+create table teljoy.current (
+        name varchar(50),
+        ObjRA double,
+        ObjDec double,
+        ObjEpoch float,
+        RawRA double,
+        RawDec double,
+        RawHourAngle float,
+        Alt float,
+        Azi float,
+        LST double,
+        UTdec double,
+        posviolate tinyint,
+        moving tinyint,
+        EastOfPier tinyint,
+        DomeInUse tinyint,
+        ShutterInUse tinyint,
+        ShutterOpen tinyint,
+        DomeTracking tinyint,
+        Frozen tinyint,
+        RA_GuideAcc double,
+        DEC_GuideAcc double,
+        LastError varchar(500),
+        LastMod timestamp
+);
+
+create table teljoy.objects (
+        ObjID varchar(10),
+        name varchar(50),
+        ObjRA varchar(20),
+        ObjDec varchar(20),
+        ObjEpoch float,
+        filtnames varchar(50),
+        exptimes varchar(50),
+        XYpos_X integer,
+        XYpos_Y integer,
+        type varchar(20),
+        period float,
+        comment varchar(1000),
+        LastMod timestamp,
+        LastObs timestamp
+);
+
+create table teljoy.objtemp (
+        ObjID varchar(10),
+        fObjRA double,
+        fObjDec double,
+        LastMod timestamp
+);
+
+create table teljoy.tjbox (
+        action varchar(50),
+        ObjID varchar(20),
+        ObjRA varchar(20),
+        ObjDec varchar(20),
+        ObjEpoch float,
+        RAtrack double,
+        DECtrack double,
+        Alt float,
+        Azi float,
+        OffsetRA float,
+        OffsetDEC float,
+        DomeAzi float,
+        shutter tinyint,
+        freeze tinyint,
+        lastmod timestamp
+);
+---------------------------------------
+
 """
 
 import MySQLdb as dblib

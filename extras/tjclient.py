@@ -1,4 +1,14 @@
 """Pyro4 RPC client library for Teljoy.
+
+    Note that communications are encrypted using a key (password) found in a file called 'teljoy.pyrokey' in the
+    telescope user home directory (file name and path in the constant KEYFILE defined below.)
+
+    Make sure that the same key is present in a corresponding file on any remote machines running the tjclient.py
+    library or the programs that use it (tjjump.py, tjpos.py, etc), and that the tjclient.py file has been edited
+    so that the path ane file name of this key file are correct.
+
+    Both tjserver.py (in the Teljoy directory on the telescope control computer) and this file must load a KEYFILE
+    containing the same encryption password, or the communications link will not work.
 """
 
 DEFHOST = 'cynosure.canterbury.ac.nz'
