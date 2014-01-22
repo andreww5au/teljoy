@@ -1,13 +1,21 @@
 """Pyro4 RPC client library for Teljoy
 """
 
-DEFHOST = '132.181.49.137'
+DEFHOST = 'cynosure.canterbury.ac.nz'
 DEFPORT = 9696
 DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
 
 import Pyro4
-import time
+
 import datetime
+import os
+import time
+import traceback
+
+KEYFILE = '~mjuo/teljoy.pyrokey'
+
+hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
+Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 status = None
 ShutterAction = None
@@ -65,6 +73,8 @@ class MotorsStatus(StatusObj):
     self.PosDirty = False
     self.ticks = 0
     self.Frozen = False
+    self.Autoguiding = False
+    self.guidelog = (0,0)
 
 
 class LimitStatus(object):
@@ -77,6 +87,7 @@ class LimitStatus(object):
     self.EastLim = False          # RA axis eastward limit reached
     self.WestLim = False          # RA axis westward limit reached
     self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
+    self.WantsOverride = False    # True if the user has requested an ovveride to the cable wrap limit
     self.LimOverride = False      # True if the limit has been overridden in software
 
 
@@ -114,23 +125,33 @@ class TelClient(StatusObj):
   def connect(self):
     self.connected = False
     ok = False
+    msg = ''
     if self.proxy is not None:
       self.proxy._pyroRelease()
+
     try:
-      self.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
+      self.proxy = Pyro4.Proxy(DEFURL)   # Use hardwired host/port first
+      self.proxy.Ping()   # Check to see we can connect
       ok = True
     except Pyro4.errors.PyroError:
+      msg += "Can't find teljoy using default URL, trying nameserver.\n"
+      msg += "Local traceback: \n" + traceback.format_exc() + "\n"
       try:
-        self.proxy = Pyro4.Proxy(DEFURL)   # If we can't find a nameserver, try the default host/port
+        self.proxy = Pyro4.Proxy('PYRONAME:Teljoy')
+        ok = True
       except Pyro4.errors.PyroError:
         self.proxy = None
-        return "Can't find Teljoy service in nameserver"
+        msg += "Can't find Teljoy service using nameserver"
+        msg += "Local traceback: \n" + traceback.format_exc() + "\n"
+        return msg
     if ok:
       try:
         self.update()
         self.connected = True
       except Pyro4.errors.PyroError:
-        return "Can't connect to Teljoy Pyro4 service - is Teljoy running?"
+        msg += "Local traceback: \n" + traceback.format_exc() + "\n"
+        msg += "Remote Traceback: \n" + "".join(Pyro4.util.getPyroTraceback()) + "\n"
+        return msg + "Can't connect to Teljoy Pyro4 service - is Teljoy running?"
 
 
 def jump(*args, **kwargs):
@@ -140,7 +161,17 @@ def jump(*args, **kwargs):
         jump(id='plref', ra='17:47:28', dec='-27:49:49', epoch=1998.5)
   """
   with status.proxy:
-    status.proxy.jump(*args, **kwargs)
+    return status.proxy.jump(*args, **kwargs)
+
+
+def reset(*args, **kwargs):
+  """Takes the arguments given, and sends a command to Teljoy
+    to reset the telescope coordinates to that position.
+    eg: reset('frog','12:34:56','-32:00:00',1998.5)
+        reset(id='plref', ra='17:47:28', dec='-27:49:49', epoch=1998.5)
+  """
+  with status.proxy:
+    return status.proxy.reset(*args, **kwargs)
 
 
 def offset(offra=0, offdec=0):
@@ -149,9 +180,18 @@ def offset(offra=0, offdec=0):
     eg: jumpoff(2.45,-12.13)
   """
   with status.proxy:
-    status.proxy.offset(offra, offdec)
+    return status.proxy.offset(offra, offdec)
+
 
 jumpoff = offset
+
+
+def autoguide(on=True):
+  """Turns autoguiding on (on=True) or off (on=False).
+    eg: jumpoff(2.45,-12.13)
+  """
+  with status.proxy:
+    return status.proxy.autoguide(on)
 
 
 def dome(arg=90):
@@ -167,7 +207,7 @@ def dome(arg=90):
     elif arg.upper() in ['C','CLOSE']:
       ShutterAction = False
   with status.proxy:
-    status.proxy.dome(arg)
+    return status.proxy.dome(arg)
 
 
 def freeze(action=True):
@@ -183,10 +223,10 @@ def freeze(action=True):
   global FreezeAction
   with status.proxy:
     if action:
-      status.proxy.freeze()
+      return status.proxy.freeze()
       FreezeAction = True
     else:
-      status.proxy.unfreeze()
+      return status.proxy.unfreeze()
       FreezeAction = False
 
 

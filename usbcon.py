@@ -51,13 +51,14 @@ class LimitStatus(object):
     self.EastLim = False          # RA axis eastward limit reached
     self.WestLim = False          # RA axis westward limit reached
     self.LimitOnTime = 0          # Timestamp marking the last time we tripped a hardware limit.
+    self.WantsOverride = False    # True if the user has requested a limit override, but it's not uet safe to do so (still moving).
     self.LimOverride = False      # True if the limit has been overridden in software
 
   def __getstate__(self):
     """Can't pickle the __setattr__ function when saving state
     """
     d = {}
-    for n in ['HWLimit', 'PowerOff', 'HorizLim', 'MeshLim', 'EastLim', 'WestLim', 'LimOverride']:
+    for n in ['HWLimit', 'PowerOff', 'HorizLim', 'MeshLim', 'EastLim', 'WestLim', 'WantsOverride', 'LimOverride']:
       d[n] = self.__dict__[n]
     return d
 
@@ -72,6 +73,22 @@ class LimitStatus(object):
        we can still move West to escape the limit.
     """
     return (not self.HWLimit) or (self.LimOverride and self.EastLim)
+
+  def override(self):
+    """Request a temporary override for the cable wrap limit. This method will set a flag
+       requesting that the hardware limit be overridden as soon as the telescope finishes
+       moving. When that happens, you can use the paddles to move east (if you have hit the
+       west limit), or west (if you have hit the east limit).
+
+       This function is only ever to be called manually, by the user at the command line.
+    """
+    if self.EastLim or self.WestLim:
+      self.WantsOverride = True
+      logger.error("Cable wrap limit will be overridden as soon as the telescope slew finishes.")
+    elif not self.HWLimit:
+      logger.error("Cable wrap limit can only be overridden when it is active, not in advance.")
+    else:
+      logger.error("Only East/West cable wrap limits can be overridden in software.")
 
   def check(self, inputs=None):
     """Test the limit states asynchronously, in the motor control thread, as we are notified
@@ -104,9 +121,10 @@ class Driver(controller.Driver):
   """To use the controller, a driver class with callbacks must be
      defined to handle the asynchronous events:
   """
-  def __init__(self, getframe=None, limits=None):
+  def __init__(self, getframe=None, newcounters=None, limits=None):
     # (Keep some values to generate test steps)
     self._getframe = getframe
+    self._newcounters = newcounters
     self.frame_number = 0
     self.inputs = 0L
     self.configuration = None
@@ -115,6 +133,7 @@ class Driver(controller.Driver):
     self.FrameLog = []   # Log of the last few seconds of frame data, as a list of tuples
     self.dropped_frames = None
     self.limits = limits
+    self.counters = None    # Last values read from the controller counters
     self.lock = threading.RLock()
 
   def get_expected_controller_version(self):
@@ -199,50 +218,28 @@ class Driver(controller.Driver):
       controller.MC_PIN_FLAG_MCA_O_FUNCTION_LOW | \
       controller.MC_PIN_FLAG_MCB_O_FUNCTION_LOW
 
-    if REALMOTORS:   #If using the real, micro-stepped telescope motors:
-      # Set the length of a frame, in cycles of the controller clock frequency. In
-      # this example a frame is 50ms, or 1/20th of a second:
-      configuration.mc_frame_period = self.host.clock_frequency / 20
+    # Set the length of a frame, in cycles of the controller clock frequency. In
+    # this example a frame is 50ms, or 1/20th of a second:
+    configuration.mc_frame_period = self.host.clock_frequency / 20
 
-      # Set the velocity limit (in steps per frame) on each axis:
-      configuration.mc_a_velocity_limit = 6000
-      configuration.mc_b_velocity_limit = 6000
+    # Set the velocity limit (in steps per frame) on each axis:
+    configuration.mc_a_velocity_limit = 6000
+    configuration.mc_b_velocity_limit = 6000
 
-      # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 800   #Should be at least three times the maximum add_to_vel,
-      configuration.mc_b_acceleration_limit = 800   #  so up to six times MOTOR_ACCEL
+    # Set the acceleration limit (in steps per frame per frame) on each axis:
+    configuration.mc_a_acceleration_limit = 800   #Should be at least three times the maximum add_to_vel,
+    configuration.mc_b_acceleration_limit = 800   #  so up to six times MOTOR_ACCEL
 
-      # Set the deceleration (in steps per frame per frame) to use when shutting down:
-      configuration.mc_a_shutdown_acceleration = 250
-      configuration.mc_b_shutdown_acceleration = 250
+    # Set the deceleration (in steps per frame per frame) to use when shutting down:
+    configuration.mc_a_shutdown_acceleration = 250
+    configuration.mc_b_shutdown_acceleration = 250
 
-      # Set the pulse width, in cycles of the clock frequency (12MHz). In this
-      # example the pulse width is 50 clock cycles, and the off time is 50 clock
-      # cycles, for a 100 clock cycle period. At the maximum velocity of 6000
-      # steps per frame, this would be a 120kHz square wave:
-      configuration.mc_pulse_width = self.host.clock_frequency / 240000
-      configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 240000
-    else:   #If using the slow, non-microstepped test rig
-      # Set the length of a frame, in cycles of the controller clock frequency. In
-      # this example a frame is 50ms, or 1/20th of a second:
-      configuration.mc_frame_period = self.host.clock_frequency / 20
-
-      # Set the velocity limit (in steps per frame) on each axis:
-      configuration.mc_a_velocity_limit = 100
-      configuration.mc_b_velocity_limit = 100
-
-      # Set the acceleration limit (in steps per frame per frame) on each axis:
-      configuration.mc_a_acceleration_limit = 5
-      configuration.mc_b_acceleration_limit = 5
-
-      # Set the deceleration (in steps per frame per frame) to use when shutting down:
-      configuration.mc_a_shutdown_acceleration = 5
-      configuration.mc_b_shutdown_acceleration = 5
-
-      # Set the pulse width, in cycles of the controller clock frequency. In this
-      # example the pulse width is 500us:
-      configuration.mc_pulse_width = self.host.clock_frequency / 10000
-      configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 10000
+    # Set the pulse width, in cycles of the clock frequency (12MHz). In this
+    # example the pulse width is 50 clock cycles, and the off time is 50 clock
+    # cycles, for a 100 clock cycle period. At the maximum velocity of 6000
+    # steps per frame, this would be a 120kHz square wave:
+    configuration.mc_pulse_width = self.host.clock_frequency / 240000
+    configuration.mc_pulse_minimum_off_time = self.host.clock_frequency / 240000
 
     # Invert all the GPIO inputs, so they are active when pulled low:
     for pin in configuration.pins[0:40]:
@@ -258,26 +255,26 @@ class Driver(controller.Driver):
     # configuration.mc_b_positive_limit_input = controller.PIN_GPIO_2
     # configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
 
-    # Set the guider input pins:
-#    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_0
-#    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_1
-#    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_2
-#    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_3
+    # Set the guider input pins. The SBIG socket has pins: 1=+RA, 2=+DEC, 3=-DEC, 4=-RA, 5=ground:
+    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_32     # +RA
+    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_35     # -RA
+    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_33     # +DEC
+    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_34     # -DEC
 
     # Set the guider sample interval, in cycles of the controller clock frequency.
     # In this example, the guider is polled every 1ms, giving a maximum of
     # 100 for the guider value in each 100ms frame:
-#    self.mc_guider_counter_divider = self.host.clock_frequency / 1000
+    self.mc_guider_counter_divider = self.host.clock_frequency / 1000
 
     # Each guider value is multiplied by a fractional scale factor to get
     # the number of steps. The resulting value then has a maximum applied before
     # being added to the next available frame:
-#    configuration.mc_guider_a_numerator = 4
-#    configuration.mc_guider_a_denominator = 50   #4 steps per 50ms slot
-#    configuration.mc_guider_a_limit = 20
-#    configuration.mc_guider_b_numerator = 4
-#    configuration.mc_guider_b_denominator = 50
-#    configuration.mc_guider_b_limit = 20
+    configuration.mc_guider_a_numerator = 4
+    configuration.mc_guider_a_denominator = 50   #4 steps per 50ms slot
+    configuration.mc_guider_a_limit = 20
+    configuration.mc_guider_b_numerator = 4
+    configuration.mc_guider_b_denominator = 50
+    configuration.mc_guider_b_limit = 20
 
     if SITE == 'NZ':
       # Set 8 pins to outputs, the rest to inputs, with values reported (paddles, limits, power state):
@@ -353,23 +350,11 @@ class Driver(controller.Driver):
     logger.debug('release in initialise_error_occurred()')
     self.host.stop()
 
-#  def _turn_output_on(self):
-#    # Turn the output on, and set the timer to turn it off later:
-#    self.host.set_outputs(1 << controller.PIN_GPIO_8)
-#
-#    self.host.add_timer(1.0, self._turn_output_off)
-
-#  def _turn_output_off(self):
-    # Turn the output off, and set the timer to turn it on later:
-#    self.host.clear_outputs(1 << controller.PIN_GPIO_8)
-
-#    self.host.add_timer(1.0, self._turn_output_on)
-
   def _check_counters(self):
     """Grab the counter data, and call _complete_check_counters when the
        data becomes available.
 
-       Called every 60 seconds, using a timer set up for the first time in
+       Called every 10 seconds, using a timer set up for the first time in
        _initialise_outputs_set above, and re-called by _complete_check_counters
        below.
     """
@@ -386,6 +371,9 @@ class Driver(controller.Driver):
   def _complete_check_counters(self, counters):
     """Update the counter log data using the values returned from the controller.
        Set up another call to update the counters in 60 seconds.
+
+       If the self._newcounters attribute was set in __init__, call that function with the
+       new counter data, to pass it up to the code that created this driver.
     """
     self.lock.release()
     logger.debug('release in _complete_check_counters')
@@ -398,8 +386,11 @@ class Driver(controller.Driver):
                    counters.b_guider_steps,
                    counters.a_measured_steps,
                    counters.b_measured_steps))
+    self.counters = counters
+    if self._newcounters is not None:
+      self._newcounters(counters)     # Pass the new counter values up to the higher level code
 
-    self.host.add_timer(60.0, self._check_counters)
+    self.host.add_timer(10.0, self._check_counters)
 
   def enqueue_frame_available(self, details):
     """This method is called when the queue changes (for example, when 
@@ -448,6 +439,28 @@ class Driver(controller.Driver):
       logger.debug('acq in state_changed() success')
       d = self.host.get_exception()
       d.addCallback(self._get_exception_completed)
+
+  def enable_guider(self):
+    """Calls self.host.enable_guider with locking. Turns on the autoguider.
+    """
+    # Note that this isn't threadsafe, but I haven't been able to find a way to acquire/release the lock.
+    # The problem is that the call to self.lock.acquire() is by the calling thread (eg, the command line
+    # handler), and the call to release() in the callback will be by the motion control thread in the
+    # interrupt handler (?). That release call fails, because that thread never acquired the lock.
+    # Using a non-reentrant lock instead  breaks the entire driver thread.
+    d = self.host.enable_guider()
+    return d
+
+  def disable_guider(self):
+    """Calls self.host.disable_guider with locking. Turns off the autoguider.
+    """
+    # Note that this isn't threadsafe, but I haven't been able to find a way to acquire/release the lock.
+    # The problem is that the call to self.lock.acquire() is by the calling thread (eg, the command line
+    # handler), and the call to release() in the callback will be by the motion control thread in the
+    # interrupt handler (?). That release call fails, because that thread never acquired the lock.
+    # Using a non-reentrant lock instead  breaks the entire driver thread.
+    d = self.host.disable_guider()
+    return d
 
   def _get_exception_completed(self, details):
     """Called when we have any exception details after a state change.
@@ -525,12 +538,22 @@ class Driver(controller.Driver):
   def set_outputs(self, bitfield):
     """Given a 64-bit number, turn ON the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
+    # Note that this isn't threadsafe, but I haven't been able to find a way to acquire/release the lock.
+    # The problem is that the call to self.lock.acquire() is by the calling thread (eg, the command line
+    # handler), and the call to release() in the callback will be by the motion control thread in the
+    # interrupt handler (?). That release call fails, because that thread never acquired the lock.
+    # Using a non-reentrant lock instead  breaks the entire driver thread.
     d = self.host.set_outputs(bitfield)
     return d
 
   def clear_outputs(self, bitfield):
     """Given a 64-bit number, turn OFF the output bit corresponding to every bit equal to '1' in 'bitfield'.
     """
+    # Note that this isn't threadsafe, but I haven't been able to find a way to acquire/release the lock.
+    # The problem is that the call to self.lock.acquire() is by the calling thread (eg, the command line
+    # handler), and the call to release() in the callback will be by the motion control thread in the
+    # interrupt handler (?). That release call fails, because that thread never acquired the lock.
+    # Using a non-reentrant lock instead  breaks the entire driver thread.
     d = self.host.clear_outputs(bitfield)
     return d
 

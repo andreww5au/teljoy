@@ -74,13 +74,19 @@ def TJParams(status):
     tmp += trow(head("RA") + data(sexstring(status.current.Ra/15/3600)))
     tmp += trow(head("Dec") + data(sexstring(status.current.Dec/3600)))
     tmp += trow(head("Epoch") + data(str(status.current.Epoch)))
-    tmp += trow(head("Nonsid Track") + data("RA: %8.5g, DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
+    if status.current.TraRA or status.current.TraDEC:
+      tmp += trow(head('<font color="red">' + "Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)) + '</font>')
+    else:
+      tmp += trow(head("Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
   elif status.current.RaC and status.current.DecC:
     tmp += trow(head("Object ID") + data(''))
     tmp += trow(head("RA") + data(sexstring(status.current.RaC/15/3600)))
     tmp += trow(head("Dec") + data(sexstring(status.current.DecC/3600)))
     tmp += trow(head("Epoch") + data("of date"))
-    tmp += trow(head("Nonsid Track") + data("RA: %8.5g, DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
+    if status.current.TraRA or status.current.TraDEC:
+      tmp += trow(head('<font color="red">' + "Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)) + '</font>')
+    else:
+      tmp += trow(head("Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
   else:
     tmp += trow(head("Object ID") + data(''))
     tmp += trow(head("RA") + data('--'))
@@ -162,7 +168,8 @@ if __name__ == '__main__':
   msg = tjclient.Init()
   status = tjclient.status
   if not status.connected:
-    print "Error message from Teljoy client: %s" % msg
+    print "Can't connect - is Teljoy running?"
+#    print "Error message from Teljoy client: %s" % msg
 
   print data(TJParams(status))                    #Teljoy parameters
   print "<br>"

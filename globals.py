@@ -15,6 +15,7 @@ SITE = 'NZ'
 
 INIF = 'teljoy.ini'
 
+# Default position values used if we can't find teljoy.ini on startup.
 if SITE == 'NZ':
   DOBSLAT = -43.9866666667               # Lat: -43 59.2
   DOBSLONG = -170.465                    # Long: -170 27.9
@@ -22,7 +23,7 @@ else:
   DOBSLAT = -32.008083333               # Lat: -32 00 29.1
   DOBSLONG = -116.13501944               # Long: -116 08 06.07
 
-#These really are constant, unless this code is still being used thousands of years from now...
+# These really are constant, unless this code is still being used thousands of years from now...
 MSOLDY = 1.00273790931     # Mean solar day = MsolDy Mean sidereal days}
 MSIDDY = 0.99726956637     # Mean sidereal day = MSidDy mean solar days}
 DRASID = -15.04106868     # Sidereal rate, in arcseconds per SOLAR second
@@ -46,30 +47,17 @@ DTABLE = 'current'      # Table to use for current position updates - 'ncurrent'
 
 PULSE = 0.05                       # 50 milliseconds per 'frame' (sometimes referred to as a 'tick')
 
-REALMOTORS = True   # If true, we're driving the real telescope, if false, driving test motors.
-
-if REALMOTORS:
-  DIVIDER = 1   # Don't scale step values for real telescope
-  MOTOR_ACCEL = 50000     # 2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
-else:
-  DIVIDER = 20   # Scale down step values for testing with non-microstepped driver boards
-  MOTOR_ACCEL = 6000        # For test motors, this is 15 steps/frame/frame
+MOTOR_ACCEL = 50000     # 2.0 (revs/sec/sec) * 25000 (steps/rev) = 50,000 steps/sec/sec = 125 steps/frame/frame
 
 # Which paddles to simulate using press, release functions
 # DUMMYPADDLES = ['C','F']
 DUMMYPADDLES = []
-#DUMMY = ['C', 'F']  #List of paddles to  be simulated.
 
-# Which paddle the test-rig should operate (using input bits 8-15)
-TESTPADDLE = None
-#TESTPADDLE = 'C'
-
-FILTERS = ['Clear', 'Red', 'NCN', 'Blue', 'Visual', 'Infrared', 'Empty', 'Hole']
 
 CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']    # Initialisation file path
 
-LOGLEVEL_CONSOLE = logging.INFO      # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
-LOGLEVEL_LOGFILE = logging.DEBUG      # Logging level for logfile
+LOGLEVEL_CONSOLE = logging.INFO     # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
+LOGLEVEL_LOGFILE = logging.INFO      # Logging level for logfile
 LOGFILE = "/tmp/teljoy.log"
 
 # create global logger object for Facility Controller
@@ -158,14 +146,14 @@ class Position(object):
     return d
 
   def __repr__(self):
-    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra/15.0/3600, fixed=True), sexstring(self.Dec/3600, fixed=True), self.Epoch)
+    s = "<Position %s: Org=[%s, %s EQ %6.1f]>" % (self.ObjID, sexstring(self.Ra / 15.0 / 3600, fixed=True), sexstring(self.Dec / 3600, fixed=True), self.Epoch)
     return s
 
   def __str__(self):
     return "{%s}: Org=[%s, %s EQ %6.1f]" % (self.ObjID,
-                                            sexstring(self.Ra/15.0/3600,fixed=True),
-                                            sexstring(self.Dec/3600,fixed=True),
-                                            self.Epoch )
+                                            sexstring(self.Ra / 15.0 / 3600, fixed=True),
+                                            sexstring(self.Dec / 3600, fixed=True),
+                                            self.Epoch)
 
 
 class Errors(object):
@@ -221,10 +209,10 @@ class Prefs(object):
   def __init__(self):
     self.EastOfPier = CP.getboolean('Toggles', 'EastOfPier')
     self.RAsid = DRASID
-    self.FlexureOn = CP.getboolean('Toggles', 'FlexureOn')          #flexure corrections on?
-    self.HighHorizonOn = CP.getboolean('Toggles', 'HighHorizonOn')  #whether to use AltCutoffHi or AltCutoffLo
-    self.RefractionOn = CP.getboolean('Toggles', 'RefractionOn')    #refraction corr. on?
-    self.RealTimeOn = CP.getboolean('Toggles', 'RealTimeOn')      #real-time refraction and/or flexure corrections if on
+    self.FlexureOn = CP.getboolean('Toggles', 'FlexureOn')          # flexure corrections on?
+    self.HighHorizonOn = CP.getboolean('Toggles', 'HighHorizonOn')  # whether to use AltCutoffHi or AltCutoffLo
+    self.RefractionOn = CP.getboolean('Toggles', 'RefractionOn')    # refraction corr. on?
+    self.RealTimeOn = CP.getboolean('Toggles', 'RealTimeOn')      # real-time refraction and/or flexure corrections if on
     self.AltWarning = CP.getint('Alarms', 'AltWarning')
     self.AltCutoffFrom = CP.getint('Alarms', 'AltCutoffFrom')
     self.AltCutoffHi = CP.getint('Alarms', 'AltCutoffHi')
@@ -256,7 +244,7 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
   """Convert the floating point 'value' into a sexagecimal string.
      The character in 'sp' is used as a spacer between components. Useful for
      within functions, not on its own.
-     eg: sexstring(status.TJ.ObjRA,' ')
+     eg: sexstring(current.ObjRA/3600,' ')
   """
   if fixed:
     dp = 0
@@ -278,9 +266,9 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
     outs = ''
   D = int(aval)
   M = int((aval - float(D)) * 60)
-  S = (aval - float(D) - float(M)/60) * 3600
+  S = (aval - float(D) - (float(M) / 60)) * 3600
   Si = int(S)
-  Sf = round(S-Si, dp)
+  Sf = round(S - Si, dp)
   if Sf == 1.0:
     Si += 1
     if Si == 60:
@@ -293,7 +281,7 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
   outs += '%02i%s%02i%s%02i' % (D, sp, M, sp, Si)
   if dp > 0:
     fstr = ".%%0%id" % dp
-    outs += fstr % int(Sf*(10**dp))
+    outs += fstr % int(Sf * (10**dp))
   if error:
     return ''
   else:
@@ -304,9 +292,9 @@ def stringsex(value="", compressed=False):
   """Convert the sexagesimal coordinate 'value' into a floating point
      result. Handles either a colon or a space as seperator, but currently
      requires all three components (H:M:S not H:M or H:M.mmm).
-     If 'compressed' is true, then no seperator is used, and the argument
+     If 'compressed' is true, then no separator is used, and the argument
      must have all three components, two digits for deg/minutes, and optional
-     fractional seconds.
+     fractional seconds (eg '123456.78' == 12:34:56.78.
   """
   try:
     value = value.strip()
@@ -320,7 +308,7 @@ def stringsex(value="", compressed=False):
       sign = 1
       if h[0] == "-":
         sign = -1
-      return float(h) + (sign*float(m)/60.0) + (sign*float(s)/3600.0)
+      return float(h) + (sign * float(m) / 60.0) + (sign * float(s) / 3600.0)
     else:
       if value[0].isdigit():
         sign = 1
@@ -332,7 +320,7 @@ def stringsex(value="", compressed=False):
       h = value[:2]
       m = value[2:4]
       s = value[4:]
-      return (sign*float(h)) + (sign*float(m)/60.0) + (sign*float(s)/3600.0)
+      return (sign * float(h)) + (sign * float(m) / 60.0) + (sign * float(s) / 3600.0)
   except:
     return None
 
@@ -386,8 +374,7 @@ class SafetyInterlock(object):
             now = time.time()
             error = traceback.format_exc()
             self.Errors[name][now] = error
-            logger.error(
-              "Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
+            logger.error("Error in function called by safety interlock to stop the system: function %s: %s" % (name, error))
     return tag
 
   def remove_tag(self, tag=None):
@@ -409,8 +396,7 @@ class SafetyInterlock(object):
             now = time.time()
             error = traceback.format_exc()
             self.Errors[name][now] = error
-            logger.error(
-              "Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
+            logger.error("Error in function called by safety interlock to restart the system: function %s: %s" % (name, error))
         self.Active.set()
 
   def register_stopfunction(self, name, function, args=None, kwargs=None):
@@ -450,6 +436,8 @@ class SafetyInterlock(object):
 
 
 def UpdateConfig():
+  """Load the .ini file and populate the ConfigParser object with the contents.
+  """
   lCP = ConfigParser.SafeConfigParser(defaults=ConfigDefaults)
   lCPfile = lCP.read(CPPATH)
   if not lCPfile:
@@ -459,10 +447,10 @@ def UpdateConfig():
 
 ConfigDefaults = {'FlexureOn':'True', 'HighHorizonOn':'False', 'RefractionOn':'True',
                   'RealTimeOn':'True', 'AltWarning':'10', 'AltCutoffFrom':'6',
-                  'AltCutoffHi':'30', 'AltCutoffLo':'15', 'ObsLat':`DOBSLAT`, 'ObsLong':`DOBSLONG`,
-                  'EastOfPier':'False', 'Slew':`DFSLEWRATE/20`,
-                  'CoarseSet':`DFCOARSESETRATE/20`, 'FineSet':`DFFINESETRATE/20`, 'GUIDE':`DFGUIDERATE/20`,
-                  'Temp':`DFTEMP`,'Press':`DFPRESS`}
+                  'AltCutoffHi':'30', 'AltCutoffLo':'15', 'ObsLat':str(DOBSLAT), 'ObsLong':str(DOBSLONG),
+                  'EastOfPier':'False', 'Slew':str(DFSLEWRATE/20),
+                  'CoarseSet':str(DFCOARSESETRATE/20), 'FineSet':str(DFFINESETRATE/20), 'GUIDE':str(DFGUIDERATE/20),
+                  'Temp':str(DFTEMP), 'Press':str(DFPRESS)}
 
 ConfigDefaults.update( {'WaitTime':'0.5', 'MinBetween':'5', 'LogDirName':'/tmp'} )
 
@@ -474,5 +462,3 @@ prefs = Prefs()
 safety = SafetyInterlock()   # Create a safety interlock object
 
 DirtyTime = 0
-
-

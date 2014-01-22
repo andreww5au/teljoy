@@ -32,15 +32,21 @@
 
 import MySQLdb as dblib
 
+import os
+
 from globals import *
 import correct
 
+PWFILE = '~mjuo/teljoy.dbpass'
+
+
 USER = 'honcho'
-PASSWORD = ''
 if SITE == 'NZ':
   HOST = 'localhost'
+  PASSWORD = file(os.path.expanduser(PWFILE), 'r').read().strip()
 elif SITE == 'PERTH':
   HOST = 'mysql'
+  PASSWORD = ''
 DATABASE = ''
 
 

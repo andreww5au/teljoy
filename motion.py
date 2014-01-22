@@ -1,9 +1,25 @@
 
 """This module handles the low-level motion control - velocity ramping in each axis and sending 
-   velocity pairs to the motor queue for each 50ms time step. The core of this motion control
-   system is the TimeInt method of the MotorControl class, which runs in a thread checking the
-   motor queue and sending pairs of RA and DEC velocities for each 50ms 'tick' as required to 
-   keep the motor queue filled.
+   velocity pairs to the motor queue for each 50ms time step. It's handled by a single instance of the
+   'MotorControl' class, stored in a module global called 'motors'. That motor control object contains
+   two instances of the 'Axis' class, one for RA and the other for DEC.
+
+   The low-level driver (defined in the 'Driver' class in usbcon.py) handles all of the USB
+   communication, and is available here as the .Driver attribute in the MotorControl class. The motion
+   control, and most of the methods here are called asynchronously by the controller.
+
+   As each 'frame' is pulled from the internal queue on the controller card and turned into motor steps,
+   the 'enqueue_frame_available()' method is called on the MotorControl object. That function is called
+   aysnchronously, by the USB interrupt handler code in controller.py, through usbcon.Driver().
+
+   When MotorControl.enqueue_frame_available is called, that code calls getframe() on both the RA and DEC
+   'Axis' objects, and it is this getframe() method that does the hand paddle and jump velocity ramping,
+   adds the non-sidereal and sidereal track rates (if not 'Frozen'), and handles emergency stops when
+   the limits are active using the CutFrac variable.
+
+   The getframe() method on each axis returns the number of steps to travel in that axis, for that frame, and
+   these numbers are aggregated, converted to integer (aggregating any fractional part to add in on the next
+   frame), and sent to the controller.
 """
 
 import math
@@ -19,6 +35,7 @@ intthread = None
 
 log = []
 
+
 def KickStart():
   """Start the motion control thread to keep the motor queue full.
   """
@@ -30,44 +47,44 @@ def KickStart():
   intthread.start()
 
 
-
-
-
-
 class Axis(object):
   """Represents the motor control flags and variables controlling motion on
-     a single axis. Replaces RA_variable and DEC_variable type attributes of the
-     MotorControl class.
+     a single axis. The getframe() method is called asynchronously by the USB
+     interrupt handling thread when there is an empty spot in the input queue on
+     the controller board, and that in turns calls CalcJump and CalcPaddle to
+     do the velocity ramping for each type of motion.
   """
   def __init__(self, sidereal=0.0):
     """Set up empty attributes for a new axis record.
     """
-    self.sidereal = sidereal   #Sidereal rate for this axis (prefs.RAsid for RA, 0.0 for DEC)
-    self.up = 0                #number of 50ms ticks to ramp motor to max velocity for slew
-    self.down = 0              #number of 50ms ticks to ramp motor down after slew
-    self.plateau = 0           #number of 50ms ticks in the plateau of a slew
-    self.track = 0.0           #Current Non-Sidereal tracking velocity for moving targets in steps/50ms
-    self.add_vel = 0.0         #accelleration for slews in steps/50ms/50ms
-    self.max_vel = 0.0         #plateau velocity in steps/50ms for current slew
+    self.sidereal = sidereal   # Sidereal rate for this axis (prefs.RAsid for RA, 0.0 for DEC)
+    self.up = 0                # number of 50ms ticks to ramp motor to max velocity for slew
+    self.down = 0              # number of 50ms ticks to ramp motor down after slew
+    self.plateau = 0           # number of 50ms ticks in the plateau of a slew
+    self.track = 0.0           # Current Non-Sidereal tracking velocity for moving targets in steps/50ms
+    self.add_vel = 0.0         # acceleration for slews in steps/50ms/50ms
+    self.max = 0.0             # Maximum velocity reached so far on ramp up, saved in case the jump is too short for a plateau
+    self.max_vel = 0.0         # plateau velocity in steps/50ms for current slew
 
-    self.jump = 0.0            #Current slew velocity in steps/50ms, calculated by self.CalcJump or self.CalcPaddle for each tick
-    self.remain = 0.0          #remainder after calculating ramp profile - used in telescope jump
-    self.finish = True         #False if a jump (not paddle motion) is in progress for this axis
-    self.Paddle_start = False  #True if hand-paddle motion for this axis is ramping up or or reached plateau velocity (button pressed)
-    self.Paddle_stop = False   #True if hand-paddle motion for this axis is ramping down (button just released)
-    self.scl = 0               #How many ticks we have been decelerating for on the ramp down from a slew in this axis
-    self.refraction = 0.0      #Non sidereal trackrate used to correct for atmospheric refraction and telescope flexure - steps/50m
-    self.padlog = 0.0          #Accumulated motion from hand paddle movement
-    self.reflog = 0            #Accumulated motion from refraction tracking
-    self.guidelog = 0          #Accumulated motion from autoguider
-    self.hold = 0              #These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
-    self.frac = 0.0            #These store the accumulated fractional ticks, left over from previous frames
-    self.Jumping = False       #True if a pre-calculated slew is in progress for this axis.
-    self.Paddling = False      #True if hand-paddle motion is in progress for this axis
+    self.jump = 0.0            # Current slew velocity in steps/50ms, calculated by self.CalcJump or self.CalcPaddle for each tick
+    self.remain = 0.0          # remainder after calculating ramp profile - used in telescope jump
+    self.finish = True         # False if a jump (not paddle motion) is in progress for this axis
+    self.Paddle_start = False  # True if hand-paddle motion for this axis is ramping up or or reached plateau velocity (button pressed)
+    self.Paddle_stop = False   # True if hand-paddle motion for this axis is ramping down (button just released)
+    self.scl = 0               # How many ticks we have been decelerating for on the ramp down from a slew in this axis
+    self.refraction = 0.0      # Non sidereal trackrate used to correct for atmospheric refraction and telescope flexure - steps/50m
+    self.padlog = 0.0          # Accumulated motion from hand paddle movement
+    self.reflog = 0            # Accumulated motion from refraction tracking
+    self.guidelog = 0          # Accumulated motion from autoguider since the last time detevent.currentUpdatePosition read and cleared this variable
+    self._guidersteps_last = 0  # Previous value for the accumulated guider steps value in Driver.counters for this axis.
+    self.hold = 0              # These are used to delay a velocity value by 50ms (so we can insert a zero velocity frame)
+    self.frac = 0.0            # These store the accumulated fractional ticks, left over from previous frames
+    self.Jumping = False       # True if a pre-calculated slew is in progress for this axis.
+    self.Paddling = False      # True if hand-paddle motion is in progress for this axis
     self.lock = threading.RLock()
 
   def __repr__(self):
-    mesg =  "  <Axis: Sidereal=%f\n" % self.sidereal
+    mesg = "  <Axis: Sidereal=%f\n" % self.sidereal
     flags = []
     if self.Paddling:
       if self.Paddle_start:
@@ -87,7 +104,8 @@ class Axis(object):
     return mesg
 
   def __getstate__(self):
-    """Can't pickle the lock object when saving state
+    """This object is 'pickled' when sending it over the wire via Pyro4, and we only want to pickle attributes,
+       not functions.
     """
     d = self.__dict__.copy()
     del d['lock']
@@ -108,22 +126,22 @@ class Axis(object):
        well as hand-paddle motion, so these actions can not be carried out simultaneously.
     """
     with self.lock:
-      if self.Paddle_start:               #if RA Button pressed
-        if self.up > 0:                   #if still accelerating
-          self.jump += self.add_vel       #Increase current velocity
-          self.up -= 1                    #Count down to the end of the acceleration time
-          self.down += 1                  #Keep track of how many ticks we've accelerated for
+      if self.Paddle_start:               # if RA Button pressed
+        if self.up > 0:                   # if still accelerating
+          self.jump += self.add_vel       # Increase current velocity
+          self.up -= 1                    # Count down to the end of the acceleration time
+          self.down += 1                  # Keep track of how many ticks we've accelerated for
         else:
-          self.jump = self.max_vel        #Reached max velocity, continue till paddle button released
+          self.jump = self.max_vel        # Reached max velocity, continue till paddle button released
 
-      if self.Paddle_stop:                #if RA Button has just been released
-        if self.down > 0:                 #if still decelerating
-          self.jump -= self.add_vel       #Decrease current velocity
-          self.down -= 1                  #Count down to the end of the deceleration time
+      if self.Paddle_stop:                # if RA Button has just been released
+        if self.down > 0:                 # if still decelerating
+          self.jump -= self.add_vel       # Decrease current velocity
+          self.down -= 1                  # Count down to the end of the deceleration time
         else:
-          self.jump = 0.0                 #Set velocity to zero
-          self.Paddle_stop = False        #Flag that we have finished decelerating
-          self.Paddle_start = False       #Flag that we aren't accelerating either
+          self.jump = 0.0                 # Set velocity to zero
+          self.Paddle_stop = False        # Flag that we have finished decelerating
+          self.Paddle_start = False       # Flag that we aren't accelerating either
           self.Paddling = False
 
   def CalcJump(self):
@@ -142,24 +160,24 @@ class Axis(object):
        well as hand-paddle motion, so these actions can not be carried out simultaneously.
     """
     with self.lock:
-      if self.up > 0:                  #If we are ramping up
+      if self.up > 0:                  # If we are ramping up
         self.jump += self.add_vel   # Increase current velocity
         self.max = self.jump        # Save maximum velocity so far, in case slew is too short to have plateau
         self.up -= 1                   # Count down to the end of the acceleration time
       else:
-        if self.plateau > 0:           #If we've reached the plateau phase
+        if self.plateau > 0:           # If we've reached the plateau phase
           self.jump = self.max_vel  # Reached plateau, set constant velocity
           self.plateau -= 1            # Count down to the end of the plateau time
-        else:                            #Not ramping up or plateauing
-          if self.down > 0:            #if ramping down
-            self.jump = self.max - self.scl*self.add_vel    #decrease velocity
+        else:                            # Not ramping up or plateauing
+          if self.down > 0:            # if ramping down
+            self.jump = self.max - (self.scl * self.add_vel)    # decrease velocity
             self.down -= 1             # count down to the end of the deceleration time
             self.scl += 1              # count the number of ticks we've been decelerating for
-          else:                          #Finished jump in this axis
-            self.jump = 0.0            #Set jump velocity to zero
-            self.remain = 0            #Disable 'fudge velocity' used to store remainder of steps from profile during jump
-            self.scl = 0               #Clear deceleration counter
-            self.Jumping = False       #Flag end of jump in this axis
+          else:                          # Finished jump in this axis
+            self.jump = 0.0            # Set jump velocity to zero
+            self.remain = 0            # Disable 'fudge velocity' used to store remainder of steps from profile during jump
+            self.scl = 0               # Clear deceleration counter
+            self.Jumping = False       # Flag end of jump in this axis
 
   def StartJump(self, delta, Rate):
     """This procedure calculates the profile parameters and starts a telescope jump
@@ -169,12 +187,12 @@ class Axis(object):
        'Rate', the peak velocity in steps/second. Returns None.
 
        Outputs are the following attributes:
-          self.up, self.down       #ramp up/down time in ticks
-          self.plateau             #time in ticks to stay at max velocity
-          self.max_vel             #plateau velocity in steps/tick
-          self.add_vel             #ramp accell/decell in steps/tick/tick
-          self.remain              #Used to spread out 'leftover' slew pulses over entire slew duration
-          self.Jumping             #Set to True to start slew
+          self.up, self.down       # ramp up/down time in ticks
+          self.plateau             # time in ticks to stay at max velocity
+          self.max_vel             # plateau velocity in steps/tick
+          self.add_vel             # ramp accell/decell in steps/tick/tick
+          self.remain              # Used to spread out 'leftover' slew pulses over entire slew duration
+          self.Jumping             # Set to True to start slew
 
        A jump has three components: the ramp up, the plateau and the ramp
        down. The size of the jump, the acceleration  and the maximum velocity
@@ -188,22 +206,22 @@ class Axis(object):
       return True
     with self.lock:
       #calculate max_vel.
-      max_vel = abs(Rate)*PULSE            #unsigned value steps/pulse
+      max_vel = abs(Rate) * PULSE            # unsigned value steps/pulse
 
-      #number of time pulses in the ramp up.
-      ramp_time = abs(float(Rate))/MOTOR_ACCEL     #MOTOR_ACCEL is in steps/sec/sec
-      num_pulses = math.trunc(ramp_time/PULSE)
+      # number of time pulses in the ramp up.
+      ramp_time = abs(float(Rate)) / MOTOR_ACCEL     # MOTOR_ACCEL is in steps/sec/sec
+      num_pulses = math.trunc(ramp_time / PULSE)
 
       if num_pulses > 0:
-        #speed increment per time pulse in motor steps/pulse:
-        add_to_vel = max_vel/num_pulses
-        #The number of motor steps in a ramp:
-        num_ramp_steps = add_to_vel*(num_pulses*num_pulses/2.0+num_pulses/2.0)
+        # speed increment per time pulse in motor steps/pulse:
+        add_to_vel = max_vel / num_pulses
+        # The number of motor steps in a ramp:
+        num_ramp_steps = add_to_vel * ((num_pulses * num_pulses / 2.0) + (num_pulses / 2.0))
       else:
         add_to_vel = max_vel
         num_ramp_steps = 0
 
-      #Account for the direction of the jump.
+      # Account for the direction of the jump.
       if delta < 0:
         self.add_vel = -add_to_vel
         self.max_vel = -max_vel
@@ -213,38 +231,38 @@ class Axis(object):
         self.max_vel = max_vel
         sign = 1.0
 
-      #Calculate the ramp and plateau values.
+      # Calculate the ramp and plateau values.
       if delta == 0.0:
-        #no jump
+        # no jump
         self.up = 0
         self.down = 0
         self.plateau = 0
         self.remain = 0
         self.Jumping = False
-      elif abs(delta) < 2.0*abs(self.add_vel):
-        #Small jump - add delta to self.hold.
+      elif abs(delta) < (2.0 * abs(self.add_vel)):
+        # Small jump - add delta to self.hold.
         self.up = 0
         self.down = 0
         self.plateau = 0
         self.remain = 0
         self.Jumping = False
         self.hold += delta
-      elif abs(delta) > 2.0*num_ramp_steps:
-        #Jump is large enough to reach max velocity - has a Plateau
+      elif abs(delta) > (2.0 * num_ramp_steps):
+        # Jump is large enough to reach max velocity - has a Plateau
         self.up = num_pulses
         self.down = num_pulses
-        steps_plateau = delta - 2.0*num_ramp_steps*sign
-        pulses_plateau = steps_plateau /self.max_vel
-        self.plateau = math.trunc(pulses_plateau)      #number of pulses in the plateau
-        sum_of_pulses = self.up*2 + self.plateau
-        self.remain = (steps_plateau-self.plateau*self.max_vel)/sum_of_pulses
+        steps_plateau = delta - (2.0 * num_ramp_steps * sign)
+        pulses_plateau = steps_plateau / self.max_vel
+        self.plateau = math.trunc(pulses_plateau)      # number of pulses in the plateau
+        sum_of_pulses = (self.up * 2) + self.plateau
+        self.remain = (steps_plateau - (self.plateau * self.max_vel)) / sum_of_pulses
         self.Jumping = True
       else:
-        #Jump is to short to reach max velocity - no plateau
+        # Jump is to short to reach max velocity - no plateau
         ramp_pulses_part = 0
         num_steps_hold = abs(delta)
         while True:
-          steps_used = 2.0*add_to_vel*(ramp_pulses_part+1)
+          steps_used = 2.0 * add_to_vel * (ramp_pulses_part + 1)
           num_steps_hold -= steps_used
           if num_steps_hold < 0.0:
             num_steps_hold += steps_used
@@ -254,8 +272,8 @@ class Axis(object):
         self.up = ramp_pulses_part
         self.down = ramp_pulses_part
         self.plateau = 0
-        sum_of_pulses = self.up*2
-        self.remain = (num_steps_hold*sign)/sum_of_pulses
+        sum_of_pulses = self.up * 2
+        self.remain = (num_steps_hold * sign) / sum_of_pulses
         self.Jumping = True
 
   def StartPaddle(self, Rate):
@@ -280,15 +298,15 @@ class Axis(object):
         logger.debug('motion.Axis.StartPaddle called when this axis is already in motion.')
         return False
 
-      #number of pulses in ramp_up
-      ramp_time = abs(float(Rate))/MOTOR_ACCEL
-      num_pulses = math.trunc(ramp_time/PULSE)
-      #maximum velocity in motor steps per pulse
-      max_vel = Rate*PULSE
+      # number of pulses in ramp_up
+      ramp_time = abs(float(Rate)) / MOTOR_ACCEL
+      num_pulses = math.trunc(ramp_time / PULSE)
+      # maximum velocity in motor steps per pulse
+      max_vel = Rate * PULSE
 
-      #Increment velocity ramp by add_to_vel -  also error trap for num_pulses=0
+      # Increment velocity ramp by add_to_vel -  also error trap for num_pulses=0
       if num_pulses > 0:
-        add_to_vel = max_vel/num_pulses
+        add_to_vel = max_vel / num_pulses
       else:
         add_to_vel = 0
 
@@ -299,7 +317,7 @@ class Axis(object):
       self.Paddle_stop = False
       self.max_vel = max_vel
       self.add_vel = add_to_vel
-      self.Paddling = True               #signal telescope in motion in this axis
+      self.Paddling = True               # signal telescope in motion in this axis
       return True
 
   def StopPaddle(self):
@@ -308,8 +326,8 @@ class Axis(object):
        the hand-paddle button is released. Returns None.
 
        Outputs are the following attributes:
-        self.Paddle_start                      #True when button pressed - indicates ramp up or plateau
-        self.Paddle_stop                       #True when button just released, indicates ramp down in progress
+        self.Paddle_start                      # True when button pressed - indicates ramp up or plateau
+        self.Paddle_stop                       # True when button just released, indicates ramp down in progress
     """
     with self.lock:
       self.Paddle_start = False
@@ -323,51 +341,47 @@ class Axis(object):
     """
     with self.lock:
 
-      #MIX VELOCITIES for next pulse - sidereal rate, motion profile velocities, non-sidereal and refraction tracking
-      #Start with sidereal rate, or zero if frozen
+      # MIX VELOCITIES for next pulse - sidereal rate, motion profile velocities, non-sidereal and refraction tracking
+      # Start with sidereal rate, or zero if frozen
       if Frozen:
-        send = 0.0                      #No sidereal motion, but:
-        self.padlog -= self.sidereal    #Log fictitious backwards paddle motion instead of sidereal tracking (changes current sky coordinates)
+        send = 0.0                      # No sidereal motion, but:
+        self.padlog -= self.sidereal    # Log fictitious backwards paddle motion instead of sidereal tracking (changes current sky coordinates)
       else:
-        send = self.sidereal            #Start with sidereal rate in RA
+        send = self.sidereal            # Start with sidereal rate in RA
 
-      #Add in telescope jump or paddle motion velocities
-      if self.Jumping:      #If currently moving in a profiled (ramp-up/plateau/ramp-down) jump
-        self.CalcJump()      #Use jump profile attributes to calculate RA_jump and DEC_jump for this tick
+      # Add in telescope jump or paddle motion velocities
+      if self.Jumping:      # If currently moving in a profiled (ramp-up/plateau/ramp-down) jump
+        self.CalcJump()      # Use jump profile attributes to calculate RA_jump and DEC_jump for this tick
         send += self.jump + self.remain
-      elif self.Paddling:                  #We aren't in a profiled jump
-        self.CalcPaddle()            #Use paddle move profile attributes to calculate RA_jump and DEC_jump for this tick, if any
+      elif self.Paddling:                  # We aren't in a profiled jump
+        self.CalcPaddle()            # Use paddle move profile attributes to calculate RA_jump and DEC_jump for this tick, if any
         send += self.jump
-        self.padlog += self.jump     #Log jump motion as paddle movement
+        self.padlog += self.jump     # Log jump motion as paddle movement
       else:
-        #If we're not slewing and not Frozen, add refraction motion, autoguider motion and non-sidereal tracking, for this tick
+        # If we're not slewing and not Frozen, add refraction motion, autoguider motion and non-sidereal tracking, for this tick
         if not Frozen:
-          send += self.refraction         #Add in refraction correction velocity
-          self.reflog += self.refraction     #Log refraction correction motion
-          send += self.track            #Add in non-sidereal motion for moving targets
-          self.padlog += self.track     #Log non-sidereal motion as paddle movement
-
-      # TODO - handle autoguider log here, using counter data?
-
-      send = send / DIVIDER     # TODO - remove this hack for use on the actual telescope, only needed for test motors.
+          send += self.refraction         # Add in refraction correction velocity
+          self.reflog += self.refraction     # Log refraction correction motion
+          send += self.track            # Add in non-sidereal motion for moving targets
+          self.padlog += self.track     # Log non-sidereal motion as paddle movement
 
       #Add any 'held' values for this axis, containing small offsets that can bypass the ramp calculations
-      if self.hold <> 0:
+      if self.hold != 0:
         send += self.hold
         self.hold = 0
 
-      self.padlog -= send * (CutFrac/100.0)   # Subtract the cut portion of motion  this frame from the paddle log
-      send = send * (1-CutFrac/100.0)
+      self.padlog -= send * (CutFrac / 100.0)   # Subtract the cut portion of motion  this frame from the paddle log
+      send *= (1 - (CutFrac / 100.0))
 
       #Break final velocity for this tick into integer & fraction
       fracpart, int_send = math.modf(send)
-      self.frac += fracpart    #Accumulate the fractional part
-      #if the absolute value of the accumulated self.frac is greater than 1.0, update int_send
+      self.frac += fracpart    # Accumulate the fractional part
+      # if the absolute value of the accumulated self.frac is greater than 1.0, update int_send
       if abs(self.frac) > 1.0:
         int_send += math.trunc(self.frac)
         self.frac -= math.trunc(self.frac)
 
-      #Now send it to the controller queue!
+      # Now send it to the controller queue!
       return int_send
 
 
@@ -378,26 +392,30 @@ class MotorControl(object):
   """
   def __init__(self, limits=None):
     logger.debug('motion.MotorControl.__init__: Initializing Global variables')
-    self.Jumping = False        #True if a 'Jump' (precalculated slew) is in progress for either axis
-    self.Paddling = False       #True if hand-paddle movement is in progress for either axis
-    self.Moving = False         #True if the telescope is moving (other than sidereal, non-sidereal offset, flexure and refraction tracking)
-    self.PosDirty = False       #Set to True when a move (jump or paddle) finishes, to indicate move has finished. Reset to False by detevent.
-    self.ticks = 0              #Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
-    self.Frozen = False         #If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
+    self.Jumping = False        # True if a 'Jump' (precalculated slew) is in progress for either axis
+    self.Paddling = False       # True if hand-paddle movement is in progress for either axis
+    self.Moving = False         # True if the telescope is moving (other than sidereal, non-sidereal offset, flexure and refraction tracking)
+    self.PosDirty = False       # Set to True when a move (jump or paddle) finishes, to indicate move has finished. Reset to False by detevent.
+    self.ticks = 0              # Counts time since startup in ms. Increased by 50 as each velocity value is calculated and sent to the queue.
+    self.Frozen = False         # If set to true, sidereal and non-sidereal tracking disabled. Slew and hand paddle motion not affected
     self.RA = Axis(sidereal=prefs.RAsid)
     self.DEC = Axis()
     self.limits = limits
     self.lock = threading.RLock()
     self.Driver = None
     self.CutFrac = 0            # Fraction of steps to throw away during emergency stop - 0 (none) to 100 (100%)
+    self.Autoguiding = False    # True if the autoguider has been enabled
+    self._guidelogfile = None       # File to log guide motion to
     logger.debug('motion.MotorControl.__init__: finished global vars')
 
   def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
+    """This object is 'pickled' when sending it over the wire via Pyro4, and we only want to pickle attributes,
+       not functions.
     """
     d = {}
-    for n in ['Jumping','Paddling','Moving','PosDirty','ticks','Frozen']:
+    for n in ['Jumping', 'Paddling', 'Moving', 'PosDirty', 'ticks', 'Frozen', 'Autoguiding']:
       d[n] = self.__dict__[n]
+    d['guidelog'] = (self.RA.guidelog, self.DEC.guidelog)
     return d
 
   def __repr__(self):
@@ -419,6 +437,28 @@ class MotorControl(object):
     mesg += '>\n'
     return mesg
 
+  def Autoguide(self, on):
+    """If the argument 'on' is True, turn the autoguider mode on, and start logging the
+       guider steps taken. If the the argument is False, turn the autoguider mode off.
+    """
+    if on and not (self.Autoguiding):
+      self._guidelogfile = file(prefs.LogDirName + '/guider.log', 'a')
+      self.Driver.enable_guider()
+      self._guidelogfile.write('%f ON\n' % time.time())
+      self._guidelogfile.flush()
+      with self.RA.lock:
+        self.RA._guidelog_last = 0
+      with self.DEC.lock:
+        self.DEC._guidelog_last = 0
+      self.Autoguiding = True
+    elif (not on) and (self.Autoguiding):
+      self.Driver.disable_guider()
+      self._guidelogfile.write('%f OFF\n' % time.time())
+      self._guidelogfile.close()
+      self.Autoguiding = False
+    else:   # tried to turn it off when it's already off, or on when it's already on.
+      pass
+
   def Jump(self, delRA, delDEC, Rate, force=False):
     """This procedure calculates the profile parameters for a telescope jump.
     
@@ -427,8 +467,8 @@ class MotorControl(object):
 
        Calls RA.StartJump() and DEC.StartJump to start the slews in each axis
     """
-    #Determine motor speeds and displacements.
-    #If slewing (paddle or Jump) exit and return True as an error
+    # Determine motor speeds and displacements.
+    # If slewing (paddle or Jump) exit and return True as an error
     if (self.Jumping or self.Paddling):
       logger.error('motion.MotorControl.Jump called while telescope is already moving')
       return True
@@ -441,13 +481,20 @@ class MotorControl(object):
       logger.error('ERROR: motion.motors.Jump called when safety interlock is on')
 
   def getframe(self):
-    """
+    """Called asynchrnously by driver (in USB comms thread) whenever a spot in the controller input
+       queue opens up ready for a new frame. This averages 20 times per second while the system is running,
+       but can be much slower (if the system is busy) or much faster (while the queue is being re-filled if it
+       is allowed to become (almost) empty.
+
+       This method calls .getframe() on each of the axis objects, truncates the results to a pair of
+       integers (holding over any fractional part for next time), sets various flags, and sends the
+       pair of numbers to the controller.
     """
     if SITE == 'NZ':
       ovrd = self.limits.LimOverride
       if self.limits.PowerOff or self.limits.HorizLim or self.limits.MeshLim:
         ovrd = False     # Only allow east and west limits to be overriden
-      if self.limits.HWLimit and (not ovrd) and (self.CutFrac<100):
+      if self.limits.HWLimit and (not ovrd) and (self.CutFrac < 100):
         self.CutFrac += 10
       if (not self.limits.HWLimit) or ovrd:
         self.CutFrac = 0
@@ -463,18 +510,29 @@ class MotorControl(object):
     self.Moving = (self.Paddling or self.Jumping)
 
     if was_moving and (not self.Moving):
-      self.PosDirty = True                     #Flag that the log file position needs to be updated
+      self.PosDirty = True                     # Flag that the log file position needs to be updated
       with self.RA.lock:
-        self.RA.reflog = 0                       #Zero the refraction/flexure tracking log
+        self.RA.reflog = 0                       # Zero the refraction/flexure tracking log
       with self.DEC.lock:
-        self.DEC.reflog = 0                      #Zero the refraction/flexure tracking log
+        self.DEC.reflog = 0                      # Zero the refraction/flexure tracking log
 
     if prefs.EastOfPier:
-      int_DEC = -int_DEC      #Invert DEC direction if tel. east of pier
+      int_DEC = -int_DEC      # Invert DEC direction if tel. east of pier
 
-    #Now send word_RA and word_DEC to the controller queue!
+    # Now send word_RA and word_DEC to the controller queue!
     return (int_RA, int_DEC)
 
+  def newcounters(self, counters):
+    """Called aynchronously whenever new counter data is available from the controller
+       hardware. Updates the autoguider logs.
+    """
+    with self.RA.lock:
+      self.RA.guidelog += counters.a_guider_steps - self.RA._guidersteps_last
+      self.RA._guidersteps_last = counters.a_guider_steps
+
+    with self.DEC.lock:
+      self.DEC.guidelog += counters.b_guider_steps - self.DEC._guidersteps_last
+      self.DEC._guidersteps_last = counters.b_guider_steps
 
 
 def RunQueue():
@@ -490,7 +548,7 @@ def RunQueue():
     try:
       oldmotors = motors    # Keep a  reference to the old object around, in case it takes time to clean itself up on exit
       motors = MotorControl(limits=limits)
-      motors.Driver = usbcon.Driver(getframe=motors.getframe, limits=limits)
+      motors.Driver = usbcon.Driver(getframe=motors.getframe, newcounters=motors.newcounters, limits=limits)
       motors.Driver.run()
     except:
       print "controller.Controller.stop() was called with an exception:"
@@ -503,4 +561,3 @@ def RunQueue():
 
 limits = None
 motors = None
-

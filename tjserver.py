@@ -2,6 +2,8 @@
 """
 
 import Pyro4
+
+import os
 import threading
 import time
 import traceback
@@ -12,12 +14,16 @@ import detevent
 import motion
 if SITE == 'NZ':
   import nzdome as dome
+  TESTHOST = 'www.canterbury.ac.nz'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 else:
   import pdome as dome
+  TESTHOST = 'www.google.com.au'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
 import utils
 
-#hmac = "ShiverMeTimbers"
-#Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
+KEYFILE = '~mjuo/teljoy.pyrokey'
+
+hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()
+Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696
 
@@ -34,7 +40,7 @@ class Telescope(object):
       try:
         ns = Pyro4.locateNS()
       except:
-        logger.info("Can't locate Pyro nameserver - continuing on port %d" % PYROPORT)
+        logger.debug("Can't locate Pyro nameserver - continuing on port %d" % PYROPORT)
         ns = None
 
       try:
@@ -44,7 +50,7 @@ class Telescope(object):
         logger.info("Previous Pyro daemon socket port: %d" % existing.port)
         # start the daemon on the previous port, and try to detect the IP address of an external interface.
         try:
-          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('google.com.au'), port=existing.port)
+          pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress(TESTHOST), port=existing.port)
         except:   # Fails if the above DNS name isn't found, eg no internet connection
           pyro_daemon = Pyro4.Daemon(port=existing.port)   # Bind to the loopback address if we can't find an external interface
         # register the object in the daemon with the old objectId
@@ -58,7 +64,7 @@ class Telescope(object):
             pyro_daemon = Pyro4.Daemon(port=PYROPORT)     # Bind to the loopback address if we can't find an external interface
           # register the object in the daemon and let it get a new objectId
           # also need to register in name server because it's not there yet.
-          uri =  pyro_daemon.register(self)
+          uri =  pyro_daemon.register(self, objectId='Teljoy')
           if ns is not None:
             ns.register("Teljoy", uri)
         except:
@@ -132,6 +138,16 @@ class Telescope(object):
     """
     detevent.current.Offset(ora=ora, odec=odec)
     return "Moved small offset distance: %4.1f,%4.1f" % (ora,odec)
+
+  def autoguide(self, on):
+    """Turn the autoguider mode on or off.
+    """
+    if on:
+      motion.motors.Autoguide(True)
+      return "Autoguiding turned ON"
+    else:
+      motion.motors.Autoguide(False)
+      return "Autoguiding turned OFF"
 
   def freeze(self):
     """Freeze the telescope

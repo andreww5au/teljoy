@@ -10,11 +10,11 @@ if (len(sys.argv) < 2) or sys.argv[1] in ["-h", "--h", "--help"]:
   print "       %s <ra> <dec>      or" % sys.argv[0]
   print "       %s <ra> <dec> <epoch>" % sys.argv[0]
   print
-  print "Jumps the telescope to the specified object or position."
+  print "Resets the telescope coordinates to the specified object or position."
   print
   print "If one argument is given, it's assumed to be an object name. It's"
   print "looked up (in the local database, solar system ephemeris, and "
-  print "SIMBAD/NED/Vizier online) and used as a target."
+  print "SIMBAD/NED/Vizier online) and used as the current coordinates."
   print
   print "If two arguments are given, they are assumed to be RA and Dec, in "
   print "J2000 coordinates."
@@ -42,6 +42,6 @@ else:
   s = tjclient.status
 
   try:
-    print tjclient.jump(*sys.argv[1:])
+    print tjclient.reset(*sys.argv[1:])
   except:
     print "".join(Pyro4.util.getPyroTraceback())

@@ -36,6 +36,8 @@ def Lookup(objid=''):
      anywhere else that seems reasonable. Return a position object for that name,
      or None if it can't be found. Try both the name as given, and if that fails,
      the name converted to all upper case.
+
+     This function is intended to be called manually, by the user at the command line.
   """
   obj = sqlint.GetObject(name=objid)
 
@@ -55,6 +57,8 @@ def Lookup(objid=''):
 def GetSesame(name=''):
   """Given an object name, use the Sesame web service to look up the object in
      SIMBAD, Vizier, and NED. Returns a position object.
+
+     This function is intended to be called manually, by the user at the command line.
   """
   try:
     data = urllib2.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib2.quote(name)).read()
@@ -134,13 +138,13 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
     return pclass(ra=ra, dec=dec, epoch=epoch, objid=objid, domepos=domepos)
 
   if len(args) == 0:
-    if type(objid) == str:
-      return Lookup(objid=objid)
+    if type(objid) in [str, unicode]:
+      return Lookup(objid=str(objid))
     else:
       return None
   elif len(args) == 1:
-    if type(args[0]) == str:
-      return Lookup(objid=args[0])
+    if type(args[0]) in [str, unicode]:
+      return Lookup(objid=str(args[0]))
     else:
       return None
   elif len(args) == 2:
@@ -148,7 +152,11 @@ def ParseArgs(args, kws, pclass=correct.CalcPosition):
       epoch = 2000.0
     return pclass(ra=args[0], dec=args[1], epoch=epoch, objid=objid, domepos=domepos)
   elif len(args) == 3:
-    return pclass(ra=args[0], dec=args[1], epoch=args[2], objid=objid, domepos=domepos)
+    try:
+      epoch = float(args[2])
+    except:
+      epoch = 2000
+    return pclass(ra=args[0], dec=args[1], epoch=epoch, objid=objid, domepos=domepos)
 
   return None
 
@@ -164,6 +172,12 @@ p = Pos
 
 
 def jump(*args, **kws):
+  """Jump the telescope to a new object, specified by an obect name string, or ra=, dec= and epoch= arguments,
+     where ra and dec can be strings (containing H:M:S or D:M:S values) or numbers.
+
+
+       This function is intended to be called manually, by the user at the command line.
+  """
   if 'force' in kws.keys():
     force = kws['force']
   else:
@@ -193,6 +207,9 @@ def reset(*args, **kws):
      'ra' and 'dec' can be sexagesimal strings (in hours:minutes:seconds for RA and degrees:minutes:seconds
      for DEC), or numeric values (fractional hours for RA, fractional degrees for DEC). Epoch is in decimal 
      years, and objid is an optional short string with an ID.
+
+     This function is intended to be called manually, by the user at the command line.
+
   """
   ob = Pos(*args, **kws)
   if ob is None:
@@ -207,23 +224,29 @@ Reset = reset
 
 def offset(ora, odec):
   """Make a tiny slew from the current position, by ora,odec arcseconds.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   detevent.current.Offset(ora=ora, odec=odec)
-  logger.info("Moved small offset distance: %4.1f,%4.1f" % ora, odec)
+  logger.info("Moved small offset distance: %4.1f,%4.1f" % (ora, odec))
 
 
 Offset = offset
 
 
 def freeze(force=False):
-  """Freeze the telescope
+  """Freeze the telescope. Stops all sidereal and non-sidereal tracking, but maintain position accuracy.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   motion.motors.Frozen = True
   logger.info("Telescope frozen")
 
 
 def unfreeze(force=False):
-  """Un-Freeze the telescope
+  """Un-Freeze the telescope. Resume tracking.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   if not safety.Active.is_set():
     if not force:
@@ -235,12 +258,39 @@ def unfreeze(force=False):
   logger.info("Telescope un-frozen")
 
 
+def domecal():
+  """Call this function when the dome is pointing due North. It will calculate a
+     current value for the dome encoder offset, and set the current encoder offset
+     in the dome object.
+
+       This function is intended to be called manually, by the user at the command line.
+  """
+  print "Assuming dome is due north!"
+  azi = dome.getDomeAzi()
+  enc = int(azi*256.0/360.0)
+  enc -= dome.EncoderOffset
+  if enc < 0:
+    enc += 256
+  if enc > 255:
+    enc -= 256
+  print "Raw dome encoder value = %d" % enc
+  newoff = -enc
+  if newoff > 128:
+    newoff -= 256
+  if newoff < -128:
+    newoff += 256
+  print "Setting dome encoder offset to %d" % newoff
+  dome.EncoderOffset = newoff
+
+
 def shutdown():
   """Go through a telescope and dome shutdown - move the telescope to the cap replacement
      position and rotate the dome to the park position.
 
      Then wait for a keypress indicating that the cap is on, and move the telescope to the
      STOW position, while closing the chutter.
+
+       This function is intended to be called manually, by the user at the command line.
   """
   print "About to shut down the system and close+park the dome - are you sure?"
   ans = raw_input()
@@ -249,19 +299,20 @@ def shutdown():
     return
   if not dome.AutoDome:
     print "Dome not in automatic mode - can't park dome or close shutter"
-  jump(CAP, force=True)
-  print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
-  ans = raw_input()
-  if dome.AutoDome:
-    while dome.DomeInUse:
-      print "Waiting for dome to finish moving..."
-      time.sleep(2)
-    print "Closing dome."
-    dome.close(force=True)
+  if SITE == 'PERTH':
+    jump(CAP, force=True)
+    print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
+    ans = raw_input()
+    if dome.AutoDome:
+      while dome.DomeInUse:
+        print "Waiting for dome to finish moving..."
+        time.sleep(2)
+      print "Closing dome."
+      dome.close(force=True)
   jump(STOW, force=True)
   time.sleep(2)
   while motion.motors.Moving or dome.DomeInUse:
-    print "Waiting for telescope to park and shutter to close."
+    print "Waiting for telescope to park and dome to finish moving."
     time.sleep(5)
   sys.exit()
 

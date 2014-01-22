@@ -52,7 +52,8 @@ elif SITE == 'NZ':
 #from digio import press, release, cslew, cset
 from utils import *
 import tjserver
-import weather
+if SITE == 'PERTH':
+  import weather
 import pyephem
 
 SIGNAL_HANDLERS = {}
@@ -171,7 +172,8 @@ def i():
 if __name__ == '__main__':
   LastDome = None    # State of the dome.IsShutterOpen boolean, saved during safety shutdowns
   LastFrozen = None  # State of the motion.motors.Frozen boolean, saved during safety shutdowns
-  weather.Init()    #Initialise weather package, including SQL connection
+  if SITE == 'PERTH':
+    weather.Init()    #Initialise weather package, including SQL connection
   motion.KickStart()
   time.sleep(0.2)  # Wait for motion control to start up
   m = motion.motors
