@@ -1,0 +1,287 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module usbcon</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>usbcon</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/usbcon.py">/home/andrew/PyDevel/teljoy/usbcon.py</a></font></td></tr></table>
+    <p><tt>Low&nbsp;level&nbsp;interface&nbsp;to&nbsp;the&nbsp;USB&nbsp;motion&nbsp;controller&nbsp;code.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="controller.html">controller</a><br>
+</td><td width="25%" valign=top><a href="digio.html">digio</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="random.html">random</a><br>
+<a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="traceback.html">traceback</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="usbcon.html#LimitStatus">LimitStatus</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="controller.html#Driver">controller.Driver</a>(<a href="__builtin__.html#object">__builtin__.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="usbcon.html#Driver">Driver</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="exceptions.html#Exception">exceptions.Exception</a>(<a href="exceptions.html#BaseException">exceptions.BaseException</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="usbcon.html#DriverException">DriverException</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Driver">class <strong>Driver</strong></a>(<a href="controller.html#Driver">controller.Driver</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>To&nbsp;use&nbsp;the&nbsp;controller,&nbsp;a&nbsp;driver&nbsp;class&nbsp;with&nbsp;callbacks&nbsp;must&nbsp;be<br>
+defined&nbsp;to&nbsp;handle&nbsp;the&nbsp;asynchronous&nbsp;events:<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="usbcon.html#Driver">Driver</a></dd>
+<dd><a href="controller.html#Driver">controller.Driver</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="Driver-__init__"><strong>__init__</strong></a>(self, getframe<font color="#909090">=None</font>, newcounters<font color="#909090">=None</font>, limits<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="Driver-clear_outputs"><strong>clear_outputs</strong></a>(self, bitfield)</dt><dd><tt>Given&nbsp;a&nbsp;64-bit&nbsp;number,&nbsp;turn&nbsp;OFF&nbsp;the&nbsp;output&nbsp;bit&nbsp;corresponding&nbsp;to&nbsp;every&nbsp;bit&nbsp;equal&nbsp;to&nbsp;'1'&nbsp;in&nbsp;'bitfield'.</tt></dd></dl>
+
+<dl><dt><a name="Driver-disable_guider"><strong>disable_guider</strong></a>(self)</dt><dd><tt>Calls&nbsp;self.<strong>host</strong>.disable_guider&nbsp;with&nbsp;locking.&nbsp;Turns&nbsp;off&nbsp;the&nbsp;autoguider.</tt></dd></dl>
+
+<dl><dt><a name="Driver-enable_guider"><strong>enable_guider</strong></a>(self)</dt><dd><tt>Calls&nbsp;self.<strong>host</strong>.enable_guider&nbsp;with&nbsp;locking.&nbsp;Turns&nbsp;on&nbsp;the&nbsp;autoguider.</tt></dd></dl>
+
+<dl><dt><a name="Driver-enqueue_frame_available"><strong>enqueue_frame_available</strong></a>(self, details)</dt><dd><tt>This&nbsp;method&nbsp;is&nbsp;called&nbsp;when&nbsp;the&nbsp;queue&nbsp;changes&nbsp;(for&nbsp;example,&nbsp;when&nbsp;<br>
+a&nbsp;frame&nbsp;is&nbsp;dequeued,&nbsp;or&nbsp;when&nbsp;a&nbsp;previous&nbsp;call&nbsp;to&nbsp;enqueue_frame&nbsp;on&nbsp;the<br>
+controller&nbsp;completes).&nbsp;It&nbsp;should&nbsp;check&nbsp;the&nbsp;state&nbsp;of&nbsp;the&nbsp;queue,<br>
+and&nbsp;if&nbsp;required,&nbsp;enqueue&nbsp;at&nbsp;most&nbsp;one&nbsp;frame;&nbsp;once&nbsp;the&nbsp;frame&nbsp;is&nbsp;<br>
+enqueued,&nbsp;the&nbsp;controller&nbsp;will&nbsp;immediately&nbsp;call&nbsp;this&nbsp;method<br>
+to&nbsp;enqueue&nbsp;another.</tt></dd></dl>
+
+<dl><dt><a name="Driver-get_expected_controller_version"><strong>get_expected_controller_version</strong></a>(self)</dt><dd><tt>This&nbsp;code&nbsp;needs&nbsp;controller&nbsp;version&nbsp;0.7</tt></dd></dl>
+
+<dl><dt><a name="Driver-initialisation_error"><strong>initialisation_error</strong></a>(self, failure)</dt><dd><tt>Called&nbsp;by&nbsp;the&nbsp;controller.Controller&nbsp;<a href="__builtin__.html#object">object</a>,&nbsp;not&nbsp;sure&nbsp;exactly&nbsp;when...</tt></dd></dl>
+
+<dl><dt><a name="Driver-initialise"><strong>initialise</strong></a>(self, state_details)</dt><dd><tt>Initialise&nbsp;the&nbsp;controller,&nbsp;reset&nbsp;the&nbsp;queue&nbsp;so&nbsp;it&nbsp;starts<br>
+the&nbsp;motion&nbsp;system&nbsp;and&nbsp;calling&nbsp;for&nbsp;more&nbsp;data,<br>
+and&nbsp;print&nbsp;out&nbsp;controller&nbsp;version&nbsp;details.</tt></dd></dl>
+
+<dl><dt><a name="Driver-inputs_changed"><strong>inputs_changed</strong></a>(self, inputs)</dt><dd><tt>Called&nbsp;whenever&nbsp;any&nbsp;of&nbsp;the&nbsp;'notifiable'&nbsp;binary&nbsp;inputs&nbsp;have&nbsp;changed&nbsp;state.</tt></dd></dl>
+
+<dl><dt><a name="Driver-run"><strong>run</strong></a>(self)</dt><dd><tt>Enter&nbsp;the&nbsp;polling&nbsp;loop.&nbsp;The&nbsp;default&nbsp;poller&nbsp;(returned&nbsp;by&nbsp;select.poll)&nbsp;can<br>
+also&nbsp;be&nbsp;replaced&nbsp;with&nbsp;any&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;implementing&nbsp;the&nbsp;methods&nbsp;required&nbsp;by&nbsp;libusb1:<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;exits&nbsp;if&nbsp;<a href="#Driver-stop">stop</a>()&nbsp;is&nbsp;called.&nbsp;If&nbsp;stop&nbsp;was&nbsp;passed&nbsp;an&nbsp;exception,&nbsp;it&nbsp;indicates&nbsp;an<br>
+unrecoverable&nbsp;error&nbsp;that&nbsp;means&nbsp;the&nbsp;main&nbsp;program&nbsp;must&nbsp;exit,&nbsp;and&nbsp;that&nbsp;exception&nbsp;is&nbsp;raised<br>
+by&nbsp;the&nbsp;<a href="#Driver-run">run</a>()&nbsp;method.&nbsp;If&nbsp;<a href="#Driver-stop">stop</a>()&nbsp;had&nbsp;no&nbsp;arguments,&nbsp;the&nbsp;<a href="#Driver-run">run</a>()&nbsp;method&nbsp;returns&nbsp;normally.</tt></dd></dl>
+
+<dl><dt><a name="Driver-set_outputs"><strong>set_outputs</strong></a>(self, bitfield)</dt><dd><tt>Given&nbsp;a&nbsp;64-bit&nbsp;number,&nbsp;turn&nbsp;ON&nbsp;the&nbsp;output&nbsp;bit&nbsp;corresponding&nbsp;to&nbsp;every&nbsp;bit&nbsp;equal&nbsp;to&nbsp;'1'&nbsp;in&nbsp;'bitfield'.</tt></dd></dl>
+
+<dl><dt><a name="Driver-shutdown"><strong>shutdown</strong></a>(self)</dt><dd><tt>Do&nbsp;a&nbsp;clean&nbsp;shutdown,&nbsp;acquiring&nbsp;the&nbsp;lock&nbsp;first&nbsp;to&nbsp;make&nbsp;sure&nbsp;there's&nbsp;no&nbsp;transfer&nbsp;happening.</tt></dd></dl>
+
+<dl><dt><a name="Driver-state_changed"><strong>state_changed</strong></a>(self, details)</dt><dd><tt>Called&nbsp;when&nbsp;the&nbsp;controller&nbsp;run&nbsp;state&nbsp;changes.&nbsp;This&nbsp;is&nbsp;usually&nbsp;either&nbsp;on<br>
+startup&nbsp;when&nbsp;the&nbsp;queue&nbsp;processing&nbsp;starts,&nbsp;or&nbsp;on&nbsp;shutdown&nbsp;when&nbsp;we've&nbsp;told<br>
+it&nbsp;to&nbsp;stop.</tt></dd></dl>
+
+<dl><dt><a name="Driver-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;controller&nbsp;loop,&nbsp;triggering&nbsp;creation&nbsp;of&nbsp;a&nbsp;new&nbsp;<a href="#Driver">Driver</a>&nbsp;and&nbsp;Controller.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="controller.html#Driver">controller.Driver</a>:<br>
+<dl><dt><a name="Driver-internal_attach_host"><strong>internal_attach_host</strong></a>(self, host)</dt></dl>
+
+<dl><dt><a name="Driver-runtime_error"><strong>runtime_error</strong></a>(self, failure)</dt><dd><tt>Called&nbsp;when&nbsp;an&nbsp;error&nbsp;has&nbsp;caused&nbsp;the&nbsp;run&nbsp;loop&nbsp;to&nbsp;stop.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="controller.html#Driver">controller.Driver</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DriverException">class <strong>DriverException</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="usbcon.html#DriverException">DriverException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="DriverException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#DriverException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="DriverException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="DriverException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="DriverException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#DriverException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="DriverException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="LimitStatus">class <strong>LimitStatus</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;represent&nbsp;the&nbsp;hardware&nbsp;limit&nbsp;state/s.<br>
+&nbsp;<br>
+Only&nbsp;used&nbsp;for&nbsp;New&nbsp;Zealand&nbsp;telescopes,&nbsp;no&nbsp;limit&nbsp;state&nbsp;can&nbsp;be&nbsp;read&nbsp;in&nbsp;Perth.&nbsp;This&nbsp;code&nbsp;largely<br>
+ported&nbsp;as-is,&nbsp;and&nbsp;has&nbsp;never&nbsp;actually&nbsp;been&nbsp;used&nbsp;on&nbsp;the&nbsp;NZ&nbsp;telescope.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="LimitStatus-CanEast"><strong>CanEast</strong></a>(self)</dt><dd><tt>Returns&nbsp;True&nbsp;if&nbsp;there&nbsp;is&nbsp;no&nbsp;limit&nbsp;set,&nbsp;or&nbsp;the&nbsp;West&nbsp;limit&nbsp;is&nbsp;set&nbsp;but<br>
+we&nbsp;can&nbsp;still&nbsp;move&nbsp;East&nbsp;to&nbsp;escape&nbsp;the&nbsp;limit.</tt></dd></dl>
+
+<dl><dt><a name="LimitStatus-CanWest"><strong>CanWest</strong></a>(self)</dt><dd><tt>Returns&nbsp;True&nbsp;if&nbsp;there&nbsp;is&nbsp;no&nbsp;limit&nbsp;set,&nbsp;or&nbsp;the&nbsp;East&nbsp;limit&nbsp;is&nbsp;set&nbsp;but<br>
+we&nbsp;can&nbsp;still&nbsp;move&nbsp;West&nbsp;to&nbsp;escape&nbsp;the&nbsp;limit.</tt></dd></dl>
+
+<dl><dt><a name="LimitStatus-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>Can't&nbsp;pickle&nbsp;the&nbsp;__setattr__&nbsp;function&nbsp;when&nbsp;saving&nbsp;state</tt></dd></dl>
+
+<dl><dt><a name="LimitStatus-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="LimitStatus-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><tt>This&nbsp;is&nbsp;called&nbsp;by&nbsp;python&nbsp;itself&nbsp;when&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;converted<br>
+to&nbsp;a&nbsp;string&nbsp;automatically,&nbsp;or&nbsp;using&nbsp;the&nbsp;``&nbsp;operation.</tt></dd></dl>
+
+<dl><dt><a name="LimitStatus-__str__"><strong>__str__</strong></a>(self)</dt><dd><tt>This&nbsp;is&nbsp;called&nbsp;by&nbsp;python&nbsp;itself&nbsp;when&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;converted&nbsp;to<br>
+a&nbsp;string&nbsp;using&nbsp;the&nbsp;str()&nbsp;function.</tt></dd></dl>
+
+<dl><dt><a name="LimitStatus-check"><strong>check</strong></a>(self, inputs<font color="#909090">=None</font>)</dt><dd><tt>Test&nbsp;the&nbsp;limit&nbsp;states&nbsp;asynchronously,&nbsp;in&nbsp;the&nbsp;motor&nbsp;control&nbsp;thread,&nbsp;as&nbsp;we&nbsp;are&nbsp;notified<br>
+about&nbsp;changed&nbsp;inputs.&nbsp;This&nbsp;function&nbsp;can&nbsp;SET&nbsp;the&nbsp;global&nbsp;limit&nbsp;flag&nbsp;(self.<strong>HWLimit</strong>),&nbsp;but<br>
+not&nbsp;clear&nbsp;it&nbsp;-&nbsp;this&nbsp;flag&nbsp;can&nbsp;only&nbsp;be&nbsp;cleared&nbsp;at&nbsp;a&nbsp;higher&nbsp;level,&nbsp;when&nbsp;not&nbsp;jumping,<br>
+slewing&nbsp;with&nbsp;the&nbsp;paddle,&nbsp;etc.</tt></dd></dl>
+
+<dl><dt><a name="LimitStatus-override"><strong>override</strong></a>(self)</dt><dd><tt>Request&nbsp;a&nbsp;temporary&nbsp;override&nbsp;for&nbsp;the&nbsp;cable&nbsp;wrap&nbsp;limit.&nbsp;This&nbsp;method&nbsp;will&nbsp;set&nbsp;a&nbsp;flag<br>
+requesting&nbsp;that&nbsp;the&nbsp;hardware&nbsp;limit&nbsp;be&nbsp;overridden&nbsp;as&nbsp;soon&nbsp;as&nbsp;the&nbsp;telescope&nbsp;finishes<br>
+moving.&nbsp;When&nbsp;that&nbsp;happens,&nbsp;you&nbsp;can&nbsp;use&nbsp;the&nbsp;paddles&nbsp;to&nbsp;move&nbsp;east&nbsp;(if&nbsp;you&nbsp;have&nbsp;hit&nbsp;the<br>
+west&nbsp;limit),&nbsp;or&nbsp;west&nbsp;(if&nbsp;you&nbsp;have&nbsp;hit&nbsp;the&nbsp;east&nbsp;limit).<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;only&nbsp;ever&nbsp;to&nbsp;be&nbsp;called&nbsp;manually,&nbsp;by&nbsp;the&nbsp;user&nbsp;at&nbsp;the&nbsp;command&nbsp;line.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-binstring"><strong>binstring</strong></a>(v)</dt><dd><tt>Convert&nbsp;a&nbsp;longint&nbsp;into&nbsp;a&nbsp;human&nbsp;readable&nbsp;binary&nbsp;string.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CoarseSet': '180', 'EastOfPier': 'False', 'FineSet': '60', 'FlexureOn': 'True', 'GUIDE': '5', 'HighHorizonOn': 'False', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>

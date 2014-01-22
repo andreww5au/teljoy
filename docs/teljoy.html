@@ -1,0 +1,134 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module teljoy</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>teljoy</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/teljoy.py">/home/andrew/PyDevel/teljoy/teljoy.py</a></font></td></tr></table>
+    <p><tt>Crude&nbsp;command-line&nbsp;telescope&nbsp;control&nbsp;program.<br>
+&nbsp;<br>
+Imports&nbsp;the&nbsp;relevant&nbsp;modules,&nbsp;puts&nbsp;useful&nbsp;functions&nbsp;into&nbsp;the<br>
+global&nbsp;namespace&nbsp;to&nbsp;use&nbsp;on&nbsp;the&nbsp;command&nbsp;line,&nbsp;starts&nbsp;the&nbsp;appropriate<br>
+background&nbsp;threads&nbsp;(motion.TimeInt,&nbsp;dummycon.runtel&nbsp;and&nbsp;<br>
+detevent.DetermineEvent)&nbsp;and&nbsp;drops&nbsp;into&nbsp;an&nbsp;interactive&nbsp;Python&nbsp;prompt.<br>
+&nbsp;<br>
+The&nbsp;utils&nbsp;module&nbsp;contains&nbsp;functions&nbsp;that&nbsp;will&nbsp;probably&nbsp;only&nbsp;be&nbsp;used<br>
+from&nbsp;the&nbsp;command&nbsp;line.<br>
+&nbsp;<br>
+Typical&nbsp;use:<br>
+&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;reset(ra='12:34:56',&nbsp;dec='-32:00:00')&nbsp;&nbsp;&nbsp;#Set&nbsp;initial&nbsp;position<br>
+&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;s&nbsp;=&nbsp;Pos(ra='23:50:0',&nbsp;dec='-32:00:00')<br>
+&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;jump(s)<br>
+&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;jump('NGC&nbsp;2997')<br>
+&nbsp;&nbsp;&gt;&gt;&gt;<br>
+&nbsp;<br>
+Hit&nbsp;'c'&nbsp;then&nbsp;enter&nbsp;to&nbsp;see&nbsp;the&nbsp;current&nbsp;telescope&nbsp;state.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="atexit.html">atexit</a><br>
+<a href="correct.html">correct</a><br>
+<a href="detevent.html">detevent</a><br>
+<a href="libusb1.html">libusb1</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+<a href="motion.html">motion</a><br>
+<a href="pyephem.html">pyephem</a><br>
+<a href="random.html">random</a><br>
+<a href="signal.html">signal</a><br>
+</td><td width="25%" valign=top><a href="sqlint.html">sqlint</a><br>
+<a href="sys.html">sys</a><br>
+<a href="threading.html">threading</a><br>
+<a href="time.html">time</a><br>
+<a href="tjserver.html">tjserver</a><br>
+</td><td width="25%" valign=top><a href="traceback.html">traceback</a><br>
+<a href="urllib2.html">urllib2</a><br>
+<a href="usbcon.html">usbcon</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-RegisterCleanup"><strong>RegisterCleanup</strong></a>(func)</dt><dd><tt>Traps&nbsp;a&nbsp;number&nbsp;of&nbsp;signals&nbsp;that&nbsp;would&nbsp;result&nbsp;in&nbsp;the&nbsp;program&nbsp;exit,&nbsp;to&nbsp;make&nbsp;sure&nbsp;that&nbsp;the<br>
+function&nbsp;'func'&nbsp;is&nbsp;called&nbsp;before&nbsp;exit.&nbsp;The&nbsp;calling&nbsp;process&nbsp;must&nbsp;define&nbsp;its&nbsp;own&nbsp;cleanup<br>
+function&nbsp;-&nbsp;typically&nbsp;this&nbsp;would&nbsp;shut&nbsp;down&nbsp;anything&nbsp;that&nbsp;needs&nbsp;to&nbsp;be&nbsp;stopped&nbsp;cleanly.<br>
+&nbsp;<br>
+We&nbsp;don't&nbsp;need&nbsp;to&nbsp;trap&nbsp;signal&nbsp;2&nbsp;(SIGINT),&nbsp;because&nbsp;this&nbsp;is&nbsp;internally&nbsp;handled&nbsp;by&nbsp;the&nbsp;python<br>
+interpreter,&nbsp;generating&nbsp;a&nbsp;KeyboardInterrupt&nbsp;exception&nbsp;-&nbsp;if&nbsp;this&nbsp;causes&nbsp;the&nbsp;process&nbsp;to&nbsp;exit,<br>
+the&nbsp;function&nbsp;registered&nbsp;by&nbsp;atexit.register()&nbsp;will&nbsp;be&nbsp;called&nbsp;automatically.</tt></dd></dl>
+ <dl><dt><a name="-SignalHandler"><strong>SignalHandler</strong></a>(signum<font color="#909090">=None</font>, frame<font color="#909090">=None</font>)</dt><dd><tt>Called&nbsp;when&nbsp;a&nbsp;signal&nbsp;is&nbsp;received&nbsp;that&nbsp;would&nbsp;result&nbsp;in&nbsp;the&nbsp;programme&nbsp;exit,&nbsp;if&nbsp;the<br>
+<a href="#-RegisterCleanup">RegisterCleanup</a>()&nbsp;function&nbsp;has&nbsp;been&nbsp;previously&nbsp;called&nbsp;to&nbsp;set&nbsp;the&nbsp;signal&nbsp;handlers&nbsp;and<br>
+define&nbsp;an&nbsp;exit&nbsp;function&nbsp;using&nbsp;the&nbsp;'atexit'&nbsp;module.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;exit&nbsp;functions&nbsp;registered&nbsp;by&nbsp;atexit&nbsp;are&nbsp;NOT&nbsp;called&nbsp;when&nbsp;the&nbsp;programme&nbsp;exits&nbsp;due<br>
+to&nbsp;a&nbsp;received&nbsp;signal,&nbsp;so&nbsp;we&nbsp;must&nbsp;trap&nbsp;signals&nbsp;where&nbsp;possible.&nbsp;The&nbsp;cleanup&nbsp;function&nbsp;will&nbsp;NOT<br>
+be&nbsp;called&nbsp;when&nbsp;signal&nbsp;9&nbsp;(SIGKILL)&nbsp;is&nbsp;received,&nbsp;as&nbsp;this&nbsp;signal&nbsp;cannot&nbsp;be&nbsp;trapped.</tt></dd></dl>
+ <dl><dt><a name="-cleanup"><strong>cleanup</strong></a>()</dt><dd><tt>Registers&nbsp;to&nbsp;be&nbsp;called&nbsp;just&nbsp;before&nbsp;exit&nbsp;by&nbsp;the&nbsp;exit&nbsp;handler.<br>
+Waits&nbsp;for&nbsp;any&nbsp;hand&nbsp;paddle&nbsp;motion&nbsp;or&nbsp;slews&nbsp;to&nbsp;finish&nbsp;before&nbsp;exiting.</tt></dd></dl>
+ <dl><dt><a name="-i"><strong>i</strong></a>()</dt></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(00:40:19.734, 30:00:00.00,  ...zi= 0.00
+      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<strong>CLEANUP_FUNCTION</strong> = None<br>
+<strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', 'DNP': '0.0', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(00:40:19.735, 17:45:00....zi= 0.00
+      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>SIGNAL_HANDLERS</strong> = {}<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(00:40:19.736, -44:00:00....i=185.21
+      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<strong>STOW</strong> = &lt;Position Stowed: Org=(00:40:19.733, 30:00:00.00...zi= 0.00
+      Time: [UT:05:12:32 LST:00:40:20] &gt;<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>dome</strong> = {'DomeInUse': False, 'queue': [], 'CommandSent':...zi': -10, 'Command': None, 'DomeTracking': False}<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>

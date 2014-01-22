@@ -1,0 +1,368 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module detevent</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>detevent</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/detevent.py">/home/andrew/PyDevel/teljoy/detevent.py</a></font></td></tr></table>
+    <p><tt>This&nbsp;module&nbsp;contains&nbsp;the&nbsp;code&nbsp;needed&nbsp;to&nbsp;support&nbsp;higher-level&nbsp;telescope&nbsp;control,&nbsp;<br>
+including&nbsp;maintaining&nbsp;the&nbsp;current&nbsp;telescope&nbsp;coordinates,&nbsp;as&nbsp;well&nbsp;as&nbsp;checking&nbsp;and<br>
+acting&nbsp;on&nbsp;external&nbsp;inputs&nbsp;(hand-paddle&nbsp;buttons,&nbsp;commanded&nbsp;actions&nbsp;via&nbsp;the&nbsp;SQL&nbsp;<br>
+'mailbox'&nbsp;table',&nbsp;etc)&nbsp;and&nbsp;maintaining&nbsp;the&nbsp;current&nbsp;state&nbsp;in&nbsp;an&nbsp;SQL&nbsp;table.<br>
+&nbsp;<br>
+The&nbsp;activities&nbsp;in&nbsp;this&nbsp;module&nbsp;are&nbsp;all&nbsp;carried&nbsp;out&nbsp;by&nbsp;functions&nbsp;or&nbsp;methods&nbsp;called<br>
+at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;an&nbsp;'event&nbsp;loop'&nbsp;<a href="__builtin__.html#object">object</a>.&nbsp;An&nbsp;event&nbsp;loop&nbsp;maintains&nbsp;a&nbsp;register<br>
+of&nbsp;functions&nbsp;that&nbsp;must&nbsp;be&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals,&nbsp;and&nbsp;handles&nbsp;calling&nbsp;them&nbsp;and<br>
+recovering&nbsp;from&nbsp;any&nbsp;errors&nbsp;they&nbsp;give.<br>
+&nbsp;<br>
+Each&nbsp;event&nbsp;loop&nbsp;has&nbsp;a&nbsp;different&nbsp;cycle&nbsp;time.&nbsp;This&nbsp;module&nbsp;uses&nbsp;two&nbsp;event&nbsp;loops&nbsp;-&nbsp;the<br>
+'fastloop'&nbsp;calls&nbsp;each&nbsp;function&nbsp;registered&nbsp;approximately&nbsp;five&nbsp;times&nbsp;per&nbsp;second.&nbsp;The<br>
+'slowloo'&nbsp;calls&nbsp;each&nbsp;function&nbsp;registered&nbsp;once&nbsp;every&nbsp;30&nbsp;seconds.&nbsp;The&nbsp;fastloop&nbsp;is&nbsp;for<br>
+functions&nbsp;that&nbsp;do&nbsp;hand&nbsp;paddle&nbsp;sensing,&nbsp;writing&nbsp;the&nbsp;current&nbsp;position&nbsp;record,&nbsp;etc.&nbsp;THe<br>
+slowloop&nbsp;is&nbsp;for&nbsp;weather&nbsp;sensing&nbsp;and&nbsp;other&nbsp;less&nbsp;time-critical&nbsp;actions.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="copy.html">copy</a><br>
+<a href="correct.html">correct</a><br>
+</td><td width="25%" valign=top><a href="nzdome.html">nzdome</a><br>
+<a href="logging.html">logging</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="motion.html">motion</a><br>
+<a href="random.html">random</a><br>
+<a href="sqlint.html">sqlint</a><br>
+</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+<a href="time.html">time</a><br>
+<a href="traceback.html">traceback</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="detevent.html#EventLoop">EventLoop</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="correct.html#CalcPosition">correct.CalcPosition</a>(<a href="globals.html#Position">globals.Position</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="detevent.html#CurrentPosition">CurrentPosition</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="CurrentPosition">class <strong>CurrentPosition</strong></a>(<a href="correct.html#CalcPosition">correct.CalcPosition</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;special&nbsp;position&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;that's&nbsp;used&nbsp;only&nbsp;to&nbsp;store&nbsp;the&nbsp;current&nbsp;telescope&nbsp;coordinates,&nbsp;and&nbsp;defines&nbsp;methods<br>
+that&nbsp;allow&nbsp;you&nbsp;to&nbsp;reset&nbsp;this&nbsp;position,&nbsp;jump&nbsp;from&nbsp;this&nbsp;position&nbsp;to&nbsp;a&nbsp;new&nbsp;one,&nbsp;etc.<br>
+&nbsp;<br>
+Only&nbsp;one&nbsp;instance&nbsp;of&nbsp;this&nbsp;class&nbsp;can&nbsp;ever&nbsp;exist.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="detevent.html#CurrentPosition">CurrentPosition</a></dd>
+<dd><a href="correct.html#CalcPosition">correct.CalcPosition</a></dd>
+<dd><a href="globals.html#Position">globals.Position</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="CurrentPosition-IniPos"><strong>IniPos</strong></a>(self)</dt><dd><tt>This&nbsp;function&nbsp;is&nbsp;called&nbsp;on&nbsp;startup&nbsp;to&nbsp;set&nbsp;the&nbsp;'Current'&nbsp;position<br>
+and&nbsp;other&nbsp;data&nbsp;to&nbsp;something&nbsp;reasonable&nbsp;on&nbsp;startup.<br>
+&nbsp;<br>
+Uses&nbsp;the&nbsp;RA,&nbsp;DEC&nbsp;and&nbsp;LST&nbsp;in&nbsp;the&nbsp;state&nbsp;information&nbsp;saved&nbsp;by<br>
+detevent.ChecKDBUpdate&nbsp;and&nbsp;sqlint.UpdateSQLCurrent&nbsp;approximately<br>
+once&nbsp;per&nbsp;second.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Jump"><strong>Jump</strong></a>(self, FObj, Rate<font color="#909090">=None</font>, force<font color="#909090">=False</font>)</dt><dd><tt>Jump&nbsp;the&nbsp;telescope&nbsp;to&nbsp;new&nbsp;position.<br>
+&nbsp;<br>
+Inputs:<br>
+&nbsp;&nbsp;FObj&nbsp;-&nbsp;a&nbsp;correct.<a href="correct.html#CalcPosition">CalcPosition</a>&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;containing&nbsp;the&nbsp;destination&nbsp;position<br>
+&nbsp;&nbsp;Rate&nbsp;-&nbsp;the&nbsp;motor&nbsp;speed,&nbsp;in&nbsp;steps/second<br>
+&nbsp;<br>
+Slews&nbsp;in&nbsp;RA&nbsp;by&nbsp;(FObj.RaC-Current.RaC),&nbsp;and&nbsp;slews&nbsp;in&nbsp;DEC&nbsp;by&nbsp;(FObj.DecC-Current.DecC).<br>
+Returns&nbsp;'True'&nbsp;if&nbsp;Alt&nbsp;of&nbsp;initial&nbsp;or&nbsp;final&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;too&nbsp;low,&nbsp;'False'&nbsp;if&nbsp;the&nbsp;slew&nbsp;proceeded&nbsp;OK.<br>
+&nbsp;<br>
+Every&nbsp;action&nbsp;that&nbsp;results&nbsp;in&nbsp;a&nbsp;telescope&nbsp;slew&nbsp;(Pyro4&nbsp;remote&nbsp;calls,&nbsp;the&nbsp;user&nbsp;on&nbsp;the&nbsp;command&nbsp;line,<br>
+tjbox&nbsp;table&nbsp;processing,&nbsp;etc)&nbsp;ends&nbsp;up&nbsp;in&nbsp;a&nbsp;call&nbsp;to&nbsp;this&nbsp;method.&nbsp;The&nbsp;only&nbsp;exceptions&nbsp;are&nbsp;hand-paddle<br>
+motion&nbsp;(in&nbsp;handpaddle.py)&nbsp;and&nbsp;small&nbsp;offsets&nbsp;(the&nbsp;'Offset'&nbsp;method&nbsp;below).</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Offset"><strong>Offset</strong></a>(self, ora, odec)</dt><dd><tt>Make&nbsp;a&nbsp;tiny&nbsp;slew&nbsp;from&nbsp;the&nbsp;current&nbsp;position,&nbsp;by&nbsp;ora,odec&nbsp;arcseconds.<br>
+&nbsp;<br>
+The&nbsp;maximum&nbsp;coordinate&nbsp;shift&nbsp;allowed&nbsp;is&nbsp;defined&nbsp;in&nbsp;the&nbsp;MAXOFFSETSTEPS&nbsp;constant&nbsp;at&nbsp;the<br>
+top&nbsp;of&nbsp;this&nbsp;module&nbsp;-&nbsp;this&nbsp;will&nbsp;be&nbsp;reached&nbsp;with&nbsp;quite&nbsp;large&nbsp;offsets&nbsp;in&nbsp;plate-scale<br>
+near&nbsp;the&nbsp;equator,&nbsp;but&nbsp;relatively&nbsp;small&nbsp;east-west&nbsp;shifts&nbsp;in&nbsp;plate&nbsp;scale&nbsp;near&nbsp;the&nbsp;pole<br>
+can&nbsp;result&nbsp;in&nbsp;large&nbsp;differences&nbsp;in&nbsp;RA&nbsp;between&nbsp;initial&nbsp;and&nbsp;final&nbsp;position.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-RelRef"><strong>RelRef</strong></a>(self)</dt><dd><tt>Calculates&nbsp;real&nbsp;time&nbsp;refraction&nbsp;and&nbsp;flexure&nbsp;correction&nbsp;velocities&nbsp;for&nbsp;the&nbsp;current&nbsp;position.<br>
+These&nbsp;velocities&nbsp;are&nbsp;mixed&nbsp;into&nbsp;the&nbsp;telescope&nbsp;motion&nbsp;by&nbsp;the&nbsp;low-level&nbsp;control&nbsp;loop<br>
+in&nbsp;motion.motors.TimeInt.<br>
+&nbsp;<br>
+Real&nbsp;time&nbsp;flexure&nbsp;and&nbsp;refraction&nbsp;are&nbsp;derived&nbsp;by&nbsp;calculating&nbsp;them&nbsp;at&nbsp;now-WINDOW&nbsp;and<br>
+now+WINDOW,&nbsp;then&nbsp;taking&nbsp;the&nbsp;difference&nbsp;to&nbsp;turn&nbsp;into&nbsp;a&nbsp;velocity.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slowloop'.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Reset"><strong>Reset</strong></a>(self, obj)</dt><dd><tt>Set&nbsp;the&nbsp;current&nbsp;RA&nbsp;and&nbsp;DEC&nbsp;to&nbsp;those&nbsp;in&nbsp;the&nbsp;specified&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(must&nbsp;be&nbsp;an&nbsp;instance&nbsp;of&nbsp;correct.<a href="correct.html#CalcPosition">CalcPosition</a>)</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-UpdatePosition"><strong>UpdatePosition</strong></a>(self)</dt><dd><tt>Update&nbsp;Current&nbsp;sky&nbsp;coordinates&nbsp;from&nbsp;paddle&nbsp;and&nbsp;refraction&nbsp;motion.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="correct.html#CalcPosition">correct.CalcPosition</a>:<br>
+<dl><dt><a name="CurrentPosition-AltAziConv"><strong>AltAziConv</strong></a>(self)</dt><dd><tt>Calculate&nbsp;Altitude&nbsp;and&nbsp;Azimuth&nbsp;from&nbsp;.RaA,&nbsp;.DecA,&nbsp;and&nbsp;.Time.LST<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;must&nbsp;be&nbsp;called&nbsp;after&nbsp;.RaA&nbsp;and&nbsp;.DecA&nbsp;have&nbsp;been&nbsp;calculated.<br>
+&nbsp;<br>
+#Taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;&nbsp;&nbsp;&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:43-48.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-ApparentPlace"><strong>ApparentPlace</strong></a>(self)</dt><dd><tt>Calculate&nbsp;annual&nbsp;aberration&nbsp;(I&nbsp;think&nbsp;:-)<br>
+&nbsp;<br>
+Returns&nbsp;dRA&nbsp;and&nbsp;dDEC&nbsp;corrections&nbsp;as&nbsp;a&nbsp;tuple,&nbsp;in&nbsp;arcseconds.<br>
+&nbsp;<br>
+#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:71-73.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Flex"><strong>Flex</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;correction&nbsp;for&nbsp;telescope&nbsp;flexure,&nbsp;using&nbsp;the&nbsp;TPOINT&nbsp;flexure&nbsp;terms&nbsp;from<br>
+the&nbsp;teljoy.ini&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Nutation"><strong>Nutation</strong></a>(self, T)</dt><dd><tt>var&nbsp;L,Ld,M,Md,Omega:double<br>
+#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:69-70.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NOTE&nbsp;-&nbsp;original&nbsp;Pascal&nbsp;function&nbsp;modified&nbsp;dPhi&nbsp;and&nbsp;dEpsi&nbsp;arguments&nbsp;in&nbsp;place<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New&nbsp;Python&nbsp;function&nbsp;returns&nbsp;dRA&nbsp;and&nbsp;dDEC&nbsp;(in&nbsp;arcsec)&nbsp;as&nbsp;tuple!</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Precess"><strong>Precess</strong></a>(self)</dt><dd><tt>Correct&nbsp;for&nbsp;precession&nbsp;of&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;from&nbsp;the&nbsp;equinox&nbsp;of&nbsp;the&nbsp;<br>
+original&nbsp;coordinates&nbsp;(.Ra,&nbsp;.Dec,&nbsp;and&nbsp;.Epoch)&nbsp;to&nbsp;the&nbsp;current&nbsp;date.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;since&nbsp;the&nbsp;correction&nbsp;is&nbsp;for&nbsp;the&nbsp;reference&nbsp;frame&nbsp;itself,&nbsp;there's&nbsp;no&nbsp;<br>
+reason&nbsp;the&nbsp;destination&nbsp;epoch&nbsp;needs&nbsp;to&nbsp;be&nbsp;the&nbsp;current&nbsp;date&nbsp;-&nbsp;we&nbsp;just&nbsp;need&nbsp;the<br>
+'current'&nbsp;and&nbsp;destination&nbsp;coordinates&nbsp;for&nbsp;any&nbsp;jumps&nbsp;to&nbsp;be&nbsp;in&nbsp;the&nbsp;same&nbsp;reference<br>
+frame&nbsp;(equinox).&nbsp;<br>
+&nbsp;<br>
+It&nbsp;might&nbsp;be&nbsp;more&nbsp;sensible&nbsp;to&nbsp;keep&nbsp;the&nbsp;'current'&nbsp;coordinates&nbsp;(detevent.current)<br>
+in&nbsp;J2000&nbsp;equinox,&nbsp;and&nbsp;convert&nbsp;all&nbsp;targets&nbsp;to&nbsp;that&nbsp;equinox.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;for&nbsp;historical&nbsp;reasons,&nbsp;the&nbsp;equinox&nbsp;for&nbsp;the&nbsp;coordinates&nbsp;is&nbsp;stored&nbsp;in&nbsp;the&nbsp;'Epoch'<br>
+attribute.&nbsp;Strictly&nbsp;speaking,&nbsp;'Epoch'&nbsp;refers&nbsp;to&nbsp;the&nbsp;time&nbsp;an&nbsp;observation&nbsp;or&nbsp;measurement<br>
+was&nbsp;made,&nbsp;and&nbsp;NOT&nbsp;the&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;used.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;sets&nbsp;the&nbsp;RaA&nbsp;and&nbsp;DecA&nbsp;attributes&nbsp;to&nbsp;the&nbsp;precessed&nbsp;coordinates.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;&nbsp;&nbsp;&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:65-67.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-Refrac"><strong>Refrac</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;correction&nbsp;for&nbsp;atmospheric&nbsp;refraction&nbsp;for&nbsp;the&nbsp;given&nbsp;coordinates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns&nbsp;a&nbsp;tuple&nbsp;of&nbsp;dRA&nbsp;and&nbsp;dDEC,&nbsp;which&nbsp;are&nbsp;OFFSETS&nbsp;from&nbsp;the&nbsp;current&nbsp;position,&nbsp;in&nbsp;arcseconds.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>This&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;'pickled'&nbsp;when&nbsp;sending&nbsp;it&nbsp;over&nbsp;the&nbsp;wire&nbsp;via&nbsp;Pyro4,&nbsp;and&nbsp;we&nbsp;only&nbsp;want&nbsp;to&nbsp;pickle&nbsp;attributes,<br>
+not&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="CurrentPosition-__init__"><strong>__init__</strong></a>(self, obj<font color="#909090">=None</font>, ra<font color="#909090">=None</font>, dec<font color="#909090">=None</font>, epoch<font color="#909090">=2000.0</font>, domepos<font color="#909090">=None</font>, objid<font color="#909090">=''</font>)</dt></dl>
+
+<dl><dt><a name="CurrentPosition-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="CurrentPosition-update"><strong>update</strong></a>(self, now<font color="#909090">=True</font>)</dt><dd><tt>Use&nbsp;self.<strong>Ra</strong>&nbsp;and&nbsp;self.<strong>Dec</strong>&nbsp;to&nbsp;update&nbsp;the&nbsp;other&nbsp;position&nbsp;attributes&nbsp;(RaA,DecA,RaC,DecC,Alt,Azi).<br>
+if&nbsp;'now'&nbsp;is&nbsp;True,&nbsp;use&nbsp;the&nbsp;current&nbsp;time,&nbsp;otherwise&nbsp;use&nbsp;the&nbsp;time&nbsp;in&nbsp;self.<strong>Time</strong>.UT.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="globals.html#Position">globals.Position</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EventLoop">class <strong>EventLoop</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Allows&nbsp;a&nbsp;set&nbsp;of&nbsp;functions&nbsp;to&nbsp;be&nbsp;registered&nbsp;that&nbsp;must&nbsp;be&nbsp;called&nbsp;at<br>
+regular&nbsp;intervals.&nbsp;One&nbsp;call&nbsp;to&nbsp;'runall'&nbsp;will&nbsp;iterate&nbsp;through&nbsp;all<br>
+registered&nbsp;functions,&nbsp;catching&nbsp;and&nbsp;logging&nbsp;any&nbsp;errors.&nbsp;Calling<br>
+'runloop'&nbsp;will&nbsp;loop&nbsp;forever&nbsp;at&nbsp;the&nbsp;specified&nbsp;loop&nbsp;interval,&nbsp;until<br>
+<a href="#EventLoop-shutdown">shutdown</a>()&nbsp;is&nbsp;called.&nbsp;It&nbsp;may&nbsp;take&nbsp;some&nbsp;time,&nbsp;up&nbsp;to&nbsp;the&nbsp;specified<br>
+loop&nbsp;interval&nbsp;or&nbsp;1&nbsp;second,&nbsp;whichever&nbsp;is&nbsp;longer,&nbsp;to&nbsp;exit.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EventLoop-__init__"><strong>__init__</strong></a>(self, name<font color="#909090">=''</font>, looptime<font color="#909090">=1.0</font>)</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;eventloop&nbsp;<a href="__builtin__.html#object">object</a>.</tt></dd></dl>
+
+<dl><dt><a name="EventLoop-register"><strong>register</strong></a>(self, name, function)</dt><dd><tt>Register&nbsp;a&nbsp;new&nbsp;function&nbsp;to&nbsp;be&nbsp;called&nbsp;in&nbsp;the&nbsp;loop.</tt></dd></dl>
+
+<dl><dt><a name="EventLoop-remove"><strong>remove</strong></a>(self, name)</dt><dd><tt>Remove&nbsp;a&nbsp;function&nbsp;from&nbsp;the&nbsp;call&nbsp;list.</tt></dd></dl>
+
+<dl><dt><a name="EventLoop-runall"><strong>runall</strong></a>(self)</dt><dd><tt>Run&nbsp;all&nbsp;functions&nbsp;once,&nbsp;catching&nbsp;any&nbsp;errors.</tt></dd></dl>
+
+<dl><dt><a name="EventLoop-runloop"><strong>runloop</strong></a>(self)</dt><dd><tt>Loop&nbsp;forever&nbsp;iterating&nbsp;over&nbsp;the&nbsp;registered&nbsp;functions.&nbsp;Use&nbsp;time.sleep<br>
+to&nbsp;make&nbsp;sure&nbsp;the&nbsp;loop&nbsp;is&nbsp;run&nbsp;no&nbsp;more&nbsp;often&nbsp;than&nbsp;once&nbsp;every&nbsp;'looptime'<br>
+seconds.&nbsp;Maintain&nbsp;'self.<strong>runtime</strong>'&nbsp;as&nbsp;the&nbsp;measured&nbsp;time,&nbsp;in&nbsp;seconds,<br>
+that&nbsp;the&nbsp;loop&nbsp;took&nbsp;to&nbsp;execute,&nbsp;the&nbsp;last&nbsp;time&nbsp;it&nbsp;was&nbsp;run.<br>
+&nbsp;<br>
+Set&nbsp;self.<strong>exit</strong>&nbsp;to&nbsp;True&nbsp;to&nbsp;exit&nbsp;the&nbsp;loop</tt></dd></dl>
+
+<dl><dt><a name="EventLoop-shutdown"><strong>shutdown</strong></a>(self)</dt><dd><tt>Flag&nbsp;an&nbsp;exit&nbsp;at&nbsp;the&nbsp;next&nbsp;available&nbsp;opportunity&nbsp;(at&nbsp;most&nbsp;around&nbsp;1&nbsp;second&nbsp;delay).</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-CheckDBUpdate"><strong>CheckDBUpdate</strong></a>()</dt><dd><tt>Make&nbsp;sure&nbsp;that&nbsp;the&nbsp;current&nbsp;state&nbsp;is&nbsp;saved&nbsp;to&nbsp;the&nbsp;SQL&nbsp;database&nbsp;approximately&nbsp;once&nbsp;<br>
+every&nbsp;second.&nbsp;Exits&nbsp;without&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;SQL&nbsp;connection&nbsp;isn't&nbsp;available.<br>
+&nbsp;<br>
+The&nbsp;state&nbsp;data&nbsp;is&nbsp;used&nbsp;by&nbsp;external&nbsp;clients&nbsp;(eg&nbsp;Prosp,&nbsp;the&nbsp;CCD&nbsp;camera&nbsp;controller)<br>
+and&nbsp;also&nbsp;used&nbsp;by&nbsp;Teljoy&nbsp;to&nbsp;set&nbsp;the&nbsp;initial&nbsp;position&nbsp;on&nbsp;startup,&nbsp;using&nbsp;the&nbsp;last<br>
+recorded&nbsp;RA,&nbsp;DEC&nbsp;and&nbsp;LST.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+ <dl><dt><a name="-CheckDirtyDome"><strong>CheckDirtyDome</strong></a>()</dt><dd><tt>When&nbsp;prefs.DomeTracking&nbsp;is&nbsp;on,&nbsp;make&nbsp;sure&nbsp;that&nbsp;the&nbsp;dome&nbsp;is&nbsp;moved&nbsp;to&nbsp;the&nbsp;current<br>
+telescope&nbsp;azimuth&nbsp;after&nbsp;each&nbsp;telescope&nbsp;more,&nbsp;or&nbsp;if&nbsp;the&nbsp;telescope&nbsp;has&nbsp;tracked<br>
+far&nbsp;enough&nbsp;since&nbsp;the&nbsp;last&nbsp;dome&nbsp;move&nbsp;that&nbsp;the&nbsp;dome&nbsp;azimuth&nbsp;is&nbsp;more&nbsp;than&nbsp;6&nbsp;degrees<br>
+off.&nbsp;<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+ <dl><dt><a name="-CheckDirtyPos"><strong>CheckDirtyPos</strong></a>()</dt><dd><tt>Check&nbsp;to&nbsp;see&nbsp;if&nbsp;we've&nbsp;just&nbsp;finished&nbsp;a&nbsp;move&nbsp;(hand&nbsp;paddle&nbsp;or&nbsp;profiled&nbsp;jump).<br>
+&nbsp;<br>
+The&nbsp;motion.motors.PosDirty&nbsp;flag&nbsp;is&nbsp;true&nbsp;if&nbsp;the&nbsp;telescope&nbsp;while&nbsp;the&nbsp;telescope<br>
+is&nbsp;moving,&nbsp;AND&nbsp;for&nbsp;a&nbsp;few&nbsp;seconds&nbsp;after&nbsp;it&nbsp;finishes&nbsp;moving.&nbsp;It&nbsp;is&nbsp;reset&nbsp;to&nbsp;False<br>
+by&nbsp;this&nbsp;function.&nbsp;Other&nbsp;code&nbsp;uses&nbsp;this&nbsp;flag&nbsp;to&nbsp;delay&nbsp;costly&nbsp;actions&nbsp;like<br>
+moving&nbsp;the&nbsp;dome&nbsp;until&nbsp;it's&nbsp;clear&nbsp;that&nbsp;another&nbsp;movement&nbsp;(eg,&nbsp;paddle&nbsp;button)&nbsp;isn't<br>
+about&nbsp;to&nbsp;occur).<br>
+&nbsp;<br>
+If&nbsp;more&nbsp;than&nbsp;prefs.WaitBeforePosUpdate&nbsp;seconds&nbsp;have&nbsp;passed&nbsp;since&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last<br>
+move,&nbsp;flag&nbsp;the&nbsp;current&nbsp;position&nbsp;as&nbsp;new&nbsp;and&nbsp;stable&nbsp;by&nbsp;clearing&nbsp;the&nbsp;PosDirty&nbsp;flag.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+ <dl><dt><a name="-CheckErrors"><strong>CheckErrors</strong></a>()</dt><dd><tt>This&nbsp;function&nbsp;checks&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;errors.AltError&nbsp;and&nbsp;errors.CalError.<br>
+&nbsp;<br>
+When&nbsp;the&nbsp;error&nbsp;state&nbsp;changes&nbsp;from&nbsp;'False'&nbsp;to&nbsp;'True',&nbsp;register&nbsp;and&nbsp;save&nbsp;a&nbsp;safety&nbsp;interlock<br>
+for&nbsp;that&nbsp;error,&nbsp;to&nbsp;freeze&nbsp;the&nbsp;telescope&nbsp;and&nbsp;close&nbsp;the&nbsp;dome.<br>
+&nbsp;<br>
+When&nbsp;the&nbsp;error&nbsp;state&nbsp;changes&nbsp;from&nbsp;'True'&nbsp;to&nbsp;False',&nbsp;remove&nbsp;the&nbsp;safety&nbsp;interlock&nbsp;for<br>
+that&nbsp;error&nbsp;(which&nbsp;will&nbsp;cause&nbsp;the&nbsp;telescope&nbsp;to&nbsp;unfreeze&nbsp;and&nbsp;the&nbsp;dome&nbsp;to&nbsp;open,&nbsp;provided<br>
+there&nbsp;are&nbsp;no&nbsp;other&nbsp;active&nbsp;safety&nbsp;interlocks&nbsp;registered).</tt></dd></dl>
+ <dl><dt><a name="-CheckLimitClear"><strong>CheckLimitClear</strong></a>()</dt><dd><tt>Periodically&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;a&nbsp;hardware&nbsp;limit&nbsp;state&nbsp;has&nbsp;been&nbsp;cleared.&nbsp;If&nbsp;it&nbsp;has,<br>
+and&nbsp;it's&nbsp;now&nbsp;safe&nbsp;to&nbsp;resume&nbsp;motion&nbsp;(we&nbsp;aren't&nbsp;moving,&nbsp;etc),&nbsp;then&nbsp;clear&nbsp;the<br>
+global&nbsp;limit&nbsp;flag.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+ <dl><dt><a name="-CheckTJbox"><strong>CheckTJbox</strong></a>()</dt><dd><tt>Check&nbsp;the&nbsp;command&nbsp;table&nbsp;in&nbsp;the&nbsp;database&nbsp;and&nbsp;carry&nbsp;out&nbsp;any&nbsp;commanded&nbsp;actions.<br>
+Check&nbsp;the&nbsp;progress&nbsp;of&nbsp;any&nbsp;previous&nbsp;commands&nbsp;still&nbsp;being&nbsp;acted&nbsp;on.<br>
+Exits&nbsp;without&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;SQL&nbsp;connection&nbsp;isn't&nbsp;available.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+ <dl><dt><a name="-CheckTimeout"><strong>CheckTimeout</strong></a>()</dt><dd><tt>This&nbsp;function&nbsp;checks&nbsp;the&nbsp;time&nbsp;since&nbsp;the&nbsp;last&nbsp;command&nbsp;received&nbsp;via&nbsp;the&nbsp;database&nbsp;from&nbsp;the&nbsp;tjbox&nbsp;table.<br>
+If&nbsp;it&nbsp;exceeds&nbsp;ten&nbsp;minutes,&nbsp;the&nbsp;shutter&nbsp;is&nbsp;closed&nbsp;and&nbsp;the&nbsp;telescope&nbsp;is&nbsp;frozen.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;a&nbsp;safety&nbsp;mechanism,&nbsp;as&nbsp;the&nbsp;CCD&nbsp;camera&nbsp;control&nbsp;software&nbsp;(Prosp)&nbsp;also&nbsp;currently&nbsp;handles&nbsp;<br>
+weather&nbsp;and&nbsp;sunrise&nbsp;detection.&nbsp;If&nbsp;that&nbsp;isn't&nbsp;running,&nbsp;we&nbsp;need&nbsp;to&nbsp;make&nbsp;sure&nbsp;the&nbsp;roof&nbsp;is&nbsp;closed.<br>
+&nbsp;<br>
+When&nbsp;this&nbsp;Python&nbsp;Teljoy&nbsp;code&nbsp;is&nbsp;stable,&nbsp;the&nbsp;weather&nbsp;and&nbsp;end-of-night&nbsp;handling&nbsp;can&nbsp;be&nbsp;moved&nbsp;here,<br>
+and&nbsp;this&nbsp;function&nbsp;removed.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slowloop'.</tt></dd></dl>
+ <dl><dt><a name="-DoTJbox"><strong>DoTJbox</strong></a>()</dt><dd><tt>Read&nbsp;the&nbsp;tjbox&nbsp;database&nbsp;table&nbsp;and&nbsp;carry&nbsp;out&nbsp;any&nbsp;commanded&nbsp;actions.<br>
+Exits&nbsp;without&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;SQL&nbsp;connection&nbsp;isn't&nbsp;available.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;by&nbsp;CheckTJBox.</tt></dd></dl>
+ <dl><dt><a name="-Init"><strong>Init</strong></a>()</dt><dd><tt>Open&nbsp;up&nbsp;a&nbsp;database&nbsp;connection,&nbsp;initialise&nbsp;the&nbsp;current&nbsp;telescope&nbsp;coordinates&nbsp;using&nbsp;the&nbsp;teljoy.current<br>
+table,&nbsp;and&nbsp;start&nbsp;the&nbsp;fast&nbsp;and&nbsp;slow&nbsp;event&nbsp;loops&nbsp;in&nbsp;two&nbsp;separate&nbsp;threads,&nbsp;to&nbsp;handle&nbsp;all&nbsp;the&nbsp;high-level&nbsp;actions.</tt></dd></dl>
+ <dl><dt><a name="-LogGuider"><strong>LogGuider</strong></a>()</dt><dd><tt>This&nbsp;function&nbsp;logs&nbsp;the&nbsp;autoguider&nbsp;steps&nbsp;to&nbsp;a&nbsp;file&nbsp;in&nbsp;/tmp.<br>
+It's&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slowloop'.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', 'DNP': '0.0', ...}<br>
+<strong>DBLastTime</strong> = 0<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>FASTLOOP</strong> = 0.2<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>LastError</strong> = ''<br>
+<strong>LastObj</strong> = None<br>
+<strong>MAXOFFSETSTEPS</strong> = 36000<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>ProspLastTime</strong> = 1390367549.701713<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>SLOWLOOP</strong> = 30<br>
+<strong>TIMEOUT</strong> = 0<br>
+<strong>TJboxAction</strong> = 'none'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>current</strong> = None<br>
+<strong>detthread</strong> = None<br>
+<strong>errors</strong> = 
+<br>
+<strong>fastloop</strong> = None<br>
+<strong>fastthread</strong> = None<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>paddles</strong> = &lt;PaddleStatus: GuideAcc=(0.000000,0.000000)  &gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+<br>
+<strong>slowloop</strong> = None<br>
+<strong>slowthread</strong> = None</td></tr></table>
+</body></html>

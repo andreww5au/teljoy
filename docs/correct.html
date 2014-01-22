@@ -1,0 +1,390 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module correct</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>correct</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/correct.py">/home/andrew/PyDevel/teljoy/correct.py</a></font></td></tr></table>
+    <p><tt>This&nbsp;module&nbsp;defines&nbsp;the&nbsp;<a href="#TimeRec">TimeRec</a>&nbsp;and&nbsp;<a href="#CalcPosition">CalcPosition</a>&nbsp;classes,&nbsp;containing&nbsp;attributes&nbsp;and<br>
+methods&nbsp;for&nbsp;astrometric&nbsp;corrections&nbsp;(JD,&nbsp;LST,&nbsp;precession,&nbsp;nutation,&nbsp;refraction,&nbsp;etc).<br>
+&nbsp;<br>
+The&nbsp;pyephem&nbsp;module&nbsp;defines&nbsp;subclasses&nbsp;of&nbsp;<a href="#TimeRec">TimeRec</a>&nbsp;and&nbsp;<a href="#CalcPosition">CalcPosition</a>,&nbsp;but&nbsp;the&nbsp;subclasses<br>
+duplicate&nbsp;almost&nbsp;all&nbsp;of&nbsp;the&nbsp;astrometric&nbsp;code&nbsp;and&nbsp;LST&nbsp;calculation&nbsp;here,&nbsp;using&nbsp;routines&nbsp;in<br>
+the&nbsp;ephem&nbsp;library(wrapping&nbsp;Elwood&nbsp;P&nbsp;Downey's&nbsp;code).&nbsp;The&nbsp;routines&nbsp;in&nbsp;here&nbsp;are&nbsp;the&nbsp;original<br>
+Teljoy&nbsp;astrometric&nbsp;code,&nbsp;ported&nbsp;from&nbsp;Pascal,&nbsp;but&nbsp;after&nbsp;some&nbsp;more&nbsp;testing,&nbsp;most&nbsp;of&nbsp;this&nbsp;code<br>
+could&nbsp;be&nbsp;deleted&nbsp;and&nbsp;the&nbsp;classes&nbsp;merged.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="datetime.html">datetime</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+<a href="random.html">random</a><br>
+</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="traceback.html">traceback</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="correct.html#FlexureProfile">FlexureProfile</a>
+</font></dt><dt><font face="helvetica, arial"><a href="correct.html#TimeRec">TimeRec</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="globals.html#Position">globals.Position</a>(<a href="__builtin__.html#object">__builtin__.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="correct.html#CalcPosition">CalcPosition</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="correct.html#HADecPosition">HADecPosition</a>
+</font></dt></dl>
+</dd>
+</dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="CalcPosition">class <strong>CalcPosition</strong></a>(<a href="globals.html#Position">globals.Position</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Subclass&nbsp;globals.<a href="globals.html#Position">Position</a>&nbsp;to&nbsp;add&nbsp;astrometric&nbsp;calculation&nbsp;methods.<br>
+Extra&nbsp;coordinate&nbsp;attributes&nbsp;(RaA,&nbsp;RaC,&nbsp;DecA,&nbsp;DecC)&nbsp;are&nbsp;all&nbsp;in&nbsp;arcseconds.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="correct.html#CalcPosition">CalcPosition</a></dd>
+<dd><a href="globals.html#Position">globals.Position</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="CalcPosition-AltAziConv"><strong>AltAziConv</strong></a>(self)</dt><dd><tt>Calculate&nbsp;Altitude&nbsp;and&nbsp;Azimuth&nbsp;from&nbsp;.RaA,&nbsp;.DecA,&nbsp;and&nbsp;.Time.LST<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;must&nbsp;be&nbsp;called&nbsp;after&nbsp;.RaA&nbsp;and&nbsp;.DecA&nbsp;have&nbsp;been&nbsp;calculated.<br>
+&nbsp;<br>
+#Taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;&nbsp;&nbsp;&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:43-48.</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-ApparentPlace"><strong>ApparentPlace</strong></a>(self)</dt><dd><tt>Calculate&nbsp;annual&nbsp;aberration&nbsp;(I&nbsp;think&nbsp;:-)<br>
+&nbsp;<br>
+Returns&nbsp;dRA&nbsp;and&nbsp;dDEC&nbsp;corrections&nbsp;as&nbsp;a&nbsp;tuple,&nbsp;in&nbsp;arcseconds.<br>
+&nbsp;<br>
+#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:71-73.</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-Flex"><strong>Flex</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;correction&nbsp;for&nbsp;telescope&nbsp;flexure,&nbsp;using&nbsp;the&nbsp;TPOINT&nbsp;flexure&nbsp;terms&nbsp;from<br>
+the&nbsp;teljoy.ini&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-Nutation"><strong>Nutation</strong></a>(self, T)</dt><dd><tt>var&nbsp;L,Ld,M,Md,Omega:double<br>
+#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:69-70.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NOTE&nbsp;-&nbsp;original&nbsp;Pascal&nbsp;function&nbsp;modified&nbsp;dPhi&nbsp;and&nbsp;dEpsi&nbsp;arguments&nbsp;in&nbsp;place<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New&nbsp;Python&nbsp;function&nbsp;returns&nbsp;dRA&nbsp;and&nbsp;dDEC&nbsp;(in&nbsp;arcsec)&nbsp;as&nbsp;tuple!</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-Precess"><strong>Precess</strong></a>(self)</dt><dd><tt>Correct&nbsp;for&nbsp;precession&nbsp;of&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;from&nbsp;the&nbsp;equinox&nbsp;of&nbsp;the&nbsp;<br>
+original&nbsp;coordinates&nbsp;(.Ra,&nbsp;.Dec,&nbsp;and&nbsp;.Epoch)&nbsp;to&nbsp;the&nbsp;current&nbsp;date.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;since&nbsp;the&nbsp;correction&nbsp;is&nbsp;for&nbsp;the&nbsp;reference&nbsp;frame&nbsp;itself,&nbsp;there's&nbsp;no&nbsp;<br>
+reason&nbsp;the&nbsp;destination&nbsp;epoch&nbsp;needs&nbsp;to&nbsp;be&nbsp;the&nbsp;current&nbsp;date&nbsp;-&nbsp;we&nbsp;just&nbsp;need&nbsp;the<br>
+'current'&nbsp;and&nbsp;destination&nbsp;coordinates&nbsp;for&nbsp;any&nbsp;jumps&nbsp;to&nbsp;be&nbsp;in&nbsp;the&nbsp;same&nbsp;reference<br>
+frame&nbsp;(equinox).&nbsp;<br>
+&nbsp;<br>
+It&nbsp;might&nbsp;be&nbsp;more&nbsp;sensible&nbsp;to&nbsp;keep&nbsp;the&nbsp;'current'&nbsp;coordinates&nbsp;(detevent.current)<br>
+in&nbsp;J2000&nbsp;equinox,&nbsp;and&nbsp;convert&nbsp;all&nbsp;targets&nbsp;to&nbsp;that&nbsp;equinox.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;for&nbsp;historical&nbsp;reasons,&nbsp;the&nbsp;equinox&nbsp;for&nbsp;the&nbsp;coordinates&nbsp;is&nbsp;stored&nbsp;in&nbsp;the&nbsp;'Epoch'<br>
+attribute.&nbsp;Strictly&nbsp;speaking,&nbsp;'Epoch'&nbsp;refers&nbsp;to&nbsp;the&nbsp;time&nbsp;an&nbsp;observation&nbsp;or&nbsp;measurement<br>
+was&nbsp;made,&nbsp;and&nbsp;NOT&nbsp;the&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;used.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;sets&nbsp;the&nbsp;RaA&nbsp;and&nbsp;DecA&nbsp;attributes&nbsp;to&nbsp;the&nbsp;precessed&nbsp;coordinates.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;&nbsp;&nbsp;&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:65-67.</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-Refrac"><strong>Refrac</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;correction&nbsp;for&nbsp;atmospheric&nbsp;refraction&nbsp;for&nbsp;the&nbsp;given&nbsp;coordinates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns&nbsp;a&nbsp;tuple&nbsp;of&nbsp;dRA&nbsp;and&nbsp;dDEC,&nbsp;which&nbsp;are&nbsp;OFFSETS&nbsp;from&nbsp;the&nbsp;current&nbsp;position,&nbsp;in&nbsp;arcseconds.</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>This&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;'pickled'&nbsp;when&nbsp;sending&nbsp;it&nbsp;over&nbsp;the&nbsp;wire&nbsp;via&nbsp;Pyro4,&nbsp;and&nbsp;we&nbsp;only&nbsp;want&nbsp;to&nbsp;pickle&nbsp;attributes,<br>
+not&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="CalcPosition-__init__"><strong>__init__</strong></a>(self, obj<font color="#909090">=None</font>, ra<font color="#909090">=None</font>, dec<font color="#909090">=None</font>, epoch<font color="#909090">=2000.0</font>, domepos<font color="#909090">=None</font>, objid<font color="#909090">=''</font>)</dt></dl>
+
+<dl><dt><a name="CalcPosition-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="CalcPosition-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="CalcPosition-update"><strong>update</strong></a>(self, now<font color="#909090">=True</font>)</dt><dd><tt>Use&nbsp;self.<strong>Ra</strong>&nbsp;and&nbsp;self.<strong>Dec</strong>&nbsp;to&nbsp;update&nbsp;the&nbsp;other&nbsp;position&nbsp;attributes&nbsp;(RaA,DecA,RaC,DecC,Alt,Azi).<br>
+if&nbsp;'now'&nbsp;is&nbsp;True,&nbsp;use&nbsp;the&nbsp;current&nbsp;time,&nbsp;otherwise&nbsp;use&nbsp;the&nbsp;time&nbsp;in&nbsp;self.<strong>Time</strong>.UT.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="globals.html#Position">globals.Position</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="FlexureProfile">class <strong>FlexureProfile</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;load&nbsp;and&nbsp;store&nbsp;the&nbsp;TPOINT&nbsp;flexure&nbsp;terms&nbsp;from&nbsp;the&nbsp;.ini&nbsp;file<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="FlexureProfile-GetFlexConstants"><strong>GetFlexConstants</strong></a>(self)</dt><dd><tt>Load&nbsp;the&nbsp;terms&nbsp;from&nbsp;the&nbsp;.ini&nbsp;file</tt></dd></dl>
+
+<dl><dt><a name="FlexureProfile-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="HADecPosition">class <strong>HADecPosition</strong></a>(<a href="correct.html#CalcPosition">CalcPosition</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Subclass&nbsp;<a href="#CalcPosition">CalcPosition</a>&nbsp;to&nbsp;handle&nbsp;fixed&nbsp;(HourAngle/Dec&nbsp;positions,&nbsp;for&nbsp;tasks&nbsp;like<br>
+pointing&nbsp;at&nbsp;the&nbsp;flatfielding&nbsp;screen,&nbsp;parking&nbsp;the&nbsp;telescope,&nbsp;etc.&nbsp;Source&nbsp;attributes<br>
+and&nbsp;arguments&nbsp;to&nbsp;__init__&nbsp;are&nbsp;ha&nbsp;(in&nbsp;hours,&nbsp;dec&nbsp;(in&nbsp;degrees),&nbsp;and&nbsp;domepos&nbsp;(in&nbsp;degrees).<br>
+&nbsp;<br>
+The&nbsp;<a href="#HADecPosition-update">update</a>()&nbsp;method&nbsp;is&nbsp;overridden&nbsp;to&nbsp;first&nbsp;calculate&nbsp;.Ra&nbsp;and&nbsp;.Dec&nbsp;from&nbsp;the<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="correct.html#HADecPosition">HADecPosition</a></dd>
+<dd><a href="correct.html#CalcPosition">CalcPosition</a></dd>
+<dd><a href="globals.html#Position">globals.Position</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="HADecPosition-__init__"><strong>__init__</strong></a>(self, ha<font color="#909090">=None</font>, dec<font color="#909090">=None</font>, epoch<font color="#909090">=0.0</font>, domepos<font color="#909090">=None</font>, objid<font color="#909090">=''</font>)</dt></dl>
+
+<dl><dt><a name="HADecPosition-update"><strong>update</strong></a>(self, now<font color="#909090">=True</font>)</dt><dd><tt>Override&nbsp;normal&nbsp;position&nbsp;update&nbsp;to&nbsp;calculate&nbsp;the&nbsp;current&nbsp;ra/dec&nbsp;from&nbsp;the&nbsp;fixed&nbsp;hour-angle/dec&nbsp;position<br>
+before&nbsp;doing&nbsp;the&nbsp;astropmetric&nbsp;calculations.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="correct.html#CalcPosition">CalcPosition</a>:<br>
+<dl><dt><a name="HADecPosition-AltAziConv"><strong>AltAziConv</strong></a>(self)</dt><dd><tt>Calculate&nbsp;Altitude&nbsp;and&nbsp;Azimuth&nbsp;from&nbsp;.RaA,&nbsp;.DecA,&nbsp;and&nbsp;.Time.LST<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;must&nbsp;be&nbsp;called&nbsp;after&nbsp;.RaA&nbsp;and&nbsp;.DecA&nbsp;have&nbsp;been&nbsp;calculated.<br>
+&nbsp;<br>
+#Taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;&nbsp;&nbsp;&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:43-48.</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-ApparentPlace"><strong>ApparentPlace</strong></a>(self)</dt><dd><tt>Calculate&nbsp;annual&nbsp;aberration&nbsp;(I&nbsp;think&nbsp;:-)<br>
+&nbsp;<br>
+Returns&nbsp;dRA&nbsp;and&nbsp;dDEC&nbsp;corrections&nbsp;as&nbsp;a&nbsp;tuple,&nbsp;in&nbsp;arcseconds.<br>
+&nbsp;<br>
+#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:71-73.</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-Flex"><strong>Flex</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;correction&nbsp;for&nbsp;telescope&nbsp;flexure,&nbsp;using&nbsp;the&nbsp;TPOINT&nbsp;flexure&nbsp;terms&nbsp;from<br>
+the&nbsp;teljoy.ini&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-Nutation"><strong>Nutation</strong></a>(self, T)</dt><dd><tt>var&nbsp;L,Ld,M,Md,Omega:double<br>
+#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+#&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:69-70.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NOTE&nbsp;-&nbsp;original&nbsp;Pascal&nbsp;function&nbsp;modified&nbsp;dPhi&nbsp;and&nbsp;dEpsi&nbsp;arguments&nbsp;in&nbsp;place<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New&nbsp;Python&nbsp;function&nbsp;returns&nbsp;dRA&nbsp;and&nbsp;dDEC&nbsp;(in&nbsp;arcsec)&nbsp;as&nbsp;tuple!</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-Precess"><strong>Precess</strong></a>(self)</dt><dd><tt>Correct&nbsp;for&nbsp;precession&nbsp;of&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;from&nbsp;the&nbsp;equinox&nbsp;of&nbsp;the&nbsp;<br>
+original&nbsp;coordinates&nbsp;(.Ra,&nbsp;.Dec,&nbsp;and&nbsp;.Epoch)&nbsp;to&nbsp;the&nbsp;current&nbsp;date.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;since&nbsp;the&nbsp;correction&nbsp;is&nbsp;for&nbsp;the&nbsp;reference&nbsp;frame&nbsp;itself,&nbsp;there's&nbsp;no&nbsp;<br>
+reason&nbsp;the&nbsp;destination&nbsp;epoch&nbsp;needs&nbsp;to&nbsp;be&nbsp;the&nbsp;current&nbsp;date&nbsp;-&nbsp;we&nbsp;just&nbsp;need&nbsp;the<br>
+'current'&nbsp;and&nbsp;destination&nbsp;coordinates&nbsp;for&nbsp;any&nbsp;jumps&nbsp;to&nbsp;be&nbsp;in&nbsp;the&nbsp;same&nbsp;reference<br>
+frame&nbsp;(equinox).&nbsp;<br>
+&nbsp;<br>
+It&nbsp;might&nbsp;be&nbsp;more&nbsp;sensible&nbsp;to&nbsp;keep&nbsp;the&nbsp;'current'&nbsp;coordinates&nbsp;(detevent.current)<br>
+in&nbsp;J2000&nbsp;equinox,&nbsp;and&nbsp;convert&nbsp;all&nbsp;targets&nbsp;to&nbsp;that&nbsp;equinox.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;for&nbsp;historical&nbsp;reasons,&nbsp;the&nbsp;equinox&nbsp;for&nbsp;the&nbsp;coordinates&nbsp;is&nbsp;stored&nbsp;in&nbsp;the&nbsp;'Epoch'<br>
+attribute.&nbsp;Strictly&nbsp;speaking,&nbsp;'Epoch'&nbsp;refers&nbsp;to&nbsp;the&nbsp;time&nbsp;an&nbsp;observation&nbsp;or&nbsp;measurement<br>
+was&nbsp;made,&nbsp;and&nbsp;NOT&nbsp;the&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;used.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;sets&nbsp;the&nbsp;RaA&nbsp;and&nbsp;DecA&nbsp;attributes&nbsp;to&nbsp;the&nbsp;precessed&nbsp;coordinates.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;This&nbsp;is&nbsp;taken&nbsp;from&nbsp;Astronomical&nbsp;Formulae&nbsp;for&nbsp;Calculators,&nbsp;Jean&nbsp;Meeus,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;&nbsp;&nbsp;&nbsp;3rd&nbsp;Ed.&nbsp;1985.&nbsp;&nbsp;P:65-67.</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-Refrac"><strong>Refrac</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;correction&nbsp;for&nbsp;atmospheric&nbsp;refraction&nbsp;for&nbsp;the&nbsp;given&nbsp;coordinates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns&nbsp;a&nbsp;tuple&nbsp;of&nbsp;dRA&nbsp;and&nbsp;dDEC,&nbsp;which&nbsp;are&nbsp;OFFSETS&nbsp;from&nbsp;the&nbsp;current&nbsp;position,&nbsp;in&nbsp;arcseconds.</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>This&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;'pickled'&nbsp;when&nbsp;sending&nbsp;it&nbsp;over&nbsp;the&nbsp;wire&nbsp;via&nbsp;Pyro4,&nbsp;and&nbsp;we&nbsp;only&nbsp;want&nbsp;to&nbsp;pickle&nbsp;attributes,<br>
+not&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="HADecPosition-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="HADecPosition-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="globals.html#Position">globals.Position</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TimeRec">class <strong>TimeRec</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;store&nbsp;a&nbsp;date&nbsp;and&nbsp;time,&nbsp;in&nbsp;standard&nbsp;Python&nbsp;format&nbsp;(a&nbsp;datetime.datetime&nbsp;<a href="__builtin__.html#object">object</a>,<br>
+in&nbsp;the&nbsp;UTC&nbsp;timezone),&nbsp;a&nbsp;decimal&nbsp;Julian&nbsp;Day&nbsp;number,&nbsp;and&nbsp;the&nbsp;Local&nbsp;Sidereal&nbsp;Time&nbsp;associated<br>
+with&nbsp;that&nbsp;JD&nbsp;and&nbsp;datetime&nbsp;for&nbsp;the&nbsp;current&nbsp;position&nbsp;(defined&nbsp;in&nbsp;the&nbsp;.ini&nbsp;file).<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TimeRec-CalcJulDay"><strong>CalcJulDay</strong></a>(self)</dt><dd><tt>Calculate&nbsp;full&nbsp;Julian&nbsp;Day&nbsp;for&nbsp;the&nbsp;time&nbsp;in&nbsp;self.<strong>UT</strong></tt></dd></dl>
+
+<dl><dt><a name="TimeRec-CalcLST"><strong>CalcLST</strong></a>(self)</dt><dd><tt>Calculate&nbsp;the&nbsp;Local&nbsp;Sidereal&nbsp;Time&nbsp;from&nbsp;the&nbsp;objects&nbsp;.JD&nbsp;and&nbsp;.UT&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="TimeRec-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>This&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;'pickled'&nbsp;when&nbsp;sending&nbsp;it&nbsp;over&nbsp;the&nbsp;wire&nbsp;via&nbsp;Pyro4,&nbsp;and&nbsp;we&nbsp;only&nbsp;want&nbsp;to&nbsp;pickle&nbsp;attributes,<br>
+not&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="TimeRec-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Create&nbsp;initial&nbsp;instance&nbsp;with&nbsp;the&nbsp;current&nbsp;date&nbsp;and&nbsp;time.</tt></dd></dl>
+
+<dl><dt><a name="TimeRec-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="TimeRec-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="TimeRec-update"><strong>update</strong></a>(self, now<font color="#909090">=True</font>)</dt><dd><tt>Update&nbsp;the&nbsp;time&nbsp;record.&nbsp;If&nbsp;now&nbsp;is&nbsp;True,&nbsp;get&nbsp;the&nbsp;current&nbsp;time,&nbsp;<br>
+otherwise&nbsp;update&nbsp;JD&nbsp;and&nbsp;LST&nbsp;fields&nbsp;for&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>UT</strong></tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-DegToRad"><strong>DegToRad</strong></a>(r)</dt></dl>
+ <dl><dt><a name="-RadToDeg"><strong>RadToDeg</strong></a>(r)</dt></dl>
+ <dl><dt><a name="-Reduce"><strong>Reduce</strong></a>(r)</dt></dl>
+ <dl><dt><a name="-acos"><strong>acos</strong></a>(...)</dt><dd><tt><a href="#-acos">acos</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;arc&nbsp;cosine&nbsp;(measured&nbsp;in&nbsp;radians)&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-asin"><strong>asin</strong></a>(...)</dt><dd><tt><a href="#-asin">asin</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;arc&nbsp;sine&nbsp;(measured&nbsp;in&nbsp;radians)&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-atan2"><strong>atan2</strong></a>(...)</dt><dd><tt><a href="#-atan2">atan2</a>(y,&nbsp;x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;arc&nbsp;tangent&nbsp;(measured&nbsp;in&nbsp;radians)&nbsp;of&nbsp;y/x.<br>
+Unlike&nbsp;atan(y/x),&nbsp;the&nbsp;signs&nbsp;of&nbsp;both&nbsp;x&nbsp;and&nbsp;y&nbsp;are&nbsp;considered.</tt></dd></dl>
+ <dl><dt><a name="-cos"><strong>cos</strong></a>(...)</dt><dd><tt><a href="#-cos">cos</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;cosine&nbsp;of&nbsp;x&nbsp;(measured&nbsp;in&nbsp;radians).</tt></dd></dl>
+ <dl><dt><a name="-cosec"><strong>cosec</strong></a>(r)</dt></dl>
+ <dl><dt><a name="-cot"><strong>cot</strong></a>(r)</dt></dl>
+ <dl><dt><a name="-floor"><strong>floor</strong></a>(...)</dt><dd><tt><a href="#-floor">floor</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;floor&nbsp;of&nbsp;x&nbsp;as&nbsp;a&nbsp;float.<br>
+This&nbsp;is&nbsp;the&nbsp;largest&nbsp;integral&nbsp;value&nbsp;&lt;=&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-modf"><strong>modf</strong></a>(...)</dt><dd><tt><a href="#-modf">modf</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;fractional&nbsp;and&nbsp;integer&nbsp;parts&nbsp;of&nbsp;x.&nbsp;&nbsp;Both&nbsp;results&nbsp;carry&nbsp;the&nbsp;sign<br>
+of&nbsp;x&nbsp;and&nbsp;are&nbsp;floats.</tt></dd></dl>
+ <dl><dt><a name="-sec"><strong>sec</strong></a>(r)</dt></dl>
+ <dl><dt><a name="-sin"><strong>sin</strong></a>(...)</dt><dd><tt><a href="#-sin">sin</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;sine&nbsp;of&nbsp;x&nbsp;(measured&nbsp;in&nbsp;radians).</tt></dd></dl>
+ <dl><dt><a name="-sqrt"><strong>sqrt</strong></a>(...)</dt><dd><tt><a href="#-sqrt">sqrt</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;square&nbsp;root&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-tan"><strong>tan</strong></a>(...)</dt><dd><tt><a href="#-tan">tan</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;tangent&nbsp;of&nbsp;x&nbsp;(measured&nbsp;in&nbsp;radians).</tt></dd></dl>
+ <dl><dt><a name="-trunc"><strong>trunc</strong></a>(...)</dt><dd><tt><a href="#-trunc">trunc</a>(x:Real)&nbsp;-&gt;&nbsp;Integral<br>
+&nbsp;<br>
+Truncates&nbsp;x&nbsp;to&nbsp;the&nbsp;nearest&nbsp;Integral&nbsp;toward&nbsp;0.&nbsp;Uses&nbsp;the&nbsp;__trunc__&nbsp;magic&nbsp;method.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', 'DNP': '0.0', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>FlexData</strong> = &lt;correct.FlexureProfile object&gt;<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>N</strong> = 1.000297<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>R1</strong> = 58.294<br>
+<strong>R2</strong> = -0.0668<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>pi</strong> = 3.141592653589793<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>

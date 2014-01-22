@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module digio</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>digio</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/digio.py">/home/andrew/PyDevel/teljoy/digio.py</a></font></td></tr></table>
+    <p><tt>Functions&nbsp;to&nbsp;read&nbsp;the&nbsp;digital&nbsp;inputs,&nbsp;originally&nbsp;from&nbsp;the&nbsp;8255&nbsp;card&nbsp;and&nbsp;now&nbsp;using&nbsp;the<br>
+USB&nbsp;controller.&nbsp;For&nbsp;testing,&nbsp;a&nbsp;few&nbsp;functions&nbsp;are&nbsp;defined&nbsp;for&nbsp;for&nbsp;'faking'&nbsp;button&nbsp;presses.<br>
+&nbsp;<br>
+ReadCoarse&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Read&nbsp;the&nbsp;coarse&nbsp;paddle&nbsp;of&nbsp;the&nbsp;telescope.<br>
+ReadFine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Read&nbsp;the&nbsp;fine&nbsp;paddle&nbsp;of&nbsp;the&nbsp;telescope.<br>
+ReadLimit&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Read&nbsp;the&nbsp;limit&nbsp;and&nbsp;power-down&nbsp;status.<br>
+&nbsp;<br>
+The&nbsp;New&nbsp;Zealand&nbsp;installation&nbsp;also&nbsp;uses&nbsp;digital&nbsp;port&nbsp;IO&nbsp;to&nbsp;control&nbsp;the<br>
+dome.&nbsp;Instead&nbsp;of&nbsp;a&nbsp;serial&nbsp;link&nbsp;to&nbsp;a&nbsp;dedicated&nbsp;controller,&nbsp;as&nbsp;in&nbsp;Perth,&nbsp;<br>
+the&nbsp;serial&nbsp;link&nbsp;is&nbsp;to&nbsp;an&nbsp;encoder&nbsp;returning&nbsp;a&nbsp;stream&nbsp;of&nbsp;bytes&nbsp;containing<br>
+the&nbsp;dome&nbsp;azimuth,&nbsp;and&nbsp;digital&nbsp;IO&nbsp;is&nbsp;used&nbsp;to&nbsp;emulate&nbsp;the&nbsp;'dome&nbsp;left'&nbsp;and<br>
+'dome&nbsp;right'&nbsp;paddle&nbsp;buttons,&nbsp;which&nbsp;control&nbsp;the&nbsp;motors.&nbsp;This&nbsp;module&nbsp;contains<br>
+the&nbsp;port&nbsp;IO&nbsp;for&nbsp;that&nbsp;task,&nbsp;while&nbsp;NZDOME.PAS&nbsp;contains&nbsp;the&nbsp;rest&nbsp;of&nbsp;the&nbsp;logic.&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;<br>
+The&nbsp;constants&nbsp;and&nbsp;types&nbsp;given&nbsp;below&nbsp;are&nbsp;the&nbsp;old&nbsp;(ISA&nbsp;bus)&nbsp;locations&nbsp;of&nbsp;buffers,<br>
+control&nbsp;registers&nbsp;or&nbsp;board&nbsp;address.&nbsp;&nbsp;The&nbsp;Perth&nbsp;8255&nbsp;I/O&nbsp;board&nbsp;is&nbsp;assumed<br>
+to&nbsp;be&nbsp;at&nbsp;0x1b0&nbsp;=&nbsp;432,&nbsp;and&nbsp;the&nbsp;base&nbsp;address&nbsp;of&nbsp;the&nbsp;New&nbsp;Zealand&nbsp;board&nbsp;(a&nbsp;PC-711B)<br>
+is&nbsp;at&nbsp;0x216&nbsp;=&nbsp;534.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="motion.html">motion</a><br>
+<a href="random.html">random</a><br>
+</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="traceback.html">traceback</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-DomeGoingLeft"><strong>DomeGoingLeft</strong></a>()</dt><dd><tt>Returns&nbsp;true&nbsp;if&nbsp;the&nbsp;dome&nbsp;motor&nbsp;is&nbsp;moving&nbsp;left.&nbsp;This&nbsp;happens&nbsp;if&nbsp;the&nbsp;user&nbsp;presses&nbsp;the&nbsp;'Dome&nbsp;Left'&nbsp;button&nbsp;on&nbsp;the&nbsp;paddle.</tt></dd></dl>
+ <dl><dt><a name="-DomeGoingRight"><strong>DomeGoingRight</strong></a>()</dt><dd><tt>Returns&nbsp;true&nbsp;if&nbsp;the&nbsp;dome&nbsp;motor&nbsp;is&nbsp;moving&nbsp;right.&nbsp;This&nbsp;happens&nbsp;if&nbsp;the&nbsp;user&nbsp;presses&nbsp;the&nbsp;'Dome&nbsp;Right'&nbsp;button&nbsp;on&nbsp;the&nbsp;paddle.</tt></dd></dl>
+ <dl><dt><a name="-DomeLeft"><strong>DomeLeft</strong></a>()</dt><dd><tt>Move&nbsp;the&nbsp;dome&nbsp;left.</tt></dd></dl>
+ <dl><dt><a name="-DomeRight"><strong>DomeRight</strong></a>()</dt><dd><tt>Move&nbsp;the&nbsp;dome&nbsp;right.</tt></dd></dl>
+ <dl><dt><a name="-DomeStop"><strong>DomeStop</strong></a>()</dt><dd><tt>Turn&nbsp;off&nbsp;both&nbsp;dome&nbsp;motors.</tt></dd></dl>
+ <dl><dt><a name="-ReadCoarse"><strong>ReadCoarse</strong></a>()</dt><dd><tt>Return&nbsp;either&nbsp;the&nbsp;6&nbsp;bits&nbsp;of&nbsp;data&nbsp;from&nbsp;the&nbsp;coarse&nbsp;paddle&nbsp;bits,&nbsp;or&nbsp;a&nbsp;dummy&nbsp;value&nbsp;if<br>
+we're&nbsp;emulating&nbsp;the&nbsp;paddle&nbsp;in&nbsp;software.<br>
+In&nbsp;NZ,&nbsp;on&nbsp;the&nbsp;old&nbsp;card,&nbsp;this&nbsp;was&nbsp;port&nbsp;$216&nbsp;=&nbsp;DI-low</tt></dd></dl>
+ <dl><dt><a name="-ReadFine"><strong>ReadFine</strong></a>()</dt><dd><tt>Return&nbsp;the&nbsp;byte&nbsp;of&nbsp;data&nbsp;from&nbsp;the&nbsp;fine&nbsp;hand&nbsp;paddle&nbsp;port,&nbsp;or&nbsp;a&nbsp;dummy&nbsp;value&nbsp;if<br>
+we're&nbsp;emulating&nbsp;the&nbsp;paddle&nbsp;in&nbsp;software.<br>
+Return&nbsp;zero&nbsp;if&nbsp;called&nbsp;by&nbsp;the&nbsp;code&nbsp;in&nbsp;NZ.</tt></dd></dl>
+ <dl><dt><a name="-ReadLimit"><strong>ReadLimit</strong></a>(inputs<font color="#909090">=None</font>)</dt><dd><tt>Read&nbsp;the&nbsp;state&nbsp;of&nbsp;the&nbsp;limit&nbsp;switch&nbsp;input&nbsp;bits,&nbsp;and&nbsp;return&nbsp;a&nbsp;list&nbsp;of<br>
+active&nbsp;limit&nbsp;states&nbsp;(each&nbsp;a&nbsp;string).&nbsp;An&nbsp;empty&nbsp;list&nbsp;means&nbsp;no&nbsp;limits&nbsp;are<br>
+active.&nbsp;On&nbsp;old&nbsp;card,&nbsp;this&nbsp;was&nbsp;port&nbsp;$217&nbsp;=&nbsp;DI-high.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;if&nbsp;the&nbsp;power&nbsp;switch&nbsp;is&nbsp;off&nbsp;(0x20&nbsp;is&nbsp;set),&nbsp;then&nbsp;all&nbsp;the&nbsp;other<br>
+limit&nbsp;inputs&nbsp;will&nbsp;go&nbsp;high&nbsp;as&nbsp;well,&nbsp;as&nbsp;the&nbsp;relays&nbsp;all&nbsp;open.</tt></dd></dl>
+ <dl><dt><a name="-clear_outputs"><strong>clear_outputs</strong></a>(n)</dt><dd><tt>'n'&nbsp;is&nbsp;a&nbsp;64&nbsp;bit&nbsp;integer,&nbsp;and&nbsp;any&nbsp;bit&nbsp;set&nbsp;in&nbsp;'n'&nbsp;is&nbsp;forced&nbsp;low&nbsp;(assuming&nbsp;it&nbsp;is&nbsp;configured&nbsp;as&nbsp;an&nbsp;output<br>
+bit).&nbsp;Bits&nbsp;in&nbsp;'n'&nbsp;that&nbsp;are&nbsp;zero&nbsp;are&nbsp;left&nbsp;unchanged.</tt></dd></dl>
+ <dl><dt><a name="-cset"><strong>cset</strong></a>()</dt><dd><tt>Set&nbsp;the&nbsp;Coarse&nbsp;paddle&nbsp;to&nbsp;'set'&nbsp;speed.<br>
+&nbsp;<br>
+Code&nbsp;to&nbsp;emulate&nbsp;button&nbsp;presses&nbsp;for&nbsp;testing.</tt></dd></dl>
+ <dl><dt><a name="-cslew"><strong>cslew</strong></a>()</dt><dd><tt>Set&nbsp;the&nbsp;Coarse&nbsp;paddle&nbsp;to&nbsp;'slew'&nbsp;speed.<br>
+&nbsp;<br>
+Code&nbsp;to&nbsp;emulate&nbsp;button&nbsp;presses&nbsp;for&nbsp;testing.</tt></dd></dl>
+ <dl><dt><a name="-press"><strong>press</strong></a>(dirn, paddle<font color="#909090">='F'</font>)</dt><dd><tt>Flag&nbsp;a&nbsp;button&nbsp;as&nbsp;'pressed'.&nbsp;Args&nbsp;are&nbsp;'dirn'&nbsp;which&nbsp;must&nbsp;equal&nbsp;'N','S','E',&nbsp;or&nbsp;'W',<br>
+and&nbsp;'paddle'&nbsp;which&nbsp;must&nbsp;be&nbsp;'C'&nbsp;or&nbsp;'F'&nbsp;(default&nbsp;'F')<br>
+&nbsp;<br>
+Code&nbsp;to&nbsp;emulate&nbsp;button&nbsp;presses&nbsp;for&nbsp;testing.</tt></dd></dl>
+ <dl><dt><a name="-release"><strong>release</strong></a>(dirn<font color="#909090">=None</font>, paddle<font color="#909090">=None</font>)</dt><dd><tt>Flag&nbsp;a&nbsp;button&nbsp;as&nbsp;'pressed'.&nbsp;Args&nbsp;are&nbsp;'dirn'&nbsp;which&nbsp;must&nbsp;equal&nbsp;'N','S','E',&nbsp;or&nbsp;'W',<br>
+and&nbsp;'paddle'&nbsp;which&nbsp;must&nbsp;be&nbsp;'C'&nbsp;or&nbsp;'F'.&nbsp;If&nbsp;neither&nbsp;'dirn'&nbsp;nor&nbsp;'paddle'&nbsp;are&nbsp;given,<br>
+then&nbsp;'release'&nbsp;the&nbsp;last&nbsp;button&nbsp;'press'ed.<br>
+&nbsp;<br>
+Code&nbsp;to&nbsp;emulate&nbsp;button&nbsp;presses&nbsp;for&nbsp;testing.</tt></dd></dl>
+ <dl><dt><a name="-set_outputs"><strong>set_outputs</strong></a>(n)</dt><dd><tt>'n'&nbsp;is&nbsp;a&nbsp;64&nbsp;bit&nbsp;integer,&nbsp;and&nbsp;any&nbsp;bit&nbsp;set&nbsp;in&nbsp;'n'&nbsp;is&nbsp;forced&nbsp;high&nbsp;(assuming&nbsp;it&nbsp;is&nbsp;configured&nbsp;as&nbsp;an&nbsp;output<br>
+bit).&nbsp;Bits&nbsp;in&nbsp;'n'&nbsp;that&nbsp;are&nbsp;zero&nbsp;are&nbsp;left&nbsp;unchanged.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CB</strong> = 0<br>
+<strong>CEast</strong> = 4<br>
+<strong>CNorth</strong> = 1<br>
+<strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>CSlewMsk</strong> = 16<br>
+<strong>CSouth</strong> = 2<br>
+<strong>CWest</strong> = 8<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CoarseSet': '180', 'EastOfPier': 'False', 'FineSet': '60', 'FlexureOn': 'True', 'GUIDE': '5', 'HighHorizonOn': 'False', ...}<br>
+<strong>CspaMsk</strong> = 16<br>
+<strong>CspbMsk</strong> = 32<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>FB</strong> = 0<br>
+<strong>FEast</strong> = 4<br>
+<strong>FGuideMsk</strong> = 16<br>
+<strong>FNorth</strong> = 1<br>
+<strong>FSouth</strong> = 2<br>
+<strong>FWest</strong> = 8<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>LastDirn</strong> = ''<br>
+<strong>LastPaddle</strong> = ''<br>
+<strong>LeftBit</strong> = 8<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>RightBit</strong> = 9<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>

@@ -1,0 +1,262 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module globals</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>globals</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/globals.py">/home/andrew/PyDevel/teljoy/globals.py</a></font></td></tr></table>
+    <p><tt>Constants,&nbsp;classes&nbsp;and&nbsp;utility&nbsp;functions&nbsp;used&nbsp;by&nbsp;most&nbsp;of&nbsp;the&nbsp;other<br>
+modules&nbsp;in&nbsp;Teljoy.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="random.html">random</a><br>
+<a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="traceback.html">traceback</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="globals.html#Errors">Errors</a>
+</font></dt><dt><font face="helvetica, arial"><a href="globals.html#Position">Position</a>
+</font></dt><dt><font face="helvetica, arial"><a href="globals.html#Prefs">Prefs</a>
+</font></dt><dt><font face="helvetica, arial"><a href="globals.html#SafetyInterlock">SafetyInterlock</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Errors">class <strong>Errors</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>An&nbsp;instance&nbsp;of&nbsp;this&nbsp;class&nbsp;is&nbsp;created&nbsp;to&nbsp;store&nbsp;all&nbsp;internal&nbsp;software&nbsp;error&nbsp;states.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Errors-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>Can't&nbsp;pickle&nbsp;the&nbsp;__setattr__&nbsp;function&nbsp;when&nbsp;saving&nbsp;state</tt></dd></dl>
+
+<dl><dt><a name="Errors-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Errors-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Errors-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Position">class <strong>Position</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Base&nbsp;class&nbsp;used&nbsp;to&nbsp;store&nbsp;astronomical&nbsp;coordinates.&nbsp;Attributes&nbsp;are&nbsp;'.Ra'&nbsp;and<br>
+'.Dec'&nbsp;in&nbsp;arcseconds,&nbsp;and&nbsp;'.Epoch',&nbsp;a&nbsp;decimal&nbsp;year&nbsp;containing&nbsp;the&nbsp;equinox<br>
+for&nbsp;which&nbsp;that&nbsp;RA&nbsp;and&nbsp;DEC&nbsp;refer.&nbsp;The&nbsp;'ObjID'&nbsp;attribute&nbsp;contains&nbsp;an&nbsp;optional&nbsp;short<br>
+name&nbsp;for&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>.<br>
+&nbsp;<br>
+While&nbsp;the&nbsp;'ra'&nbsp;and&nbsp;'dec'&nbsp;arguments&nbsp;for&nbsp;the&nbsp;constructor&nbsp;for&nbsp;new&nbsp;positions&nbsp;are<br>
+in&nbsp;hours&nbsp;or&nbsp;degrees,&nbsp;the&nbsp;INTERNAL&nbsp;attributes&nbsp;(Ra&nbsp;and&nbsp;Dec,&nbsp;plus&nbsp;RaA,&nbsp;DecA,&nbsp;RaC,&nbsp;and&nbsp;DecC<br>
+in&nbsp;the&nbsp;correct.CalcPosition&nbsp;subclass)&nbsp;are&nbsp;all&nbsp;in&nbsp;arcseconds.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;RA&nbsp;and&nbsp;DEC&nbsp;attributes&nbsp;of&nbsp;this&nbsp;position&nbsp;class&nbsp;(.Ra,&nbsp;.Dec,&nbsp;.RaA,&nbsp;etc)&nbsp;should<br>
+be&nbsp;the&nbsp;only&nbsp;identifiers&nbsp;for&nbsp;Right&nbsp;Ascension&nbsp;and&nbsp;Declination&nbsp;that&nbsp;are&nbsp;in&nbsp;mixed-case,<br>
+in&nbsp;any&nbsp;of&nbsp;the&nbsp;teljoy&nbsp;code.&nbsp;This&nbsp;is&nbsp;to&nbsp;indicate&nbsp;the&nbsp;fact&nbsp;that&nbsp;they&nbsp;are&nbsp;in&nbsp;arcseconds,&nbsp;<br>
+not&nbsp;hours&nbsp;and&nbsp;degrees.&nbsp;All&nbsp;other&nbsp;coordinate&nbsp;attributes&nbsp;should&nbsp;be&nbsp;fully&nbsp;capitalised,&nbsp;as<br>
+should&nbsp;the&nbsp;strings&nbsp;'RA'&nbsp;and&nbsp;'DEC'&nbsp;if&nbsp;they&nbsp;form&nbsp;part&nbsp;of&nbsp;another&nbsp;identifier&nbsp;(RA2000,&nbsp;etc).<br>
+The&nbsp;only&nbsp;exceptions&nbsp;are&nbsp;the&nbsp;arguments&nbsp;to&nbsp;any&nbsp;function&nbsp;likely&nbsp;to&nbsp;be&nbsp;used&nbsp;on&nbsp;the<br>
+command-line&nbsp;by&nbsp;a&nbsp;user,&nbsp;which&nbsp;should&nbsp;be&nbsp;fully&nbsp;lower&nbsp;case&nbsp;(ra,&nbsp;dec).<br>
+&nbsp;<br>
+Objects&nbsp;of&nbsp;this&nbsp;base&nbsp;class&nbsp;can't&nbsp;be&nbsp;used&nbsp;for&nbsp;telescope&nbsp;jumps,&nbsp;as&nbsp;they&nbsp;don't&nbsp;contain&nbsp;the&nbsp;<br>
+methods&nbsp;required&nbsp;to&nbsp;calculate&nbsp;apparent&nbsp;place&nbsp;-&nbsp;use&nbsp;the&nbsp;correct.CalcPosition&nbsp;subclass<br>
+for&nbsp;most&nbsp;purposes.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;for&nbsp;historical&nbsp;reasons,&nbsp;the&nbsp;equinox&nbsp;for&nbsp;the&nbsp;coordinates&nbsp;is&nbsp;stored&nbsp;in&nbsp;the&nbsp;'Epoch'<br>
+attribute.&nbsp;Strictly&nbsp;speaking,&nbsp;'Epoch'&nbsp;refers&nbsp;to&nbsp;the&nbsp;time&nbsp;an&nbsp;observation&nbsp;or&nbsp;measurement<br>
+was&nbsp;made,&nbsp;and&nbsp;NOT&nbsp;the&nbsp;coordinate&nbsp;reference&nbsp;frame&nbsp;used.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Position-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>Can't&nbsp;pickle&nbsp;the&nbsp;__setattr__&nbsp;function&nbsp;when&nbsp;saving&nbsp;state</tt></dd></dl>
+
+<dl><dt><a name="Position-__init__"><strong>__init__</strong></a>(self, ra<font color="#909090">=None</font>, dec<font color="#909090">=None</font>, epoch<font color="#909090">=2000.0</font>, domepos<font color="#909090">=None</font>, objid<font color="#909090">=''</font>)</dt><dd><tt>Accepts&nbsp;optional&nbsp;'ra',&nbsp;'dec'&nbsp;and&nbsp;'objid'&nbsp;arguments.&nbsp;'ra'&nbsp;and&nbsp;'dec'&nbsp;can&nbsp;be&nbsp;sexagesimal&nbsp;<br>
+strings&nbsp;(in&nbsp;hours:minutes:seconds&nbsp;for&nbsp;RA&nbsp;and&nbsp;degrees:minutes:seconds&nbsp;for&nbsp;DEC),&nbsp;or<br>
+numeric&nbsp;values&nbsp;(fractional&nbsp;hours&nbsp;for&nbsp;RA,&nbsp;fractional&nbsp;degrees&nbsp;for&nbsp;DEC).<br>
+&nbsp;<br>
+If&nbsp;'domepos'&nbsp;(saved&nbsp;as&nbsp;self.<strong>DomePos</strong>)&nbsp;is&nbsp;None,&nbsp;then&nbsp;the&nbsp;dome&nbsp;azimuth&nbsp;is<br>
+calculated&nbsp;automatically&nbsp;when&nbsp;the&nbsp;telescope&nbsp;is&nbsp;slewed,&nbsp;otherwise&nbsp;the&nbsp;given<br>
+value&nbsp;(in&nbsp;degrees)&nbsp;is&nbsp;used&nbsp;for&nbsp;the&nbsp;dome&nbsp;azimuth&nbsp;when&nbsp;slewing&nbsp;to&nbsp;this&nbsp;position.<br>
+&nbsp;<br>
+objid&nbsp;is&nbsp;an&nbsp;optional&nbsp;identifier&nbsp;for&nbsp;the&nbsp;target&nbsp;specified.</tt></dd></dl>
+
+<dl><dt><a name="Position-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Position-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Prefs">class <strong>Prefs</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>An&nbsp;instance&nbsp;of&nbsp;this&nbsp;class&nbsp;is&nbsp;created&nbsp;to&nbsp;store&nbsp;global&nbsp;preferences<br>
+(from&nbsp;the&nbsp;.ini&nbsp;file)&nbsp;and&nbsp;operating&nbsp;modes.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Prefs-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SafetyInterlock">class <strong>SafetyInterlock</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Handles&nbsp;safety&nbsp;interlocks&nbsp;for&nbsp;a&nbsp;system.&nbsp;Any&nbsp;component,&nbsp;either&nbsp;locally&nbsp;or&nbsp;remotely,&nbsp;can<br>
+call&nbsp;<a href="#SafetyInterlock-add_tag">add_tag</a>()&nbsp;on&nbsp;this&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;to&nbsp;add&nbsp;a&nbsp;safety&nbsp;interlock.&nbsp;The&nbsp;add_tag&nbsp;function&nbsp;returns&nbsp;a<br>
+unique&nbsp;tag&nbsp;ID,&nbsp;which&nbsp;the&nbsp;calling&nbsp;process&nbsp;must&nbsp;save,&nbsp;and&nbsp;'stops'&nbsp;the&nbsp;system&nbsp;-&nbsp;this&nbsp;is&nbsp;done&nbsp;by<br>
+calling&nbsp;all&nbsp;of&nbsp;the&nbsp;functions&nbsp;registered&nbsp;using&nbsp;'<a href="#SafetyInterlock-register_stopfunction">register_stopfunction</a>()',&nbsp;one&nbsp;by&nbsp;one.<br>
+&nbsp;<br>
+By&nbsp;calling&nbsp;'<a href="#SafetyInterlock-remove_tag">remove_tag</a>(&lt;tag&gt;)',&nbsp;and&nbsp;passing&nbsp;the&nbsp;same&nbsp;tag&nbsp;value&nbsp;back,&nbsp;that&nbsp;safety&nbsp;tag&nbsp;can&nbsp;be<br>
+removed.<br>
+&nbsp;<br>
+Any&nbsp;number&nbsp;of&nbsp;processes&nbsp;can&nbsp;add&nbsp;tags,&nbsp;but&nbsp;each&nbsp;tag&nbsp;can&nbsp;only&nbsp;be&nbsp;removed&nbsp;by&nbsp;passing&nbsp;back&nbsp;the<br>
+unique&nbsp;tag&nbsp;ID&nbsp;value&nbsp;returned&nbsp;when&nbsp;that&nbsp;tag&nbsp;was&nbsp;added.<br>
+&nbsp;<br>
+The&nbsp;system&nbsp;is&nbsp;only&nbsp;re-started&nbsp;when&nbsp;_all_&nbsp;tags&nbsp;have&nbsp;been&nbsp;removed,&nbsp;and&nbsp;that&nbsp;re-start<br>
+process&nbsp;is&nbsp;carried&nbsp;out&nbsp;by&nbsp;calling&nbsp;all&nbsp;of&nbsp;the&nbsp;functions&nbsp;registered&nbsp;using&nbsp;the<br>
+'<a href="#SafetyInterlock-register_startfunction">register_startfunction</a>()'&nbsp;method,&nbsp;one&nbsp;by&nbsp;one.<br>
+&nbsp;<br>
+There&nbsp;is&nbsp;a&nbsp;single&nbsp;threading.Event()&nbsp;attribute&nbsp;called&nbsp;'Active',&nbsp;which&nbsp;is&nbsp;'set'&nbsp;when&nbsp;the<br>
+system&nbsp;is&nbsp;running/started,&nbsp;and&nbsp;clear&nbsp;when&nbsp;the&nbsp;system&nbsp;is&nbsp;stopped.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="SafetyInterlock-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SafetyInterlock-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SafetyInterlock-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SafetyInterlock-add_tag"><strong>add_tag</strong></a>(self, comment<font color="#909090">=''</font>)</dt><dd><tt>Adds&nbsp;a&nbsp;safety&nbsp;tag,&nbsp;stops&nbsp;the&nbsp;system&nbsp;if&nbsp;it&nbsp;hasn't&nbsp;already&nbsp;been&nbsp;stopped,&nbsp;and&nbsp;returns<br>
+a&nbsp;unique,&nbsp;random&nbsp;tag&nbsp;ID.&nbsp;That&nbsp;safety&nbsp;tag&nbsp;can&nbsp;only&nbsp;be&nbsp;removed&nbsp;by&nbsp;calling&nbsp;the<br>
+<a href="#SafetyInterlock-remove_tag">remove_tag</a>()&nbsp;method&nbsp;with&nbsp;that&nbsp;tag&nbsp;ID.</tt></dd></dl>
+
+<dl><dt><a name="SafetyInterlock-register_startfunction"><strong>register_startfunction</strong></a>(self, name, function, args<font color="#909090">=None</font>, kwargs<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="SafetyInterlock-register_stopfunction"><strong>register_stopfunction</strong></a>(self, name, function, args<font color="#909090">=None</font>, kwargs<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="SafetyInterlock-remove_tag"><strong>remove_tag</strong></a>(self, tag<font color="#909090">=None</font>)</dt><dd><tt>Given&nbsp;a&nbsp;tag&nbsp;ID,&nbsp;removes&nbsp;that&nbsp;tag&nbsp;from&nbsp;the&nbsp;current&nbsp;tag&nbsp;set.&nbsp;If&nbsp;there&nbsp;are&nbsp;no&nbsp;tags&nbsp;remaining,&nbsp;and&nbsp;the&nbsp;system&nbsp;hasn't<br>
+already&nbsp;been&nbsp;restarted,&nbsp;call&nbsp;all&nbsp;the&nbsp;start&nbsp;functions&nbsp;registered&nbsp;using&nbsp;<a href="#SafetyInterlock-register_startfunction">register_startfunction</a>().</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-UpdateConfig"><strong>UpdateConfig</strong></a>()</dt><dd><tt>Load&nbsp;the&nbsp;.ini&nbsp;file&nbsp;and&nbsp;populate&nbsp;the&nbsp;ConfigParser&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;the&nbsp;contents.</tt></dd></dl>
+ <dl><dt><a name="-sexstring"><strong>sexstring</strong></a>(value<font color="#909090">=0.0</font>, sp<font color="#909090">=':'</font>, fixed<font color="#909090">=False</font>, dp<font color="#909090">=None</font>)</dt><dd><tt>Convert&nbsp;the&nbsp;floating&nbsp;point&nbsp;'value'&nbsp;into&nbsp;a&nbsp;sexagecimal&nbsp;string.<br>
+The&nbsp;character&nbsp;in&nbsp;'sp'&nbsp;is&nbsp;used&nbsp;as&nbsp;a&nbsp;spacer&nbsp;between&nbsp;components.&nbsp;Useful&nbsp;for<br>
+within&nbsp;functions,&nbsp;not&nbsp;on&nbsp;its&nbsp;own.<br>
+eg:&nbsp;<a href="#-sexstring">sexstring</a>(current.ObjRA/3600,'&nbsp;')</tt></dd></dl>
+ <dl><dt><a name="-stringsex"><strong>stringsex</strong></a>(value<font color="#909090">=''</font>, compressed<font color="#909090">=False</font>)</dt><dd><tt>Convert&nbsp;the&nbsp;sexagesimal&nbsp;coordinate&nbsp;'value'&nbsp;into&nbsp;a&nbsp;floating&nbsp;point<br>
+result.&nbsp;Handles&nbsp;either&nbsp;a&nbsp;colon&nbsp;or&nbsp;a&nbsp;space&nbsp;as&nbsp;seperator,&nbsp;but&nbsp;currently<br>
+requires&nbsp;all&nbsp;three&nbsp;components&nbsp;(H:M:S&nbsp;not&nbsp;H:M&nbsp;or&nbsp;H:M.mmm).<br>
+If&nbsp;'compressed'&nbsp;is&nbsp;true,&nbsp;then&nbsp;no&nbsp;separator&nbsp;is&nbsp;used,&nbsp;and&nbsp;the&nbsp;argument<br>
+must&nbsp;have&nbsp;all&nbsp;three&nbsp;components,&nbsp;two&nbsp;digits&nbsp;for&nbsp;deg/minutes,&nbsp;and&nbsp;optional<br>
+fractional&nbsp;seconds&nbsp;(eg&nbsp;'123456.78'&nbsp;==&nbsp;12:34:56.78.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CoarseSet': '180', 'EastOfPier': 'False', 'FineSet': '60', 'FlexureOn': 'True', 'GUIDE': '5', 'HighHorizonOn': 'False', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>

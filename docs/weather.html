@@ -1,0 +1,135 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module weather</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>weather</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/weather.py">/home/andrew/PyDevel/teljoy/weather.py</a></font></td></tr></table>
+    <p><tt><a href="#Weather">Weather</a>&nbsp;station&nbsp;interface&nbsp;module.<br>
+&nbsp;<br>
+Reads&nbsp;current&nbsp;weather&nbsp;data&nbsp;from&nbsp;misc.weather&nbsp;table&nbsp;in&nbsp;database,&nbsp;and&nbsp;keeps&nbsp;status&nbsp;<a href="__builtin__.html#object">object</a><br>
+up&nbsp;to&nbsp;date.<br>
+&nbsp;<br>
+Only&nbsp;used&nbsp;in&nbsp;Perth&nbsp;system,&nbsp;no&nbsp;weather&nbsp;sensors&nbsp;available&nbsp;at&nbsp;Mt&nbsp;John&nbsp;in&nbsp;New&nbsp;Zealand.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="MySQLdb.html">MySQLdb</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+<a href="random.html">random</a><br>
+</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="traceback.html">traceback</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="weather.html#Weather">Weather</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Weather">class <strong>Weather</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Cloud&nbsp;and&nbsp;rain&nbsp;detector&nbsp;status<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Weather-GetState"><strong>GetState</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Weather-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Weather-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Weather-__str__"><strong>__str__</strong></a>(self)</dt><dd><tt>Tells&nbsp;the&nbsp;status&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;to&nbsp;display&nbsp;itself</tt></dd></dl>
+
+<dl><dt><a name="Weather-checkweather"><strong>checkweather</strong></a>(self)</dt><dd><tt>Monitor&nbsp;Cloud&nbsp;and&nbsp;Rain&nbsp;data,&nbsp;and&nbsp;take&nbsp;action&nbsp;if&nbsp;necessary</tt></dd></dl>
+
+<dl><dt><a name="Weather-empty"><strong>empty</strong></a>(self)</dt><dd><tt>called&nbsp;by&nbsp;__init__&nbsp;or&nbsp;manually&nbsp;to&nbsp;clear&nbsp;status</tt></dd></dl>
+
+<dl><dt><a name="Weather-update"><strong>update</strong></a>(self, u_curs<font color="#909090">=None</font>)</dt><dd><tt>Connect&nbsp;to&nbsp;the&nbsp;database&nbsp;to&nbsp;update&nbsp;fields</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-Init"><strong>Init</strong></a>()</dt><dd><tt>Set&nbsp;up&nbsp;the&nbsp;database&nbsp;connection&nbsp;to&nbsp;access&nbsp;the&nbsp;weather&nbsp;data.</tt></dd></dl>
+ <dl><dt><a name="-render"><strong>render</strong></a>(v, dig<font color="#909090">=4</font>, dp<font color="#909090">=1</font>)</dt><dd><tt>If&nbsp;v&nbsp;is&nbsp;None,&nbsp;return&nbsp;'NULL'&nbsp;as&nbsp;a&nbsp;string.&nbsp;Otherwise&nbsp;return<br>
+the&nbsp;value&nbsp;in&nbsp;v&nbsp;formatted&nbsp;nicely&nbsp;as&nbsp;a&nbsp;number,&nbsp;with&nbsp;the&nbsp;given<br>
+number&nbsp;of&nbsp;digits&nbsp;in&nbsp;total,&nbsp;and&nbsp;after&nbsp;the&nbsp;decimal&nbsp;point.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CoarseSet': '180', 'EastOfPier': 'False', 'FineSet': '60', 'FlexureOn': 'True', 'GUIDE': '5', 'HighHorizonOn': 'False', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+<br>
+<strong>weather</strong> = None</td></tr></table>
+</body></html>

@@ -1,0 +1,1031 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module controller</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>controller</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/controller.py">/home/andrew/PyDevel/teljoy/controller.py</a></font></td></tr></table>
+    <p><tt>#&nbsp;coding=latin1</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="twisted.internet.defer.html">twisted.internet.defer</a><br>
+<a href="twisted.python.failure.html">twisted.python.failure</a><br>
+<a href="heapq.html">heapq</a><br>
+</td><td width="25%" valign=top><a href="libusb1.html">libusb1</a><br>
+<a href="math.html">math</a><br>
+<a href="select.html">select</a><br>
+</td><td width="25%" valign=top><a href="struct.html">struct</a><br>
+<a href="sys.html">sys</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="usb1.html">usb1</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="controller.html#Controller">Controller</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#ControllerConfiguration">ControllerConfiguration</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#ControllerPin">ControllerPin</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#ControllerTimer">ControllerTimer</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#CounterDetails">CounterDetails</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#Driver">Driver</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#EnqueueDetails">EnqueueDetails</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#ExceptionDetails">ExceptionDetails</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#GuiderResult">GuiderResult</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#StateDetails">StateDetails</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#UsbTransferError">UsbTransferError</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="exceptions.html#Exception">exceptions.Exception</a>(<a href="exceptions.html#BaseException">exceptions.BaseException</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="controller.html#ControllerException">ControllerException</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="controller.html#ControllerConfigurationException">ControllerConfigurationException</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#ControllerNotConnectedException">ControllerNotConnectedException</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#InterruptTransferFailedException">InterruptTransferFailedException</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#MultipleControllersConnectedException">MultipleControllersConnectedException</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="controller.html#ControllerUsageException">ControllerUsageException</a>
+</font></dt><dt><font face="helvetica, arial"><a href="controller.html#ControllerVersionException">ControllerVersionException</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Controller">class <strong>Controller</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Controller-__init__"><strong>__init__</strong></a>(self, driver)</dt></dl>
+
+<dl><dt><a name="Controller-add_timer"><strong>add_timer</strong></a>(self, seconds, callback)</dt><dd><tt>Schedules&nbsp;a&nbsp;(once&nbsp;off)&nbsp;call&nbsp;to&nbsp;the&nbsp;callback&nbsp;function.<br>
+&nbsp;<br>
+The&nbsp;returned&nbsp;handle&nbsp;can&nbsp;be&nbsp;passed&nbsp;to&nbsp;cancel_timer&nbsp;to&nbsp;cancel&nbsp;the&nbsp;callback&nbsp;before<br>
+it&nbsp;has&nbsp;occurred.</tt></dd></dl>
+
+<dl><dt><a name="Controller-cancel_timer"><strong>cancel_timer</strong></a>(self, timer)</dt><dd><tt>Cancels&nbsp;a&nbsp;callback.</tt></dd></dl>
+
+<dl><dt><a name="Controller-clear_exception"><strong>clear_exception</strong></a>(self, exception)</dt><dd><tt>Clears&nbsp;the&nbsp;specified&nbsp;controller&nbsp;exception.&nbsp;The&nbsp;exception&nbsp;must&nbsp;be&nbsp;the&nbsp;current&nbsp;reported&nbsp;exception.<br>
+&nbsp;<br>
+Once&nbsp;the&nbsp;command&nbsp;returns&nbsp;the&nbsp;next&nbsp;exception&nbsp;should&nbsp;be&nbsp;available&nbsp;through&nbsp;the&nbsp;(synchronous)&nbsp;get<br>
+exception&nbsp;control&nbsp;request.<br>
+&nbsp;<br>
+The&nbsp;returned&nbsp;deferred&nbsp;completes&nbsp;when&nbsp;the&nbsp;command&nbsp;has&nbsp;been&nbsp;issued;&nbsp;a&nbsp;state&nbsp;change&nbsp;exception&nbsp;to<br>
+idle&nbsp;may&nbsp;be&nbsp;delivered&nbsp;before&nbsp;or&nbsp;after&nbsp;the&nbsp;deferred&nbsp;callbacks&nbsp;are&nbsp;run.</tt></dd></dl>
+
+<dl><dt><a name="Controller-clear_outputs"><strong>clear_outputs</strong></a>(self, outputs)</dt><dd><tt>Sets&nbsp;the&nbsp;specified&nbsp;GPIO&nbsp;bits&nbsp;low&nbsp;on&nbsp;the&nbsp;controller&nbsp;card.<br>
+&nbsp;<br>
+The&nbsp;outputs&nbsp;should&nbsp;be&nbsp;specified&nbsp;as&nbsp;a&nbsp;64&nbsp;bit&nbsp;long&nbsp;bitmask.&nbsp;Bits&nbsp;not&nbsp;in&nbsp;the<br>
+bitmask&nbsp;are&nbsp;left&nbsp;in&nbsp;their&nbsp;current&nbsp;state.</tt></dd></dl>
+
+<dl><dt><a name="Controller-configure"><strong>configure</strong></a>(self, configuration)</dt><dd><tt>Writes&nbsp;a&nbsp;configuration&nbsp;to&nbsp;the&nbsp;controller.<br>
+&nbsp;<br>
+The&nbsp;returned&nbsp;deferred&nbsp;completes&nbsp;when&nbsp;the&nbsp;configuration&nbsp;has&nbsp;been<br>
+successfully&nbsp;written.</tt></dd></dl>
+
+<dl><dt><a name="Controller-disable_guider"><strong>disable_guider</strong></a>(self)</dt><dd><tt>Stops&nbsp;adding&nbsp;guider&nbsp;steps&nbsp;to&nbsp;the&nbsp;motor&nbsp;control&nbsp;frames.<br>
+&nbsp;<br>
+The&nbsp;returned&nbsp;deferred&nbsp;completes&nbsp;when&nbsp;the&nbsp;command&nbsp;has&nbsp;been&nbsp;successfully&nbsp;issued.</tt></dd></dl>
+
+<dl><dt><a name="Controller-enable_guider"><strong>enable_guider</strong></a>(self)</dt><dd><tt>Starts&nbsp;adding&nbsp;guider&nbsp;steps&nbsp;to&nbsp;the&nbsp;motor&nbsp;control&nbsp;frames.<br>
+&nbsp;<br>
+The&nbsp;returned&nbsp;deferred&nbsp;completes&nbsp;when&nbsp;the&nbsp;command&nbsp;has&nbsp;been&nbsp;successfully&nbsp;issued.</tt></dd></dl>
+
+<dl><dt><a name="Controller-enqueue_frame"><strong>enqueue_frame</strong></a>(self, a_steps, b_steps)</dt><dd><tt>Enqueues&nbsp;a&nbsp;frame&nbsp;and&nbsp;returns&nbsp;the&nbsp;frame&nbsp;number&nbsp;of&nbsp;the&nbsp;enqueued&nbsp;frame.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;should&nbsp;only&nbsp;be&nbsp;called&nbsp;from&nbsp;within&nbsp;the&nbsp;enqueue_frame_available&nbsp;driver<br>
+event,&nbsp;and&nbsp;should&nbsp;only&nbsp;be&nbsp;called&nbsp;once&nbsp;per&nbsp;call&nbsp;to&nbsp;enqueue_frame_available.&nbsp;Once<br>
+the&nbsp;frame&nbsp;has&nbsp;been&nbsp;successfully&nbsp;enqueued&nbsp;another&nbsp;call&nbsp;to&nbsp;enqueue_frame_available&nbsp;is<br>
+made,&nbsp;allowing&nbsp;more&nbsp;frames&nbsp;to&nbsp;be&nbsp;enqueued&nbsp;if&nbsp;required.</tt></dd></dl>
+
+<dl><dt><a name="Controller-force_hardware_reset"><strong>force_hardware_reset</strong></a>(self)</dt><dd><tt>Forces&nbsp;the&nbsp;controller&nbsp;to&nbsp;do&nbsp;a&nbsp;hardware&nbsp;reset,&nbsp;regardless&nbsp;of&nbsp;the&nbsp;control&nbsp;state.<br>
+&nbsp;<br>
+This&nbsp;command&nbsp;will&nbsp;work&nbsp;in&nbsp;any&nbsp;state,&nbsp;and&nbsp;will&nbsp;reset&nbsp;the&nbsp;hardware&nbsp;even&nbsp;if<br>
+motor&nbsp;control&nbsp;is&nbsp;active.&nbsp;It&nbsp;should&nbsp;only&nbsp;be&nbsp;used&nbsp;for&nbsp;manual&nbsp;resets.<br>
+&nbsp;<br>
+Unless&nbsp;an&nbsp;error&nbsp;occurs&nbsp;the&nbsp;hardware&nbsp;will&nbsp;be&nbsp;reset&nbsp;before&nbsp;the&nbsp;request&nbsp;returns.</tt></dd></dl>
+
+<dl><dt><a name="Controller-force_outputs"><strong>force_outputs</strong></a>(self, outputs)</dt><dd><tt>Sets&nbsp;all&nbsp;GPIO&nbsp;bits&nbsp;to&nbsp;the&nbsp;specified&nbsp;value&nbsp;on&nbsp;the&nbsp;controller&nbsp;card.<br>
+&nbsp;<br>
+The&nbsp;outputs&nbsp;should&nbsp;be&nbsp;specified&nbsp;as&nbsp;a&nbsp;64&nbsp;bit&nbsp;long&nbsp;bitmask.</tt></dd></dl>
+
+<dl><dt><a name="Controller-get_counters"><strong>get_counters</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Controller-get_debug_registers"><strong>get_debug_registers</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Controller-get_exception"><strong>get_exception</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Controller-get_raw_exception_details"><strong>get_raw_exception_details</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Controller-hardware_reset"><strong>hardware_reset</strong></a>(self)</dt><dd><tt>Forces&nbsp;the&nbsp;controller&nbsp;to&nbsp;do&nbsp;a&nbsp;hardware&nbsp;reset.<br>
+&nbsp;<br>
+This&nbsp;command&nbsp;will&nbsp;only&nbsp;work&nbsp;from&nbsp;TC_STATE_IDLE&nbsp;or&nbsp;TC_STATE_EXCEPTION.<br>
+&nbsp;<br>
+Unless&nbsp;an&nbsp;error&nbsp;occurs&nbsp;the&nbsp;hardware&nbsp;will&nbsp;be&nbsp;reset&nbsp;before&nbsp;the&nbsp;request&nbsp;returns.</tt></dd></dl>
+
+<dl><dt><a name="Controller-run"><strong>run</strong></a>(self, system_poller)</dt><dd><tt>Runs&nbsp;the&nbsp;event&nbsp;loop,&nbsp;after&nbsp;calling&nbsp;the&nbsp;driver&nbsp;initialisation&nbsp;method.<br>
+&nbsp;<br>
+<a href="#Driver">Driver</a>&nbsp;event&nbsp;handlers&nbsp;and&nbsp;timers&nbsp;are&nbsp;handled&nbsp;by&nbsp;the&nbsp;event&nbsp;loop.&nbsp;Optionally,&nbsp;a<br>
+user&nbsp;supplied&nbsp;poller&nbsp;can&nbsp;be&nbsp;passed&nbsp;in.&nbsp;The&nbsp;poller&nbsp;must&nbsp;implement&nbsp;the&nbsp;interface<br>
+described&nbsp;in&nbsp;the&nbsp;python-libusb1&nbsp;library.</tt></dd></dl>
+
+<dl><dt><a name="Controller-set_guider_values"><strong>set_guider_values</strong></a>(self, run_at, frame_number, values)</dt></dl>
+
+<dl><dt><a name="Controller-set_outputs"><strong>set_outputs</strong></a>(self, outputs)</dt><dd><tt>Sets&nbsp;the&nbsp;specified&nbsp;GPIO&nbsp;bits&nbsp;high&nbsp;on&nbsp;the&nbsp;controller&nbsp;card.<br>
+&nbsp;<br>
+The&nbsp;outputs&nbsp;should&nbsp;be&nbsp;specified&nbsp;as&nbsp;a&nbsp;64&nbsp;bit&nbsp;long&nbsp;bitmask.&nbsp;Bits&nbsp;not&nbsp;in&nbsp;the<br>
+bitmask&nbsp;are&nbsp;left&nbsp;in&nbsp;their&nbsp;current&nbsp;state.</tt></dd></dl>
+
+<dl><dt><a name="Controller-shutdown"><strong>shutdown</strong></a>(self)</dt><dd><tt>Raises&nbsp;a&nbsp;controller&nbsp;exception&nbsp;that&nbsp;causes&nbsp;the&nbsp;controller&nbsp;to&nbsp;start&nbsp;a&nbsp;ramped&nbsp;shutdown.<br>
+&nbsp;<br>
+After&nbsp;running&nbsp;this&nbsp;command,&nbsp;the&nbsp;exception&nbsp;state&nbsp;will&nbsp;be&nbsp;reported&nbsp;with&nbsp;the<br>
+controller.TC_EXCEPTION_SHUTDOWN_REQUESTED&nbsp;exception.&nbsp;To&nbsp;use&nbsp;the&nbsp;controller&nbsp;again<br>
+a&nbsp;queue&nbsp;reset&nbsp;must&nbsp;be&nbsp;issued.<br>
+&nbsp;<br>
+The&nbsp;returned&nbsp;deferred&nbsp;completes&nbsp;when&nbsp;the&nbsp;command&nbsp;has&nbsp;been&nbsp;issued;&nbsp;the&nbsp;shutdown&nbsp;exception<br>
+may&nbsp;be&nbsp;delivered&nbsp;before&nbsp;or&nbsp;after&nbsp;the&nbsp;deferred&nbsp;callbacks&nbsp;are&nbsp;run.</tt></dd></dl>
+
+<dl><dt><a name="Controller-stop"><strong>stop</strong></a>(self, run_failure<font color="#909090">=None</font>)</dt><dd><tt>Called&nbsp;in&nbsp;event&nbsp;handlers&nbsp;or&nbsp;timers&nbsp;to&nbsp;stop&nbsp;the&nbsp;event&nbsp;loop.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerConfiguration">class <strong>ControllerConfiguration</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ControllerConfiguration-__init__"><strong>__init__</strong></a>(self, controller)</dt></dl>
+
+<dl><dt><a name="ControllerConfiguration-encode_gpio"><strong>encode_gpio</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="ControllerConfiguration-encode_mc"><strong>encode_mc</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="ControllerConfiguration-encode_safety"><strong>encode_safety</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerConfigurationException">class <strong>ControllerConfigurationException</strong></a>(<a href="controller.html#ControllerException">ControllerException</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#ControllerConfigurationException">ControllerConfigurationException</a></dd>
+<dd><a href="controller.html#ControllerException">ControllerException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors inherited from <a href="controller.html#ControllerException">ControllerException</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="ControllerConfigurationException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#ControllerConfigurationException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="ControllerConfigurationException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerConfigurationException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerConfigurationException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerException">class <strong>ControllerException</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#ControllerException">ControllerException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="ControllerException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#ControllerException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="ControllerException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerNotConnectedException">class <strong>ControllerNotConnectedException</strong></a>(<a href="controller.html#ControllerException">ControllerException</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#ControllerNotConnectedException">ControllerNotConnectedException</a></dd>
+<dd><a href="controller.html#ControllerException">ControllerException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors inherited from <a href="controller.html#ControllerException">ControllerException</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="ControllerNotConnectedException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#ControllerNotConnectedException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="ControllerNotConnectedException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerNotConnectedException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerNotConnectedException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerPin">class <strong>ControllerPin</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ControllerPin-__init__"><strong>__init__</strong></a>(self, number)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerTimer">class <strong>ControllerTimer</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ControllerTimer-__cmp__"><strong>__cmp__</strong></a>(self, rhs)</dt></dl>
+
+<dl><dt><a name="ControllerTimer-__init__"><strong>__init__</strong></a>(self, controller, expiry_time, callback)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerUsageException">class <strong>ControllerUsageException</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#ControllerUsageException">ControllerUsageException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="ControllerUsageException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#ControllerUsageException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="ControllerUsageException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerUsageException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerUsageException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerUsageException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerUsageException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ControllerVersionException">class <strong>ControllerVersionException</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#ControllerVersionException">ControllerVersionException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="ControllerVersionException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#ControllerVersionException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="ControllerVersionException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerVersionException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ControllerVersionException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#ControllerVersionException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="ControllerVersionException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="CounterDetails">class <strong>CounterDetails</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Driver">class <strong>Driver</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Driver-enqueue_frame_available"><strong>enqueue_frame_available</strong></a>(self, details)</dt><dd><tt>Called&nbsp;when&nbsp;the&nbsp;frame&nbsp;queue&nbsp;changes.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;is&nbsp;called&nbsp;when&nbsp;the&nbsp;queue&nbsp;changes&nbsp;(for&nbsp;example,&nbsp;when<br>
+a&nbsp;frame&nbsp;is&nbsp;dequeued,&nbsp;or&nbsp;when&nbsp;a&nbsp;previous&nbsp;enqueue&nbsp;completes).&nbsp;It&nbsp;should<br>
+check&nbsp;the&nbsp;state&nbsp;of&nbsp;the&nbsp;queue&nbsp;and,&nbsp;if&nbsp;required,&nbsp;enqueue&nbsp;at&nbsp;most&nbsp;one&nbsp;frame.<br>
+Once&nbsp;the&nbsp;frame&nbsp;is&nbsp;enqueued&nbsp;the&nbsp;controller&nbsp;will&nbsp;immediately&nbsp;call&nbsp;this&nbsp;method<br>
+to&nbsp;allow&nbsp;another&nbsp;to&nbsp;be&nbsp;enqueued.<br>
+&nbsp;<br>
+The&nbsp;driver&nbsp;is&nbsp;expected&nbsp;to&nbsp;manage&nbsp;the&nbsp;level&nbsp;of&nbsp;the&nbsp;queue&nbsp;itself,&nbsp;by&nbsp;setting<br>
+the&nbsp;frame&nbsp;prefill&nbsp;to&nbsp;the&nbsp;desired&nbsp;level&nbsp;and&nbsp;by&nbsp;only&nbsp;enqueuing&nbsp;frames&nbsp;when<br>
+necessary&nbsp;to&nbsp;maintain&nbsp;the&nbsp;desired&nbsp;queue&nbsp;level.<br>
+&nbsp;<br>
+An&nbsp;instance&nbsp;of&nbsp;controller.<a href="#EnqueueDetails">EnqueueDetails</a>&nbsp;is&nbsp;passed&nbsp;in,&nbsp;providing:<br>
+&nbsp;<br>
+-&nbsp;last_transmitted_frame,&nbsp;the&nbsp;last&nbsp;frame&nbsp;number&nbsp;that&nbsp;this&nbsp;module&nbsp;transmitted<br>
+&nbsp;&nbsp;to&nbsp;the&nbsp;controller.<br>
+-&nbsp;last_enqueued_frame,&nbsp;the&nbsp;last&nbsp;frame&nbsp;number&nbsp;the&nbsp;controller&nbsp;has&nbsp;reported&nbsp;to&nbsp;have<br>
+&nbsp;&nbsp;received.&nbsp;This&nbsp;may&nbsp;be&nbsp;an&nbsp;earlier&nbsp;frame&nbsp;than&nbsp;last_transmitted_frame&nbsp;(because&nbsp;the<br>
+&nbsp;&nbsp;controller&nbsp;reports&nbsp;this&nbsp;field&nbsp;asynchronously)&nbsp;and&nbsp;should&nbsp;not&nbsp;be&nbsp;used&nbsp;to&nbsp;estimate<br>
+&nbsp;&nbsp;the&nbsp;number&nbsp;of&nbsp;frames&nbsp;in&nbsp;the&nbsp;queue.<br>
+-&nbsp;last_dequeued_frame,&nbsp;the&nbsp;last&nbsp;frame&nbsp;number&nbsp;that&nbsp;was&nbsp;dequeued&nbsp;and&nbsp;loaded&nbsp;on&nbsp;to&nbsp;the<br>
+&nbsp;&nbsp;FPGA&nbsp;for&nbsp;generation&nbsp;of&nbsp;steps.<br>
+-&nbsp;frames_in_queue,&nbsp;the&nbsp;number&nbsp;of&nbsp;frames&nbsp;currently&nbsp;either&nbsp;in&nbsp;the&nbsp;queue&nbsp;or&nbsp;being<br>
+&nbsp;&nbsp;enqueued.&nbsp;This&nbsp;count&nbsp;is&nbsp;the&nbsp;difference&nbsp;between&nbsp;last_transmitted_frame&nbsp;and<br>
+&nbsp;&nbsp;last_dequeued_frame.&nbsp;Since&nbsp;the&nbsp;dequeuing&nbsp;process&nbsp;runs&nbsp;independently&nbsp;from&nbsp;the<br>
+&nbsp;&nbsp;enqueuing&nbsp;process,&nbsp;frames_in_queue&nbsp;may&nbsp;include&nbsp;an&nbsp;extra&nbsp;count&nbsp;from&nbsp;a&nbsp;frame&nbsp;that<br>
+&nbsp;&nbsp;has&nbsp;been&nbsp;dequeued&nbsp;on&nbsp;the&nbsp;controller&nbsp;but&nbsp;not&nbsp;yet&nbsp;reported&nbsp;as&nbsp;dequeued.<br>
+-&nbsp;frames_queue_capacity,&nbsp;the&nbsp;maximum&nbsp;number&nbsp;of&nbsp;frames&nbsp;that&nbsp;can&nbsp;be&nbsp;enqueued.&nbsp;The<br>
+&nbsp;&nbsp;queue&nbsp;level&nbsp;is&nbsp;typically&nbsp;maintained&nbsp;below&nbsp;the&nbsp;capacity&nbsp;to&nbsp;minimise&nbsp;control&nbsp;latency.</tt></dd></dl>
+
+<dl><dt><a name="Driver-initialisation_error"><strong>initialisation_error</strong></a>(self, failure)</dt><dd><tt>Called&nbsp;when&nbsp;the&nbsp;controller&nbsp;fails&nbsp;to&nbsp;initialise.<br>
+&nbsp;<br>
+The&nbsp;run&nbsp;loop&nbsp;will&nbsp;exit&nbsp;immediately&nbsp;on&nbsp;an&nbsp;initialisation&nbsp;failure.</tt></dd></dl>
+
+<dl><dt><a name="Driver-initialise"><strong>initialise</strong></a>(self, state_details)</dt><dd><tt>Called&nbsp;when&nbsp;the&nbsp;controller&nbsp;first&nbsp;starts&nbsp;the&nbsp;event&nbsp;loop.<br>
+&nbsp;<br>
+During&nbsp;initialisation,&nbsp;the&nbsp;driver&nbsp;can&nbsp;check&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;the&nbsp;controller,<br>
+read&nbsp;counters&nbsp;from&nbsp;previous&nbsp;runs,&nbsp;and&nbsp;reset&nbsp;the&nbsp;queue&nbsp;or&nbsp;hardware.&nbsp;A&nbsp;deferred&nbsp;must&nbsp;be<br>
+returned.&nbsp;When&nbsp;the&nbsp;deferred&nbsp;completes,&nbsp;state&nbsp;and&nbsp;input&nbsp;events&nbsp;start&nbsp;being&nbsp;forwarded.<br>
+&nbsp;<br>
+The&nbsp;host&nbsp;ensures&nbsp;the&nbsp;controller&nbsp;will&nbsp;either&nbsp;be&nbsp;in&nbsp;TC_STATE_IDLE&nbsp;or&nbsp;TC_STATE_EXCEPTION<br>
+on&nbsp;initialisation.</tt></dd></dl>
+
+<dl><dt><a name="Driver-inputs_changed"><strong>inputs_changed</strong></a>(self, inputs)</dt><dd><tt>Called&nbsp;when&nbsp;any&nbsp;of&nbsp;the&nbsp;reportable&nbsp;inputs&nbsp;have&nbsp;changed.<br>
+&nbsp;<br>
+The&nbsp;reportable&nbsp;inputs&nbsp;are&nbsp;set&nbsp;in&nbsp;the&nbsp;configuration.&nbsp;The&nbsp;inputs&nbsp;are&nbsp;passed&nbsp;in&nbsp;as<br>
+a&nbsp;long&nbsp;integer&nbsp;bit&nbsp;mask.<br>
+&nbsp;<br>
+During&nbsp;initialisation&nbsp;input&nbsp;changes&nbsp;are&nbsp;not&nbsp;reported.&nbsp;Once&nbsp;initialisation&nbsp;is&nbsp;completed<br>
+this&nbsp;method&nbsp;will&nbsp;be&nbsp;called&nbsp;with&nbsp;the&nbsp;current&nbsp;input&nbsp;state.</tt></dd></dl>
+
+<dl><dt><a name="Driver-internal_attach_host"><strong>internal_attach_host</strong></a>(self, host)</dt></dl>
+
+<dl><dt><a name="Driver-runtime_error"><strong>runtime_error</strong></a>(self, failure)</dt><dd><tt>Called&nbsp;when&nbsp;an&nbsp;error&nbsp;has&nbsp;caused&nbsp;the&nbsp;run&nbsp;loop&nbsp;to&nbsp;stop.</tt></dd></dl>
+
+<dl><dt><a name="Driver-state_changed"><strong>state_changed</strong></a>(self, details)</dt><dd><tt>Called&nbsp;when&nbsp;the&nbsp;state&nbsp;of&nbsp;the&nbsp;controller&nbsp;changes.<br>
+&nbsp;<br>
+An&nbsp;instance&nbsp;of&nbsp;controller.<a href="#StateDetails">StateDetails</a>&nbsp;is&nbsp;passed&nbsp;in,&nbsp;providing&nbsp;the<br>
+state&nbsp;field&nbsp;which&nbsp;is&nbsp;one&nbsp;of&nbsp;the&nbsp;following&nbsp;values:<br>
+&nbsp;<br>
+-&nbsp;controller.TC_STATE_IDLE<br>
+-&nbsp;controller.TC_STATE_RUNNING<br>
+-&nbsp;controller.TC_STATE_STOPPING<br>
+-&nbsp;controller.TC_STATE_EXCEPTION<br>
+&nbsp;<br>
+And&nbsp;the&nbsp;exception&nbsp;field,&nbsp;which&nbsp;is&nbsp;one&nbsp;of&nbsp;the&nbsp;following&nbsp;values:<br>
+&nbsp;<br>
+-&nbsp;controller.TC_EXCEPTION_QUEUE_UNDERFLOW<br>
+-&nbsp;controller.TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER<br>
+-&nbsp;controller.TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED<br>
+-&nbsp;controller.TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED<br>
+-&nbsp;controller.TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY<br>
+-&nbsp;controller.TC_EXCEPTION_SHUTDOWN_REQUESTED<br>
+-&nbsp;controller.TC_EXCEPTION_INVALID_CONFIGURATION<br>
+-&nbsp;controller.TC_EXCEPTION_INTERNAL_UNDERRUN<br>
+-&nbsp;controller.TC_EXCEPTION_INTERNAL_ERROR<br>
+-&nbsp;controller.TC_EXCEPTION_MCA_POSITIVE_LIMITED<br>
+-&nbsp;controller.TC_EXCEPTION_MCA_NEGATIVE_LIMITED<br>
+-&nbsp;controller.TC_EXCEPTION_MCB_POSITIVE_LIMITED<br>
+-&nbsp;controller.TC_EXCEPTION_MCB_NEGATIVE_LIMITED<br>
+-&nbsp;controller.TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED<br>
+-&nbsp;controller.TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP<br>
+-&nbsp;controller.TC_EXCEPTION_IO_SUPPLY_ERROR<br>
+-&nbsp;controller.TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW<br>
+-&nbsp;controller.TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED<br>
+-&nbsp;controller.TC_EXCEPTION_UNEXPECTED_FPGA_RESET<br>
+-&nbsp;controller.TC_EXCEPTION_FPGA_READBACK_ERROR<br>
+-&nbsp;controller.TC_EXCEPTION_UNEXPECTED_STEPPER_STOP<br>
+-&nbsp;controller.TC_EXCEPTION_CLEARING_EXCEPTION_FAILED<br>
+&nbsp;<br>
+For&nbsp;printing&nbsp;state&nbsp;details,&nbsp;use&nbsp;the&nbsp;state_description&nbsp;and&nbsp;exception_description&nbsp;properties.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnqueueDetails">class <strong>EnqueueDetails</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnqueueDetails-__init__"><strong>__init__</strong></a>(self, controller)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ExceptionDetails">class <strong>ExceptionDetails</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ExceptionDetails-__init__"><strong>__init__</strong></a>(self, exception, properties)</dt></dl>
+
+<dl><dt><a name="ExceptionDetails-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="GuiderResult">class <strong>GuiderResult</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="InterruptTransferFailedException">class <strong>InterruptTransferFailedException</strong></a>(<a href="controller.html#ControllerException">ControllerException</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#InterruptTransferFailedException">InterruptTransferFailedException</a></dd>
+<dd><a href="controller.html#ControllerException">ControllerException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors inherited from <a href="controller.html#ControllerException">ControllerException</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="InterruptTransferFailedException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#InterruptTransferFailedException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="InterruptTransferFailedException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#InterruptTransferFailedException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="InterruptTransferFailedException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="MultipleControllersConnectedException">class <strong>MultipleControllersConnectedException</strong></a>(<a href="controller.html#ControllerException">ControllerException</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="controller.html#MultipleControllersConnectedException">MultipleControllersConnectedException</a></dd>
+<dd><a href="controller.html#ControllerException">ControllerException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors inherited from <a href="controller.html#ControllerException">ControllerException</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="MultipleControllersConnectedException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#MultipleControllersConnectedException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="MultipleControllersConnectedException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#MultipleControllersConnectedException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="MultipleControllersConnectedException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="StateDetails">class <strong>StateDetails</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="StateDetails-__init__"><strong>__init__</strong></a>(self, controller, state, exception)</dt></dl>
+
+<dl><dt><a name="StateDetails-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>exception_description</strong></dt>
+</dl>
+<dl><dt><strong>state_description</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="UsbTransferError">class <strong>UsbTransferError</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="UsbTransferError-__init__"><strong>__init__</strong></a>(self, command, status)</dt></dl>
+
+<dl><dt><a name="UsbTransferError-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-run"><strong>run</strong></a>(driver, system_poller<font color="#909090">=None</font>)</dt></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CONTROLLER_PIN_FUNCTION_GPIO</strong> = 0<br>
+<strong>CONTROLLER_PIN_FUNCTION_SPECIAL</strong> = 1<br>
+<strong>CONTROLLER_PIN_INPUT</strong> = 0<br>
+<strong>CONTROLLER_PIN_OUTPUT</strong> = 1<br>
+<strong>GUIDER_RUN_AT_FRAME</strong> = 2<br>
+<strong>GUIDER_RUN_AT_NEXT_AVAILABLE_FRAME</strong> = 1<br>
+<strong>GUIDER_RUN_AT_NOT_BEFORE_FRAME</strong> = 3<br>
+<strong>MC_PIN_FLAG_INVERT_MCA_DN</strong> = 8<br>
+<strong>MC_PIN_FLAG_INVERT_MCA_DP</strong> = 4<br>
+<strong>MC_PIN_FLAG_INVERT_MCA_ON</strong> = 32<br>
+<strong>MC_PIN_FLAG_INVERT_MCA_OP</strong> = 16<br>
+<strong>MC_PIN_FLAG_INVERT_MCA_SN</strong> = 2<br>
+<strong>MC_PIN_FLAG_INVERT_MCA_SP</strong> = 1<br>
+<strong>MC_PIN_FLAG_INVERT_MCB_DN</strong> = 512<br>
+<strong>MC_PIN_FLAG_INVERT_MCB_DP</strong> = 256<br>
+<strong>MC_PIN_FLAG_INVERT_MCB_ON</strong> = 2048<br>
+<strong>MC_PIN_FLAG_INVERT_MCB_OP</strong> = 1024<br>
+<strong>MC_PIN_FLAG_INVERT_MCB_SN</strong> = 128<br>
+<strong>MC_PIN_FLAG_INVERT_MCB_SP</strong> = 64<br>
+<strong>MC_PIN_FLAG_MCA_O_FUNCTION_FRAME_CLOCK</strong> = 12288<br>
+<strong>MC_PIN_FLAG_MCA_O_FUNCTION_HIGH</strong> = 4096<br>
+<strong>MC_PIN_FLAG_MCA_O_FUNCTION_LOW</strong> = 0<br>
+<strong>MC_PIN_FLAG_MCA_O_FUNCTION_RUNNING</strong> = 8192<br>
+<strong>MC_PIN_FLAG_MCB_O_FUNCTION_FRAME_CLOCK</strong> = 49152<br>
+<strong>MC_PIN_FLAG_MCB_O_FUNCTION_HIGH</strong> = 16384<br>
+<strong>MC_PIN_FLAG_MCB_O_FUNCTION_LOW</strong> = 0<br>
+<strong>MC_PIN_FLAG_MCB_O_FUNCTION_RUNNING</strong> = 32768<br>
+<strong>PIN_GPIO_0</strong> = 0<br>
+<strong>PIN_GPIO_1</strong> = 1<br>
+<strong>PIN_GPIO_10</strong> = 10<br>
+<strong>PIN_GPIO_11</strong> = 11<br>
+<strong>PIN_GPIO_12</strong> = 12<br>
+<strong>PIN_GPIO_13</strong> = 13<br>
+<strong>PIN_GPIO_14</strong> = 14<br>
+<strong>PIN_GPIO_15</strong> = 15<br>
+<strong>PIN_GPIO_16</strong> = 16<br>
+<strong>PIN_GPIO_17</strong> = 17<br>
+<strong>PIN_GPIO_18</strong> = 18<br>
+<strong>PIN_GPIO_19</strong> = 19<br>
+<strong>PIN_GPIO_2</strong> = 2<br>
+<strong>PIN_GPIO_20</strong> = 20<br>
+<strong>PIN_GPIO_21</strong> = 21<br>
+<strong>PIN_GPIO_22</strong> = 22<br>
+<strong>PIN_GPIO_23</strong> = 23<br>
+<strong>PIN_GPIO_24</strong> = 24<br>
+<strong>PIN_GPIO_25</strong> = 25<br>
+<strong>PIN_GPIO_26</strong> = 26<br>
+<strong>PIN_GPIO_27</strong> = 27<br>
+<strong>PIN_GPIO_28</strong> = 28<br>
+<strong>PIN_GPIO_29</strong> = 29<br>
+<strong>PIN_GPIO_3</strong> = 3<br>
+<strong>PIN_GPIO_30</strong> = 30<br>
+<strong>PIN_GPIO_31</strong> = 31<br>
+<strong>PIN_GPIO_32</strong> = 32<br>
+<strong>PIN_GPIO_33</strong> = 33<br>
+<strong>PIN_GPIO_34</strong> = 34<br>
+<strong>PIN_GPIO_35</strong> = 35<br>
+<strong>PIN_GPIO_36</strong> = 36<br>
+<strong>PIN_GPIO_37</strong> = 37<br>
+<strong>PIN_GPIO_38</strong> = 38<br>
+<strong>PIN_GPIO_39</strong> = 39<br>
+<strong>PIN_GPIO_4</strong> = 4<br>
+<strong>PIN_GPIO_40</strong> = 40<br>
+<strong>PIN_GPIO_41</strong> = 41<br>
+<strong>PIN_GPIO_42</strong> = 42<br>
+<strong>PIN_GPIO_43</strong> = 43<br>
+<strong>PIN_GPIO_44</strong> = 44<br>
+<strong>PIN_GPIO_45</strong> = 45<br>
+<strong>PIN_GPIO_46</strong> = 46<br>
+<strong>PIN_GPIO_47</strong> = 47<br>
+<strong>PIN_GPIO_5</strong> = 5<br>
+<strong>PIN_GPIO_6</strong> = 6<br>
+<strong>PIN_GPIO_7</strong> = 7<br>
+<strong>PIN_GPIO_8</strong> = 8<br>
+<strong>PIN_GPIO_9</strong> = 9<br>
+<strong>PIN_MCA_DN</strong> = 51<br>
+<strong>PIN_MCA_DP</strong> = 50<br>
+<strong>PIN_MCA_ON</strong> = 53<br>
+<strong>PIN_MCA_OP</strong> = 52<br>
+<strong>PIN_MCA_QA</strong> = 60<br>
+<strong>PIN_MCA_QB</strong> = 61<br>
+<strong>PIN_MCA_SN</strong> = 49<br>
+<strong>PIN_MCA_SP</strong> = 48<br>
+<strong>PIN_MCB_DN</strong> = 57<br>
+<strong>PIN_MCB_DP</strong> = 56<br>
+<strong>PIN_MCB_ON</strong> = 59<br>
+<strong>PIN_MCB_OP</strong> = 58<br>
+<strong>PIN_MCB_QA</strong> = 62<br>
+<strong>PIN_MCB_QB</strong> = 63<br>
+<strong>PIN_MCB_SN</strong> = 55<br>
+<strong>PIN_MCB_SP</strong> = 54<br>
+<strong>TC_CLEAR_EXCEPTION</strong> = 14<br>
+<strong>TC_DETAIL_KIND_AXIS_TRACE</strong> = 1<br>
+<strong>TC_DETAIL_KIND_FPGA_ERRORS</strong> = 2<br>
+<strong>TC_ENQUEUE</strong> = 6<br>
+<strong>TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED</strong> = 3<br>
+<strong>TC_EXCEPTION_CLEARING_EXCEPTION_FAILED</strong> = 22<br>
+<strong>TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY</strong> = 5<br>
+<strong>TC_EXCEPTION_FPGA_READBACK_ERROR</strong> = 20<br>
+<strong>TC_EXCEPTION_INTERNAL_ERROR</strong> = 9<br>
+<strong>TC_EXCEPTION_INTERNAL_UNDERRUN</strong> = 8<br>
+<strong>TC_EXCEPTION_INVALID_CONFIGURATION</strong> = 7<br>
+<strong>TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP</strong> = 15<br>
+<strong>TC_EXCEPTION_IO_SUPPLY_ERROR</strong> = 16<br>
+<strong>TC_EXCEPTION_MCA_NEGATIVE_LIMITED</strong> = 11<br>
+<strong>TC_EXCEPTION_MCA_POSITIVE_LIMITED</strong> = 10<br>
+<strong>TC_EXCEPTION_MCB_NEGATIVE_LIMITED</strong> = 13<br>
+<strong>TC_EXCEPTION_MCB_POSITIVE_LIMITED</strong> = 12<br>
+<strong>TC_EXCEPTION_NONE</strong> = 0<br>
+<strong>TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED</strong> = 14<br>
+<strong>TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER</strong> = 2<br>
+<strong>TC_EXCEPTION_QUEUE_UNDERFLOW</strong> = 1<br>
+<strong>TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED</strong> = 18<br>
+<strong>TC_EXCEPTION_SHUTDOWN_REQUESTED</strong> = 6<br>
+<strong>TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW</strong> = 17<br>
+<strong>TC_EXCEPTION_UNEXPECTED_FPGA_RESET</strong> = 19<br>
+<strong>TC_EXCEPTION_UNEXPECTED_STEPPER_STOP</strong> = 21<br>
+<strong>TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED</strong> = 4<br>
+<strong>TC_GET_COUNTERS</strong> = 7<br>
+<strong>TC_GET_DEBUG_REGISTERS</strong> = 8<br>
+<strong>TC_GET_EXCEPTION</strong> = 13<br>
+<strong>TC_GET_EXCEPTION_DETAILS</strong> = 12<br>
+<strong>TC_GET_EXCEPTION_DETAILS_LENGTH</strong> = 11<br>
+<strong>TC_GET_GUIDER_RESULT</strong> = 10<br>
+<strong>TC_GET_VERSION</strong> = 1<br>
+<strong>TC_GPIO_CONFIGURE</strong> = 3<br>
+<strong>TC_ISSUE_STATE_COMMAND</strong> = 0<br>
+<strong>TC_MC_CONFIGURE</strong> = 2<br>
+<strong>TC_MC_UNUSED_INPUT</strong> = 255<br>
+<strong>TC_SAFETY_CONFIGURE</strong> = 4<br>
+<strong>TC_SET_GUIDER_VALUES</strong> = 9<br>
+<strong>TC_STATE_COMMAND_DISABLE_GUIDER</strong> = 4<br>
+<strong>TC_STATE_COMMAND_ENABLE_GUIDER</strong> = 3<br>
+<strong>TC_STATE_COMMAND_FORCE_HARDWARE_RESET</strong> = 7<br>
+<strong>TC_STATE_COMMAND_FORCE_INTERRUPT</strong> = 5<br>
+<strong>TC_STATE_COMMAND_HARDWARE_RESET</strong> = 6<br>
+<strong>TC_STATE_COMMAND_RESET_IO</strong> = 2<br>
+<strong>TC_STATE_COMMAND_SHUTDOWN</strong> = 1<br>
+<strong>TC_STATE_EXCEPTION</strong> = 3<br>
+<strong>TC_STATE_IDLE</strong> = 0<br>
+<strong>TC_STATE_RUNNING</strong> = 1<br>
+<strong>TC_STATE_STOPPING</strong> = 2<br>
+<strong>TC_WRITE_OUTPUTS</strong> = 5<br>
+<strong>clearable_exceptions</strong> = [1, 6, 10, 11, 12, 13, 18]<br>
+<strong>exception_descriptions</strong> = ['TC_EXCEPTION_NONE', 'TC_EXCEPTION_QUEUE_UNDERFLOW', 'TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER', 'TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED', 'TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED', 'TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY', 'TC_EXCEPTION_SHUTDOWN_REQUESTED', 'TC_EXCEPTION_INVALID_CONFIGURATION', 'TC_EXCEPTION_INTERNAL_UNDERRUN', 'TC_EXCEPTION_INTERNAL_ERROR', 'TC_EXCEPTION_MCA_POSITIVE_LIMITED', 'TC_EXCEPTION_MCA_NEGATIVE_LIMITED', 'TC_EXCEPTION_MCB_POSITIVE_LIMITED', 'TC_EXCEPTION_MCB_NEGATIVE_LIMITED', 'TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED', 'TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP', 'TC_EXCEPTION_IO_SUPPLY_ERROR', 'TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW', 'TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED', 'TC_EXCEPTION_UNEXPECTED_FPGA_RESET', ...]<br>
+<strong>fpga_control_bit_descriptions</strong> = ['CONTROL_BIT_ENABLE_MC', 'CONTROL_BIT_ENABLE_IO', 'CONTROL_BIT_ERRORS_PENDING', 'CONTROL_BIT_INPUTS_CHANGED', 'CONTROL_BIT_SLOTS_EMPTY', 'CONTROL_BIT_SLOTS_EMPTIED', 'CONTROL_BIT_INDICATOR_BITS_CHANGED', 'CONTROL_BIT_ERRORS_CHANGED', 'CONTROL_BIT_POWERED_ON', 'CONTROL_BIT_IO_READY', 'CONTROL_BIT_CONFIGURED']<br>
+<strong>fpga_error_bit_descriptions</strong> = ['ERROR_BIT_MCA_S_CONFIGURATION', 'ERROR_BIT_MCA_D_CONFIGURATION', 'ERROR_BIT_MCA_O_CONFIGURATION', 'ERROR_BIT_MCB_S_CONFIGURATION', 'ERROR_BIT_MCB_D_CONFIGURATION', 'ERROR_BIT_MCB_O_CONFIGURATION', 'ERROR_BIT_MCA_Q_CONFIGURATION', 'ERROR_BIT_MCB_Q_CONFIGURATION', 'ERROR_BIT_MC_SYNCHRONISATION_LOSS', 'ERROR_BIT_MCA_SLOTS_OVERUN', 'ERROR_BIT_MCA_SLOTS_UNDERRUN', 'ERROR_BIT_MCB_SLOTS_OVERUN', 'ERROR_BIT_MCB_SLOTS_UNDERRUN', 'ERROR_BIT_IO_SUPPLY_ERROR', 'ERROR_BIT_REGISTERS_MISO_UNDERRUN', 'ERROR_BIT_IO_SPI_OVERRUN', 'ERROR_BIT_MCA_POSITIVE_LIMITED', 'ERROR_BIT_MCA_NEGATIVE_LIMITED', 'ERROR_BIT_MCB_POSITIVE_LIMITED', 'ERROR_BIT_MCB_NEGATIVE_LIMITED', ...]<br>
+<strong>module_version</strong> = (0, 7, 1)</td></tr></table>
+</body></html>

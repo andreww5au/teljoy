@@ -1,0 +1,277 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module motion</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>motion</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/motion.py">/home/andrew/PyDevel/teljoy/motion.py</a></font></td></tr></table>
+    <p><tt>This&nbsp;module&nbsp;handles&nbsp;the&nbsp;low-level&nbsp;motion&nbsp;control&nbsp;-&nbsp;velocity&nbsp;ramping&nbsp;in&nbsp;each&nbsp;axis&nbsp;and&nbsp;sending&nbsp;<br>
+velocity&nbsp;pairs&nbsp;to&nbsp;the&nbsp;motor&nbsp;queue&nbsp;for&nbsp;each&nbsp;50ms&nbsp;time&nbsp;step.&nbsp;It's&nbsp;handled&nbsp;by&nbsp;a&nbsp;single&nbsp;instance&nbsp;of&nbsp;the<br>
+'<a href="#MotorControl">MotorControl</a>'&nbsp;class,&nbsp;stored&nbsp;in&nbsp;a&nbsp;module&nbsp;global&nbsp;called&nbsp;'motors'.&nbsp;That&nbsp;motor&nbsp;control&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;contains<br>
+two&nbsp;instances&nbsp;of&nbsp;the&nbsp;'<a href="#Axis">Axis</a>'&nbsp;class,&nbsp;one&nbsp;for&nbsp;RA&nbsp;and&nbsp;the&nbsp;other&nbsp;for&nbsp;DEC.<br>
+&nbsp;<br>
+The&nbsp;low-level&nbsp;driver&nbsp;(defined&nbsp;in&nbsp;the&nbsp;'Driver'&nbsp;class&nbsp;in&nbsp;usbcon.py)&nbsp;handles&nbsp;all&nbsp;of&nbsp;the&nbsp;USB<br>
+communication,&nbsp;and&nbsp;is&nbsp;available&nbsp;here&nbsp;as&nbsp;the&nbsp;.Driver&nbsp;attribute&nbsp;in&nbsp;the&nbsp;<a href="#MotorControl">MotorControl</a>&nbsp;class.&nbsp;The&nbsp;motion<br>
+control,&nbsp;and&nbsp;most&nbsp;of&nbsp;the&nbsp;methods&nbsp;here&nbsp;are&nbsp;called&nbsp;asynchronously&nbsp;by&nbsp;the&nbsp;controller.<br>
+&nbsp;<br>
+As&nbsp;each&nbsp;'frame'&nbsp;is&nbsp;pulled&nbsp;from&nbsp;the&nbsp;internal&nbsp;queue&nbsp;on&nbsp;the&nbsp;controller&nbsp;card&nbsp;and&nbsp;turned&nbsp;into&nbsp;motor&nbsp;steps,<br>
+the&nbsp;'enqueue_frame_available()'&nbsp;method&nbsp;is&nbsp;called&nbsp;on&nbsp;the&nbsp;<a href="#MotorControl">MotorControl</a>&nbsp;<a href="__builtin__.html#object">object</a>.&nbsp;That&nbsp;function&nbsp;is&nbsp;called<br>
+aysnchronously,&nbsp;by&nbsp;the&nbsp;USB&nbsp;interrupt&nbsp;handler&nbsp;code&nbsp;in&nbsp;controller.py,&nbsp;through&nbsp;usbcon.Driver().<br>
+&nbsp;<br>
+When&nbsp;<a href="#MotorControl">MotorControl</a>.enqueue_frame_available&nbsp;is&nbsp;called,&nbsp;that&nbsp;code&nbsp;calls&nbsp;getframe()&nbsp;on&nbsp;both&nbsp;the&nbsp;RA&nbsp;and&nbsp;DEC<br>
+'<a href="#Axis">Axis</a>'&nbsp;objects,&nbsp;and&nbsp;it&nbsp;is&nbsp;this&nbsp;getframe()&nbsp;method&nbsp;that&nbsp;does&nbsp;the&nbsp;hand&nbsp;paddle&nbsp;and&nbsp;jump&nbsp;velocity&nbsp;ramping,<br>
+adds&nbsp;the&nbsp;non-sidereal&nbsp;and&nbsp;sidereal&nbsp;track&nbsp;rates&nbsp;(if&nbsp;not&nbsp;'Frozen'),&nbsp;and&nbsp;handles&nbsp;emergency&nbsp;stops&nbsp;when<br>
+the&nbsp;limits&nbsp;are&nbsp;active&nbsp;using&nbsp;the&nbsp;CutFrac&nbsp;variable.<br>
+&nbsp;<br>
+The&nbsp;getframe()&nbsp;method&nbsp;on&nbsp;each&nbsp;axis&nbsp;returns&nbsp;the&nbsp;number&nbsp;of&nbsp;steps&nbsp;to&nbsp;travel&nbsp;in&nbsp;that&nbsp;axis,&nbsp;for&nbsp;that&nbsp;frame,&nbsp;and<br>
+these&nbsp;numbers&nbsp;are&nbsp;aggregated,&nbsp;converted&nbsp;to&nbsp;integer&nbsp;(aggregating&nbsp;any&nbsp;fractional&nbsp;part&nbsp;to&nbsp;add&nbsp;in&nbsp;on&nbsp;the&nbsp;next<br>
+frame),&nbsp;and&nbsp;sent&nbsp;to&nbsp;the&nbsp;controller.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="digio.html">digio</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="math.html">math</a><br>
+<a href="random.html">random</a><br>
+<a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="traceback.html">traceback</a><br>
+<a href="usbcon.html">usbcon</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="motion.html#Axis">Axis</a>
+</font></dt><dt><font face="helvetica, arial"><a href="motion.html#MotorControl">MotorControl</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Axis">class <strong>Axis</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Represents&nbsp;the&nbsp;motor&nbsp;control&nbsp;flags&nbsp;and&nbsp;variables&nbsp;controlling&nbsp;motion&nbsp;on<br>
+a&nbsp;single&nbsp;axis.&nbsp;The&nbsp;<a href="#Axis-getframe">getframe</a>()&nbsp;method&nbsp;is&nbsp;called&nbsp;asynchronously&nbsp;by&nbsp;the&nbsp;USB<br>
+interrupt&nbsp;handling&nbsp;thread&nbsp;when&nbsp;there&nbsp;is&nbsp;an&nbsp;empty&nbsp;spot&nbsp;in&nbsp;the&nbsp;input&nbsp;queue&nbsp;on<br>
+the&nbsp;controller&nbsp;board,&nbsp;and&nbsp;that&nbsp;in&nbsp;turns&nbsp;calls&nbsp;CalcJump&nbsp;and&nbsp;CalcPaddle&nbsp;to<br>
+do&nbsp;the&nbsp;velocity&nbsp;ramping&nbsp;for&nbsp;each&nbsp;type&nbsp;of&nbsp;motion.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Axis-CalcJump"><strong>CalcJump</strong></a>(self)</dt><dd><tt>A&nbsp;telescope&nbsp;slew&nbsp;is&nbsp;initiated&nbsp;by&nbsp;a&nbsp;call&nbsp;to&nbsp;<a href="#MotorControl">MotorControl</a>.Jump,&nbsp;with&nbsp;parameters&nbsp;delRA,&nbsp;delDEC,&nbsp;and&nbsp;Rate.<br>
+That&nbsp;function&nbsp;sets&nbsp;up&nbsp;the&nbsp;actual&nbsp;motion&nbsp;by&nbsp;changing&nbsp;the&nbsp;motor&nbsp;control&nbsp;attributes:<br>
+&nbsp;&nbsp;&nbsp;self.<strong>up</strong>,&nbsp;self.<strong>down</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#ramp&nbsp;up/down&nbsp;time&nbsp;in&nbsp;ticks<br>
+&nbsp;&nbsp;&nbsp;self.<strong>plateau</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#time&nbsp;in&nbsp;ticks&nbsp;to&nbsp;stay&nbsp;at&nbsp;max&nbsp;velocity<br>
+&nbsp;&nbsp;&nbsp;self.<strong>max_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#plateau&nbsp;velocity&nbsp;in&nbsp;steps/tick<br>
+&nbsp;&nbsp;&nbsp;self.<strong>add_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#ramp&nbsp;accel/decel&nbsp;in&nbsp;steps/tick/tick<br>
+&nbsp;&nbsp;&nbsp;self.<strong>remain</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#Used&nbsp;to&nbsp;spread&nbsp;out&nbsp;'leftover'&nbsp;slew&nbsp;pulses&nbsp;over&nbsp;entire&nbsp;slew&nbsp;duration<br>
+&nbsp;&nbsp;&nbsp;self.<strong>Jumping</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#Set&nbsp;to&nbsp;True&nbsp;to&nbsp;start&nbsp;slew<br>
+This&nbsp;function,&nbsp;called&nbsp;once&nbsp;per&nbsp;tick&nbsp;as&nbsp;the&nbsp;motion&nbsp;control&nbsp;values&nbsp;are&nbsp;calculated,&nbsp;uses&nbsp;those<br>
+parameters&nbsp;to&nbsp;calculate&nbsp;the&nbsp;current&nbsp;self.<strong>jump</strong>&nbsp;velocity&nbsp;for&nbsp;each&nbsp;tick.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;the&nbsp;AXIS.jump&nbsp;attributes&nbsp;are&nbsp;used&nbsp;for&nbsp;profiled&nbsp;'jumps'&nbsp;as<br>
+well&nbsp;as&nbsp;hand-paddle&nbsp;motion,&nbsp;so&nbsp;these&nbsp;actions&nbsp;can&nbsp;not&nbsp;be&nbsp;carried&nbsp;out&nbsp;simultaneously.</tt></dd></dl>
+
+<dl><dt><a name="Axis-CalcPaddle"><strong>CalcPaddle</strong></a>(self)</dt><dd><tt>The&nbsp;paddle&nbsp;code&nbsp;in&nbsp;the&nbsp;'Determine&nbsp;Event'&nbsp;loop&nbsp;communicates&nbsp;with&nbsp;the&nbsp;motor&nbsp;control&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;by<br>
+calling&nbsp;StartPaddle&nbsp;and&nbsp;StopPaddle.&nbsp;These&nbsp;functions&nbsp;in&nbsp;turn&nbsp;set&nbsp;the&nbsp;motor&nbsp;control&nbsp;attributes:<br>
+&nbsp;&nbsp;&nbsp;self.<strong>up</strong>,&nbsp;self.<strong>down</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#ramp&nbsp;up/down&nbsp;time&nbsp;in&nbsp;ticks<br>
+&nbsp;&nbsp;&nbsp;Paddle_start,&nbsp;Paddle_stop&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#Booleans<br>
+&nbsp;&nbsp;&nbsp;self.<strong>max_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#plateau&nbsp;velocity&nbsp;in&nbsp;steps/tick<br>
+&nbsp;&nbsp;&nbsp;self.<strong>add_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#ramp&nbsp;accel/decel&nbsp;in&nbsp;steps/tick/tick<br>
+This&nbsp;function,&nbsp;called&nbsp;once&nbsp;per&nbsp;tick&nbsp;as&nbsp;the&nbsp;motion&nbsp;control&nbsp;values&nbsp;are&nbsp;calculated,&nbsp;uses&nbsp;the<br>
+above&nbsp;flags&nbsp;to&nbsp;calculate&nbsp;the&nbsp;current&nbsp;velocity&nbsp;components&nbsp;for&nbsp;this&nbsp;tick&nbsp;due&nbsp;to&nbsp;a&nbsp;hand-paddle&nbsp;slew,<br>
+stored&nbsp;in&nbsp;self.<strong>jump</strong>.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;the&nbsp;'jump'&nbsp;attribute&nbsp;(self.<strong>jump</strong>)&nbsp;are&nbsp;used&nbsp;for&nbsp;profiled&nbsp;'jumps'&nbsp;as<br>
+well&nbsp;as&nbsp;hand-paddle&nbsp;motion,&nbsp;so&nbsp;these&nbsp;actions&nbsp;can&nbsp;not&nbsp;be&nbsp;carried&nbsp;out&nbsp;simultaneously.</tt></dd></dl>
+
+<dl><dt><a name="Axis-StartJump"><strong>StartJump</strong></a>(self, delta, Rate)</dt><dd><tt>This&nbsp;procedure&nbsp;calculates&nbsp;the&nbsp;profile&nbsp;parameters&nbsp;and&nbsp;starts&nbsp;a&nbsp;telescope&nbsp;jump<br>
+for&nbsp;this&nbsp;axis.<br>
+&nbsp;<br>
+Inputs&nbsp;are&nbsp;delta,&nbsp;the&nbsp;(signed)&nbsp;offset&nbsp;in&nbsp;steps,&nbsp;and<br>
+'Rate',&nbsp;the&nbsp;peak&nbsp;velocity&nbsp;in&nbsp;steps/second.&nbsp;Returns&nbsp;None.<br>
+&nbsp;<br>
+Outputs&nbsp;are&nbsp;the&nbsp;following&nbsp;attributes:<br>
+&nbsp;&nbsp;&nbsp;self.<strong>up</strong>,&nbsp;self.<strong>down</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;ramp&nbsp;up/down&nbsp;time&nbsp;in&nbsp;ticks<br>
+&nbsp;&nbsp;&nbsp;self.<strong>plateau</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;time&nbsp;in&nbsp;ticks&nbsp;to&nbsp;stay&nbsp;at&nbsp;max&nbsp;velocity<br>
+&nbsp;&nbsp;&nbsp;self.<strong>max_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;plateau&nbsp;velocity&nbsp;in&nbsp;steps/tick<br>
+&nbsp;&nbsp;&nbsp;self.<strong>add_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;ramp&nbsp;accell/decell&nbsp;in&nbsp;steps/tick/tick<br>
+&nbsp;&nbsp;&nbsp;self.<strong>remain</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Used&nbsp;to&nbsp;spread&nbsp;out&nbsp;'leftover'&nbsp;slew&nbsp;pulses&nbsp;over&nbsp;entire&nbsp;slew&nbsp;duration<br>
+&nbsp;&nbsp;&nbsp;self.<strong>Jumping</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Set&nbsp;to&nbsp;True&nbsp;to&nbsp;start&nbsp;slew<br>
+&nbsp;<br>
+A&nbsp;jump&nbsp;has&nbsp;three&nbsp;components:&nbsp;the&nbsp;ramp&nbsp;up,&nbsp;the&nbsp;plateau&nbsp;and&nbsp;the&nbsp;ramp<br>
+down.&nbsp;The&nbsp;size&nbsp;of&nbsp;the&nbsp;jump,&nbsp;the&nbsp;acceleration&nbsp;&nbsp;and&nbsp;the&nbsp;maximum&nbsp;velocity<br>
+determine&nbsp;the&nbsp;values&nbsp;for&nbsp;the&nbsp;three&nbsp;jump&nbsp;component.&nbsp;Components&nbsp;are&nbsp;described&nbsp;in&nbsp;terms<br>
+of&nbsp;the&nbsp;number&nbsp;of&nbsp;pulses(interupts)&nbsp;and&nbsp;the&nbsp;number&nbsp;of&nbsp;motor&nbsp;steps&nbsp;per&nbsp;pulse.<br>
+&nbsp;<br>
+All&nbsp;parameters&nbsp;output&nbsp;from&nbsp;this&nbsp;procedure&nbsp;are&nbsp;in&nbsp;motor&nbsp;steps/time&nbsp;pulse.</tt></dd></dl>
+
+<dl><dt><a name="Axis-StartPaddle"><strong>StartPaddle</strong></a>(self, Rate)</dt><dd><tt>This&nbsp;procedure&nbsp;is&nbsp;used&nbsp;to&nbsp;start&nbsp;one&nbsp;of&nbsp;the&nbsp;motors&nbsp;for&nbsp;a&nbsp;hand-paddle&nbsp;move,&nbsp;where<br>
+we&nbsp;don't&nbsp;know&nbsp;in&nbsp;advance&nbsp;when&nbsp;it&nbsp;will&nbsp;stop.&nbsp;Returns&nbsp;None.<br>
+&nbsp;<br>
+Inputs&nbsp;are:<br>
+&nbsp;Rate&nbsp;is&nbsp;the&nbsp;peak&nbsp;velocity&nbsp;in&nbsp;steps/second&nbsp;(same&nbsp;units&nbsp;as&nbsp;self.<strong>StartJump</strong>)<br>
+&nbsp;<br>
+Outputs&nbsp;are&nbsp;the&nbsp;following&nbsp;attributes:<br>
+&nbsp;self.<strong>up</strong>,&nbsp;self.<strong>down</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#ramp&nbsp;up/down&nbsp;time&nbsp;in&nbsp;ticks<br>
+&nbsp;self.<strong>Paddle_start</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#True&nbsp;when&nbsp;button&nbsp;pressed&nbsp;-&nbsp;indicates&nbsp;ramp&nbsp;up&nbsp;or&nbsp;plateau<br>
+&nbsp;self.<strong>Paddle_stop</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#True&nbsp;when&nbsp;button&nbsp;just&nbsp;released,&nbsp;indicates&nbsp;ramp&nbsp;down&nbsp;in&nbsp;progress<br>
+&nbsp;self.<strong>max_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#plateau&nbsp;velocity&nbsp;in&nbsp;steps/tick<br>
+&nbsp;self.<strong>add_vel</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#ramp&nbsp;accel/decel&nbsp;in&nbsp;steps/tick/tick<br>
+&nbsp;self.<strong>Paddling</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#True&nbsp;if&nbsp;the&nbsp;telescope&nbsp;is&nbsp;performing&nbsp;hand-paddle&nbsp;motion&nbsp;in&nbsp;this&nbsp;axis</tt></dd></dl>
+
+<dl><dt><a name="Axis-StopPaddle"><strong>StopPaddle</strong></a>(self)</dt><dd><tt>This&nbsp;procedure&nbsp;is&nbsp;used&nbsp;to&nbsp;stop&nbsp;one&nbsp;of&nbsp;the&nbsp;motors&nbsp;for&nbsp;a&nbsp;hand-paddle&nbsp;move,&nbsp;when<br>
+the&nbsp;hand-paddle&nbsp;button&nbsp;is&nbsp;released.&nbsp;Returns&nbsp;None.<br>
+&nbsp;<br>
+Outputs&nbsp;are&nbsp;the&nbsp;following&nbsp;attributes:<br>
+&nbsp;self.<strong>Paddle_start</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;True&nbsp;when&nbsp;button&nbsp;pressed&nbsp;-&nbsp;indicates&nbsp;ramp&nbsp;up&nbsp;or&nbsp;plateau<br>
+&nbsp;self.<strong>Paddle_stop</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;True&nbsp;when&nbsp;button&nbsp;just&nbsp;released,&nbsp;indicates&nbsp;ramp&nbsp;down&nbsp;in&nbsp;progress</tt></dd></dl>
+
+<dl><dt><a name="Axis-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>This&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;'pickled'&nbsp;when&nbsp;sending&nbsp;it&nbsp;over&nbsp;the&nbsp;wire&nbsp;via&nbsp;Pyro4,&nbsp;and&nbsp;we&nbsp;only&nbsp;want&nbsp;to&nbsp;pickle&nbsp;attributes,<br>
+not&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="Axis-__init__"><strong>__init__</strong></a>(self, sidereal<font color="#909090">=0.0</font>)</dt><dd><tt>Set&nbsp;up&nbsp;empty&nbsp;attributes&nbsp;for&nbsp;a&nbsp;new&nbsp;axis&nbsp;record.</tt></dd></dl>
+
+<dl><dt><a name="Axis-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Axis-getframe"><strong>getframe</strong></a>(self, Frozen<font color="#909090">=None</font>, CutFrac<font color="#909090">=None</font>)</dt><dd><tt>Called&nbsp;by&nbsp;the&nbsp;controller&nbsp;thread&nbsp;when&nbsp;new&nbsp;data&nbsp;needs&nbsp;to&nbsp;be&nbsp;calculated&nbsp;to&nbsp;send&nbsp;to&nbsp;the<br>
+controller&nbsp;queue&nbsp;for&nbsp;this&nbsp;axis.<br>
+&nbsp;<br>
+Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;steps&nbsp;to&nbsp;travel&nbsp;in&nbsp;the&nbsp;next&nbsp;50ms&nbsp;frame.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="MotorControl">class <strong>MotorControl</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>An&nbsp;instance&nbsp;of&nbsp;this&nbsp;class&nbsp;handles&nbsp;all&nbsp;low-level&nbsp;motion&nbsp;control,&nbsp;with&nbsp;one&nbsp;background&nbsp;thread&nbsp;running<br>
+self.<strong>Driver</strong>.run&nbsp;to&nbsp;keep&nbsp;the&nbsp;controller&nbsp;queue&nbsp;full.&nbsp;This&nbsp;thread&nbsp;is&nbsp;started&nbsp;when&nbsp;the&nbsp;'<a href="#-KickStart">KickStart</a>()'&nbsp;function<br>
+is&nbsp;called&nbsp;by&nbsp;the&nbsp;main&nbsp;program.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="MotorControl-Autoguide"><strong>Autoguide</strong></a>(self, on)</dt><dd><tt>If&nbsp;the&nbsp;argument&nbsp;'on'&nbsp;is&nbsp;True,&nbsp;turn&nbsp;the&nbsp;autoguider&nbsp;mode&nbsp;on,&nbsp;and&nbsp;start&nbsp;logging&nbsp;the<br>
+guider&nbsp;steps&nbsp;taken.&nbsp;If&nbsp;the&nbsp;the&nbsp;argument&nbsp;is&nbsp;False,&nbsp;turn&nbsp;the&nbsp;autoguider&nbsp;mode&nbsp;off.</tt></dd></dl>
+
+<dl><dt><a name="MotorControl-Jump"><strong>Jump</strong></a>(self, delRA, delDEC, Rate, force<font color="#909090">=False</font>)</dt><dd><tt>This&nbsp;procedure&nbsp;calculates&nbsp;the&nbsp;profile&nbsp;parameters&nbsp;for&nbsp;a&nbsp;telescope&nbsp;jump.<br>
+&nbsp;<br>
+Inputs&nbsp;are&nbsp;delRA&nbsp;and&nbsp;delDEC,&nbsp;the&nbsp;(signed)&nbsp;offsets&nbsp;in&nbsp;steps,&nbsp;and<br>
+'Rate',&nbsp;the&nbsp;peak&nbsp;velocity&nbsp;in&nbsp;steps/second.&nbsp;Returns&nbsp;None.<br>
+&nbsp;<br>
+Calls&nbsp;RA.StartJump()&nbsp;and&nbsp;DEC.StartJump&nbsp;to&nbsp;start&nbsp;the&nbsp;slews&nbsp;in&nbsp;each&nbsp;axis</tt></dd></dl>
+
+<dl><dt><a name="MotorControl-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>This&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;is&nbsp;'pickled'&nbsp;when&nbsp;sending&nbsp;it&nbsp;over&nbsp;the&nbsp;wire&nbsp;via&nbsp;Pyro4,&nbsp;and&nbsp;we&nbsp;only&nbsp;want&nbsp;to&nbsp;pickle&nbsp;attributes,<br>
+not&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="MotorControl-__init__"><strong>__init__</strong></a>(self, limits<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="MotorControl-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="MotorControl-getframe"><strong>getframe</strong></a>(self)</dt><dd><tt>Called&nbsp;asynchrnously&nbsp;by&nbsp;driver&nbsp;(in&nbsp;USB&nbsp;comms&nbsp;thread)&nbsp;whenever&nbsp;a&nbsp;spot&nbsp;in&nbsp;the&nbsp;controller&nbsp;input<br>
+queue&nbsp;opens&nbsp;up&nbsp;ready&nbsp;for&nbsp;a&nbsp;new&nbsp;frame.&nbsp;This&nbsp;averages&nbsp;20&nbsp;times&nbsp;per&nbsp;second&nbsp;while&nbsp;the&nbsp;system&nbsp;is&nbsp;running,<br>
+but&nbsp;can&nbsp;be&nbsp;much&nbsp;slower&nbsp;(if&nbsp;the&nbsp;system&nbsp;is&nbsp;busy)&nbsp;or&nbsp;much&nbsp;faster&nbsp;(while&nbsp;the&nbsp;queue&nbsp;is&nbsp;being&nbsp;re-filled&nbsp;if&nbsp;it<br>
+is&nbsp;allowed&nbsp;to&nbsp;become&nbsp;(almost)&nbsp;empty.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;calls&nbsp;.<a href="#MotorControl-getframe">getframe</a>()&nbsp;on&nbsp;each&nbsp;of&nbsp;the&nbsp;axis&nbsp;objects,&nbsp;truncates&nbsp;the&nbsp;results&nbsp;to&nbsp;a&nbsp;pair&nbsp;of<br>
+integers&nbsp;(holding&nbsp;over&nbsp;any&nbsp;fractional&nbsp;part&nbsp;for&nbsp;next&nbsp;time),&nbsp;sets&nbsp;various&nbsp;flags,&nbsp;and&nbsp;sends&nbsp;the<br>
+pair&nbsp;of&nbsp;numbers&nbsp;to&nbsp;the&nbsp;controller.</tt></dd></dl>
+
+<dl><dt><a name="MotorControl-newcounters"><strong>newcounters</strong></a>(self, counters)</dt><dd><tt>Called&nbsp;aynchronously&nbsp;whenever&nbsp;new&nbsp;counter&nbsp;data&nbsp;is&nbsp;available&nbsp;from&nbsp;the&nbsp;controller<br>
+hardware.&nbsp;Updates&nbsp;the&nbsp;autoguider&nbsp;logs.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-KickStart"><strong>KickStart</strong></a>()</dt><dd><tt>Start&nbsp;the&nbsp;motion&nbsp;control&nbsp;thread&nbsp;to&nbsp;keep&nbsp;the&nbsp;motor&nbsp;queue&nbsp;full.</tt></dd></dl>
+ <dl><dt><a name="-RunQueue"><strong>RunQueue</strong></a>()</dt><dd><tt>Starts&nbsp;the&nbsp;motion&nbsp;control&nbsp;queue&nbsp;running.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;only&nbsp;exits&nbsp;if&nbsp;stop()&nbsp;was&nbsp;called&nbsp;with&nbsp;an&nbsp;exception,&nbsp;indicating&nbsp;an<br>
+unrecoverable&nbsp;error&nbsp;that&nbsp;means&nbsp;the&nbsp;main&nbsp;program&nbsp;must&nbsp;exit.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CoarseSet': '180', 'EastOfPier': 'False', 'FineSet': '60', 'FlexureOn': 'True', 'GUIDE': '5', 'HighHorizonOn': 'False', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>intthread</strong> = None<br>
+<strong>limits</strong> = None<br>
+<strong>log</strong> = []<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>motors</strong> = None<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>

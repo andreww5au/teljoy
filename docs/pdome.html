@@ -1,0 +1,192 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module pdome</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>pdome</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/pdome.py">/home/andrew/PyDevel/teljoy/pdome.py</a></font></td></tr></table>
+    <p><tt><a href="#Dome">Dome</a>&nbsp;control&nbsp;module&nbsp;for&nbsp;&nbsp;Perth&nbsp;telescope.&nbsp;All&nbsp;dome&nbsp;control&nbsp;is&nbsp;via&nbsp;a&nbsp;serial&nbsp;port&nbsp;to&nbsp;the<br>
+dome&nbsp;controller.<br>
+&nbsp;<br>
+Arie's&nbsp;dome&nbsp;controller&nbsp;API&nbsp;for&nbsp;Perth&nbsp;telescope:<br>
+&nbsp;<br>
+interface&nbsp;is&nbsp;1200&nbsp;baud,&nbsp;8&nbsp;bits,&nbsp;two&nbsp;stop&nbsp;bits,&nbsp;no&nbsp;handshaking&nbsp;(HW&nbsp;or&nbsp;SW)<br>
+&nbsp;<br>
+Send&nbsp;a&nbsp;CR&nbsp;character&nbsp;to&nbsp;the&nbsp;dome.&nbsp;If&nbsp;it's&nbsp;busy,&nbsp;there&nbsp;will&nbsp;be&nbsp;no&nbsp;response.<br>
+If&nbsp;it's&nbsp;ready&nbsp;for&nbsp;a&nbsp;command,&nbsp;it&nbsp;responds&nbsp;with&nbsp;three&nbsp;characters:&nbsp;CR,&nbsp;LF,&nbsp;'?'.<br>
+&nbsp;<br>
+Commands:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'O',CR&nbsp;-&nbsp;opens&nbsp;the&nbsp;dome.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'C',CR&nbsp;-&nbsp;closes&nbsp;the&nbsp;dome<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;an&nbsp;integer&nbsp;azimuth&nbsp;in&nbsp;degrees,&nbsp;followed&nbsp;by&nbsp;a&nbsp;CR&nbsp;character&nbsp;-&nbsp;slews&nbsp;the&nbsp;dome<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'S',CR&nbsp;-&nbsp;recalibrate&nbsp;the&nbsp;dome&nbsp;encoders&nbsp;by&nbsp;slewing&nbsp;175&nbsp;degrees<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'I',CR&nbsp;-&nbsp;ask&nbsp;for&nbsp;the&nbsp;current&nbsp;dome&nbsp;shutter&nbsp;state.&nbsp;Returns&nbsp;CR,LF,'OD',&nbsp;or<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CR,LF,'CD'&nbsp;depending&nbsp;on&nbsp;whether&nbsp;the&nbsp;dome&nbsp;is&nbsp;open&nbsp;(OD)&nbsp;or<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;closed&nbsp;(CD).&nbsp;This&nbsp;is&nbsp;followed&nbsp;by&nbsp;a&nbsp;return&nbsp;prompt&nbsp;(CR,LF,'?').<br>
+&nbsp;<br>
+&nbsp;<a href="#Dome">Dome</a>&nbsp;failure:<br>
+&nbsp;&nbsp;&nbsp;If&nbsp;the&nbsp;dome&nbsp;fails&nbsp;to&nbsp;move&nbsp;when&nbsp;commanded,&nbsp;after&nbsp;60&nbsp;seconds,&nbsp;the&nbsp;controller&nbsp;will:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-turn&nbsp;off&nbsp;the&nbsp;dome&nbsp;motors<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-close&nbsp;the&nbsp;shutter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-repeat:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-wait&nbsp;for&nbsp;10&nbsp;seconds<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-sound&nbsp;the&nbsp;alarm&nbsp;for&nbsp;12&nbsp;seconds<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-send&nbsp;CR,&nbsp;LF,&nbsp;and&nbsp;'FD'</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="math.html">math</a><br>
+<a href="random.html">random</a><br>
+</td><td width="25%" valign=top><a href="serial.html">serial</a><br>
+<a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="traceback.html">traceback</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="pdome.html#Dome">Dome</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Dome">class <strong>Dome</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>An&nbsp;instance&nbsp;of&nbsp;this&nbsp;class&nbsp;is&nbsp;used&nbsp;to&nbsp;store&nbsp;the&nbsp;current&nbsp;dome&nbsp;motion&nbsp;<br>
+state,&nbsp;as&nbsp;well&nbsp;as&nbsp;some&nbsp;dome&nbsp;control&nbsp;preferences.&nbsp;Methods&nbsp;(open,&nbsp;close,<br>
+move)&nbsp;allow&nbsp;control.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Dome-CalcAzi"><strong>CalcAzi</strong></a>(self, Obj)</dt><dd><tt>Calculates&nbsp;the&nbsp;dome&nbsp;azimuth&nbsp;for&nbsp;a&nbsp;given&nbsp;telescope&nbsp;position,&nbsp;passed&nbsp;as&nbsp;a<br>
+correct.CalcPosition&nbsp;<a href="__builtin__.html#object">object</a>.&nbsp;If&nbsp;that&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;has&nbsp;a&nbsp;DomePos&nbsp;attribute&nbsp;that&nbsp;is<br>
+a&nbsp;valid&nbsp;number,&nbsp;use&nbsp;that&nbsp;instead&nbsp;of&nbsp;the&nbsp;calculated&nbsp;value.<br>
+&nbsp;<br>
+Because&nbsp;the&nbsp;telescope&nbsp;is&nbsp;mounted&nbsp;off-centre&nbsp;on&nbsp;the&nbsp;equatorial&nbsp;axis,&nbsp;and&nbsp;the<br>
+dome&nbsp;radius&nbsp;is&nbsp;roughly&nbsp;the&nbsp;as&nbsp;the&nbsp;tube&nbsp;length,&nbsp;there&nbsp;is&nbsp;a&nbsp;considerable<br>
+difference&nbsp;between&nbsp;telescope&nbsp;and&nbsp;dome&nbsp;azimuth.<br>
+&nbsp;<br>
+The&nbsp;correction&nbsp;is&nbsp;made&nbsp;by&nbsp;transforming&nbsp;the&nbsp;position&nbsp;of&nbsp;the&nbsp;centre&nbsp;of&nbsp;the<br>
+telescope&nbsp;tube&nbsp;to&nbsp;cartesian&nbsp;coordinates&nbsp;(x0,y0,z0),&nbsp;projecting&nbsp;the&nbsp;direction<br>
+of&nbsp;the&nbsp;telescope&nbsp;from&nbsp;that&nbsp;position&nbsp;to&nbsp;the&nbsp;surface&nbsp;of&nbsp;the&nbsp;dome&nbsp;sphere&nbsp;(Exx2,&nbsp;Why2,&nbsp;Zee2),<br>
+and&nbsp;transforming&nbsp;that&nbsp;back&nbsp;to&nbsp;polar&nbsp;coordinates&nbsp;for&nbsp;the&nbsp;dome&nbsp;centre.<br>
+&nbsp;<br>
+Returns&nbsp;the&nbsp;calculated&nbsp;dome&nbsp;azimuth,&nbsp;in&nbsp;degrees.</tt></dd></dl>
+
+<dl><dt><a name="Dome-__call__"><strong>__call__</strong></a>(self, arg, **kwargs)</dt><dd><tt>This&nbsp;method&nbsp;is&nbsp;run&nbsp;when&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class&nbsp;is&nbsp;treated&nbsp;like&nbsp;a&nbsp;function,&nbsp;and&nbsp;called.<br>
+Defining&nbsp;it&nbsp;allows&nbsp;the&nbsp;global&nbsp;'dome'&nbsp;variable&nbsp;containing&nbsp;the&nbsp;current&nbsp;dome&nbsp;state&nbsp;to&nbsp;be<br>
+treated&nbsp;like&nbsp;a&nbsp;function,&nbsp;so&nbsp;dome(123)&nbsp;would&nbsp;move&nbsp;the&nbsp;dome&nbsp;to&nbsp;Azi=123&nbsp;degrees,&nbsp;and<br>
+dome('open')&nbsp;or&nbsp;dome('close)&nbsp;would&nbsp;open&nbsp;and&nbsp;close&nbsp;the&nbsp;shutter.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;purely&nbsp;for&nbsp;the&nbsp;convenience&nbsp;of&nbsp;the&nbsp;human&nbsp;at&nbsp;the&nbsp;command&nbsp;line,&nbsp;you&nbsp;can<br>
+also&nbsp;simply&nbsp;call&nbsp;dome.<a href="#Dome-move">move</a>(123),&nbsp;dome.<a href="#Dome-open">open</a>()&nbsp;or&nbsp;dome.<a href="#Dome-close">close</a>().</tt></dd></dl>
+
+<dl><dt><a name="Dome-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>Can't&nbsp;pickle&nbsp;the&nbsp;__setattr__&nbsp;function&nbsp;when&nbsp;saving&nbsp;state</tt></dd></dl>
+
+<dl><dt><a name="Dome-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Dome-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Dome-check"><strong>check</strong></a>(self)</dt><dd><tt>Should&nbsp;be&nbsp;called&nbsp;repeatedly&nbsp;(eg&nbsp;by&nbsp;detevent&nbsp;loop)&nbsp;to&nbsp;manage&nbsp;communication<br>
+with&nbsp;the&nbsp;dome&nbsp;controller.</tt></dd></dl>
+
+<dl><dt><a name="Dome-close"><strong>close</strong></a>(self, force<font color="#909090">=False</font>)</dt><dd><tt>If&nbsp;the&nbsp;safety&nbsp;interlock&nbsp;is&nbsp;not&nbsp;active,&nbsp;or&nbsp;the&nbsp;'force'&nbsp;argument&nbsp;is&nbsp;true,<br>
+add&nbsp;an&nbsp;'close&nbsp;shutter'&nbsp;command&nbsp;to&nbsp;the&nbsp;dome&nbsp;command&nbsp;queue.</tt></dd></dl>
+
+<dl><dt><a name="Dome-move"><strong>move</strong></a>(self, az<font color="#909090">=None</font>, force<font color="#909090">=False</font>)</dt><dd><tt>Add&nbsp;a&nbsp;'move'&nbsp;command&nbsp;to&nbsp;the&nbsp;dome&nbsp;command&nbsp;queue,&nbsp;to&nbsp;be&nbsp;executed&nbsp;as&nbsp;soon&nbsp;as&nbsp;the&nbsp;dome&nbsp;is&nbsp;free.<br>
+If&nbsp;a&nbsp;safety&nbsp;interlock&nbsp;is&nbsp;active,&nbsp;exit&nbsp;with&nbsp;an&nbsp;error&nbsp;unless&nbsp;the&nbsp;'force'&nbsp;argument&nbsp;is<br>
+True.<br>
+&nbsp;<br>
+The&nbsp;'az'&nbsp;parameter&nbsp;defines&nbsp;the&nbsp;dome&nbsp;azimuth&nbsp;to&nbsp;move&nbsp;to&nbsp;-&nbsp;0-360,&nbsp;where&nbsp;0=North&nbsp;and<br>
+90&nbsp;is&nbsp;due&nbsp;East.</tt></dd></dl>
+
+<dl><dt><a name="Dome-open"><strong>open</strong></a>(self, force<font color="#909090">=False</font>)</dt><dd><tt>If&nbsp;the&nbsp;safety&nbsp;interlock&nbsp;is&nbsp;not&nbsp;active,&nbsp;or&nbsp;the&nbsp;'force'&nbsp;argument&nbsp;is&nbsp;true,<br>
+add&nbsp;an&nbsp;'open&nbsp;shutter'&nbsp;command&nbsp;to&nbsp;the&nbsp;dome&nbsp;command&nbsp;queue.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-DegToRad"><strong>DegToRad</strong></a>(r)</dt><dd><tt>Given&nbsp;an&nbsp;argument&nbsp;in&nbsp;degrees,&nbsp;return&nbsp;the&nbsp;value&nbsp;converted&nbsp;to&nbsp;radians.</tt></dd></dl>
+ <dl><dt><a name="-RadToDeg"><strong>RadToDeg</strong></a>(r)</dt><dd><tt>Given&nbsp;an&nbsp;argument&nbsp;in&nbsp;radians,&nbsp;return&nbsp;the&nbsp;value&nbsp;converted&nbsp;to&nbsp;degrees.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>ABSP</strong> = 0.15804597701149425<br>
+<strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPfile</strong> = ['./teljoy.ini']<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'AskDomeStatus': 0, 'CoarseSet': '180', 'DefaultAutoDome': 0, 'DomeTracking': '0', 'EastOfPier': 'False', 'FineSet': '60', ...}<br>
+<strong>DEBUG</strong> = False<br>
+<strong>DFCOARSESETRATE</strong> = 3600<br>
+<strong>DFFINESETRATE</strong> = 1200<br>
+<strong>DFGUIDERATE</strong> = 100<br>
+<strong>DFPRESS</strong> = 1015.92<br>
+<strong>DFSLEWRATE</strong> = 108000<br>
+<strong>DFTEMP</strong> = 0<br>
+<strong>DOBSLAT</strong> = -43.9866666667<br>
+<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DOMEPORT</strong> = 0<br>
+<strong>DRASID</strong> = -15.04106868<br>
+<strong>DTABLE</strong> = 'current'<br>
+<strong>DUMMYPADDLES</strong> = []<br>
+<strong>DirtyTime</strong> = 0<br>
+<strong>ETA</strong> = 0.0574712643678161<br>
+<strong>INIF</strong> = 'teljoy.ini'<br>
+<strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>MOTOR_ACCEL</strong> = 50000<br>
+<strong>MSIDDY</strong> = 0.99726956637<br>
+<strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>PULSE</strong> = 0.05<br>
+<strong>RD</strong> = 3.48<br>
+<strong>SITE</strong> = 'NZ'<br>
+<strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
+<strong>dome</strong> = {'DomeInUse': False, 'queue': [], 'CommandSent':...zi': -10, 'Command': None, 'DomeTracking': False}<br>
+<strong>errors</strong> = 
+<br>
+<strong>ff</strong> = &lt;logging.Formatter object&gt;<br>
+<strong>fh</strong> = &lt;logging.FileHandler object&gt;<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;<br>
+<strong>prefs</strong> = &lt;globals.Prefs object&gt;<br>
+<strong>safety</strong> = Safety Interlock - system ACTIVE
+No tags.
+</td></tr></table>
+</body></html>
