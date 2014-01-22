@@ -13,10 +13,6 @@
     'dome right' paddle buttons, which control the motors. This module contains
     the port IO for that task, while NZDOME.PAS contains the rest of the logic.    
 
-    The constants and types given below are the old (ISA bus) locations of buffers,
-    control registers or board address.  The Perth 8255 I/O board is assumed
-    to be at 0x1b0 = 432, and the base address of the New Zealand board (a PC-711B)
-    is at 0x216 = 534.
 """
 
 from globals import *

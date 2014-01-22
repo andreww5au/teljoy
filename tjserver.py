@@ -1,4 +1,7 @@
-"""Handle RPC comms with other components of the observing system, using Pyro4
+""" Pyro4 RPC server, allowing teljoy to be controller over the network. Runs a Pyro4 proxy server in a background thread.
+
+    This server is used by the included client programs (the tjclient.py library, and utilities like tjjump.py, that use it)
+    as well as the web status page CGI script, to load the current telescope state whenever the page refreshed.
 """
 
 import Pyro4

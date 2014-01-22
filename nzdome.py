@@ -1,4 +1,14 @@
 
+"""
+   Dome control module for New Zealand telescope at Mt John. It uses two output bits to control the
+   dome motors (left and right) and an encoder constantly sending the current dome enncoder reading (a single
+   byte, 0-255, representing the azimuth).
+
+   For this module to work, the dome control unit on the wall inside the dome needs to be bypassed, and the
+   dome encoder connected directly to the serial port on the telescope control computer.
+"""
+
+
 import math
 import serial
 import time

@@ -1,4 +1,4 @@
-"""Pyro4 RPC client library for Teljoy
+"""Pyro4 RPC client library for Teljoy.
 """
 
 DEFHOST = 'cynosure.canterbury.ac.nz'

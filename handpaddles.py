@@ -1,4 +1,4 @@
-"""Handles reading and responding to hand paddle direction switches and speed buttons
+"""Handles reading and responding to hand paddle direction switches and speed buttons.
 """
 
 from globals import *

@@ -1,3 +1,8 @@
+"""Utility functions, all intended to be called manually by users at the Teljoy command line.
+   Also defines built in position constants like 'STOW', again to be used at the command line.
+"""
+
+
 import sys
 import time
 import urllib2

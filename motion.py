@@ -1,5 +1,5 @@
 
-"""This module handles the low-level motion control - velocity ramping in each axis and sending 
+"""This module handles the telescope motion control - velocity ramping in each axis and sending
    velocity pairs to the motor queue for each 50ms time step. It's handled by a single instance of the
    'MotorControl' class, stored in a module global called 'motors'. That motor control object contains
    two instances of the 'Axis' class, one for RA and the other for DEC.

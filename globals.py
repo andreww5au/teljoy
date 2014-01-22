@@ -1,5 +1,6 @@
 """Constants, classes and utility functions used by most of the other
-   modules in Teljoy. 
+   modules in Teljoy. Most of the modules do 'from globals import *', which
+   is ugly and not ideal, but a working compromise between utility and purity.
 """
 
 import random
@@ -343,6 +344,10 @@ class SafetyInterlock(object):
 
      There is a single threading.Event() attribute called 'Active', which is 'set' when the
      system is running/started, and clear when the system is stopped.
+
+     This safety interlock system is almost entirely useless in New Zealand at the Mt John site,
+     where the dome shutter is entirely manually controlled. All it does there is handle freezing the
+     telescope tracking when the altitude is too low, before the hardware limit hits.
   """
 
   def __init__(self):

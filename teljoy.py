@@ -1,14 +1,19 @@
 #!/usr/bin/python -i
 
-"""Crude command-line telescope control program.
+"""Telescope control software using a 'velocity streaming' controller, where every frame
+   (typically 50ms) a pair of integers are read by the control hardware, and the control hardware
+   generates exactly that many motor steps over the next 50ms.
+
+   This file is the main executable. It mports the relevant modules, puts
+   useful functions into the global namespace to use on the command line, starts
+   the appropriate background threads and drops into an interactive Python prompt. Signal
+   handlers and cleanup functions are also set up, to shut down the motor controller cleanly
+   when teljoy exits (either intentionally or unintentionally).
+
+   All user control of the telescope is by typing functions at the Python command prompt,
+   like 'jump()', 'reset()', etc.
    
-   Imports the relevant modules, puts useful functions into the
-   global namespace to use on the command line, starts the appropriate
-   background threads (motion.TimeInt, dummycon.runtel and 
-   detevent.DetermineEvent) and drops into an interactive Python prompt.
-   
-   The utils module contains functions that will probably only be used
-   from the command line.
+   Most of the functions designed to be called directly by the user are in the 'utils.py' module.
    
    Typical use:
      >>> reset(ra='12:34:56', dec='-32:00:00')   #Set initial position

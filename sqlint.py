@@ -28,6 +28,13 @@
    Some of these functions, especially the galaxy lookup stuff, probably won't be used again. 
    They are better handled using VO calls to a name resolver like Vizier now that we have
    a decent net connection.
+
+   Note that this is all ancient code, ported from Pascal code dating back to 1996, and is preserved
+   for legacy reasons (compatibility with other code running at Perth Observatory). Don't use this as a model
+   for new code - instead, read the Python database API, or better, use a higher level abstraction like
+   Django models.
+"""
+
 """
 
 import MySQLdb as dblib
