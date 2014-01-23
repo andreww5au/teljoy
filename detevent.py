@@ -427,18 +427,22 @@ class CurrentPosition(correct.CalcPosition):
     if (abs(DelRA) > MAXOFFSETSTEPS) or (abs(DelDEC) > MAXOFFSETSTEPS):
       logger.error('Offset() called with values resulting in too large a shift.')
       return True
+    if motion.limits.HWLimit:
+      logger.error('detevent.Offset called when hardware limit is active!')
+      return True
     with motion.motors.lock:
       if motion.motors.Moving or motion.motors.Paddling:
         logger.error('detevent.Offset called while telescope in motion!')
         return True
-      motion.motors.Jump(DelRA, DelDEC, prefs.SlewRate)  # Calculate the motor profile and jump
-      if not self.posviolate:
-        self.Ra += ora / math.cos(self.DecC / 3600 * math.pi / 180)
-        self.Dec += odec
-      self.RaA += ora / math.cos(self.DecC / 3600 * math.pi / 180)
-      self.DecA += odec
-      self.RaC += ora / math.cos(self.DecC / 3600 * math.pi / 180)
-      self.DecC += odec
+      error = motion.motors.Jump(DelRA, DelDEC, prefs.SlewRate)  # Calculate the motor profile and jump
+      if not error:
+        if not self.posviolate:
+          self.Ra += ora / math.cos(self.DecC / 3600 * math.pi / 180)
+          self.Dec += odec
+        self.RaA += ora / math.cos(self.DecC / 3600 * math.pi / 180)
+        self.DecA += odec
+        self.RaC += ora / math.cos(self.DecC / 3600 * math.pi / 180)
+        self.DecC += odec
 
 
 def CheckDirtyPos():

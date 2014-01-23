@@ -472,6 +472,9 @@ class MotorControl(object):
     if (self.Jumping or self.Paddling):
       logger.error('motion.MotorControl.Jump called while telescope is already moving')
       return True
+    if self.limits.HWLimit:
+      logger.error('motion.MotorControl.Jump called when hardware limit is active.')
+      return True
     if safety.Active.is_set() or force:
       with self.lock:
         self.RA.StartJump(delRA, Rate)
@@ -479,6 +482,7 @@ class MotorControl(object):
         return False
     else:
       logger.error('ERROR: motion.motors.Jump called when safety interlock is on')
+      return True
 
   def getframe(self):
     """Called asynchrnously by driver (in USB comms thread) whenever a spot in the controller input

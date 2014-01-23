@@ -232,8 +232,18 @@ def offset(ora, odec):
 
        This function is intended to be called manually, by the user at the command line.
   """
+  oldRA, oldDEC = sexstring(detevent.current.Ra / 15 / 3600, sp=' '), sexstring(detevent.current.Dec / 3600, sp=' ')
+  if detevent.current.Dec > 0:
+    oldDEC = '+' + oldDEC
   detevent.current.Offset(ora=ora, odec=odec)
   logger.info("Moved small offset distance: %4.1f,%4.1f" % (ora, odec))
+  time.sleep(0.5)
+  newRA, newDEC = sexstring(detevent.current.Ra / 15 / 3600, sp=' '), sexstring(detevent.current.Dec / 3600, sp=' ')
+  if detevent.current.Dec > 0:
+    newDEC = '+' + newDEC
+  lst = sexstring(detevent.current.Time.LST, sp=' ')[:5]
+  print "TPoint input data:"
+  print "%s   %s   %s   %s   %s" % (oldRA, oldDEC, newRA, newDEC, lst)
 
 
 Offset = offset
