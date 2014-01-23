@@ -10,7 +10,8 @@
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/globals.py">/home/andrew/PyDevel/teljoy/globals.py</a></font></td></tr></table>
     <p><tt>Constants,&nbsp;classes&nbsp;and&nbsp;utility&nbsp;functions&nbsp;used&nbsp;by&nbsp;most&nbsp;of&nbsp;the&nbsp;other<br>
-modules&nbsp;in&nbsp;Teljoy.</tt></p>
+modules&nbsp;in&nbsp;Teljoy.&nbsp;Most&nbsp;of&nbsp;the&nbsp;modules&nbsp;do&nbsp;'from&nbsp;globals&nbsp;import&nbsp;*',&nbsp;which<br>
+is&nbsp;ugly&nbsp;and&nbsp;not&nbsp;ideal,&nbsp;but&nbsp;a&nbsp;working&nbsp;compromise&nbsp;between&nbsp;utility&nbsp;and&nbsp;purity.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -169,7 +170,11 @@ process&nbsp;is&nbsp;carried&nbsp;out&nbsp;by&nbsp;calling&nbsp;all&nbsp;of&nbsp
 '<a href="#SafetyInterlock-register_startfunction">register_startfunction</a>()'&nbsp;method,&nbsp;one&nbsp;by&nbsp;one.<br>
 &nbsp;<br>
 There&nbsp;is&nbsp;a&nbsp;single&nbsp;threading.Event()&nbsp;attribute&nbsp;called&nbsp;'Active',&nbsp;which&nbsp;is&nbsp;'set'&nbsp;when&nbsp;the<br>
-system&nbsp;is&nbsp;running/started,&nbsp;and&nbsp;clear&nbsp;when&nbsp;the&nbsp;system&nbsp;is&nbsp;stopped.<br>&nbsp;</tt></td></tr>
+system&nbsp;is&nbsp;running/started,&nbsp;and&nbsp;clear&nbsp;when&nbsp;the&nbsp;system&nbsp;is&nbsp;stopped.<br>
+&nbsp;<br>
+This&nbsp;safety&nbsp;interlock&nbsp;system&nbsp;is&nbsp;almost&nbsp;entirely&nbsp;useless&nbsp;in&nbsp;New&nbsp;Zealand&nbsp;at&nbsp;the&nbsp;Mt&nbsp;John&nbsp;site,<br>
+where&nbsp;the&nbsp;dome&nbsp;shutter&nbsp;is&nbsp;entirely&nbsp;manually&nbsp;controlled.&nbsp;All&nbsp;it&nbsp;does&nbsp;there&nbsp;is&nbsp;handle&nbsp;freezing&nbsp;the<br>
+telescope&nbsp;tracking&nbsp;when&nbsp;the&nbsp;altitude&nbsp;is&nbsp;too&nbsp;low,&nbsp;before&nbsp;the&nbsp;hardware&nbsp;limit&nbsp;hits.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="SafetyInterlock-__init__"><strong>__init__</strong></a>(self)</dt></dl>

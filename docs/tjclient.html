@@ -9,7 +9,17 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>tjclient</strong></big></big></font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/extras/tjclient.py">/home/andrew/PyDevel/teljoy/extras/tjclient.py</a></font></td></tr></table>
-    <p><tt>Pyro4&nbsp;RPC&nbsp;client&nbsp;library&nbsp;for&nbsp;Teljoy</tt></p>
+    <p><tt>Pyro4&nbsp;RPC&nbsp;client&nbsp;library&nbsp;for&nbsp;Teljoy.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;communications&nbsp;are&nbsp;encrypted&nbsp;using&nbsp;a&nbsp;key&nbsp;(password)&nbsp;found&nbsp;in&nbsp;a&nbsp;file&nbsp;called&nbsp;'teljoy.pyrokey'&nbsp;in&nbsp;the<br>
+telescope&nbsp;user&nbsp;home&nbsp;directory&nbsp;(file&nbsp;name&nbsp;and&nbsp;path&nbsp;in&nbsp;the&nbsp;constant&nbsp;KEYFILE&nbsp;defined&nbsp;below.)<br>
+&nbsp;<br>
+Make&nbsp;sure&nbsp;that&nbsp;the&nbsp;same&nbsp;key&nbsp;is&nbsp;present&nbsp;in&nbsp;a&nbsp;corresponding&nbsp;file&nbsp;on&nbsp;any&nbsp;remote&nbsp;machines&nbsp;running&nbsp;the&nbsp;tjclient.py<br>
+library&nbsp;or&nbsp;the&nbsp;programs&nbsp;that&nbsp;use&nbsp;it&nbsp;(tjjump.py,&nbsp;tjpos.py,&nbsp;etc),&nbsp;and&nbsp;that&nbsp;the&nbsp;tjclient.py&nbsp;file&nbsp;has&nbsp;been&nbsp;edited<br>
+so&nbsp;that&nbsp;the&nbsp;path&nbsp;ane&nbsp;file&nbsp;name&nbsp;of&nbsp;this&nbsp;key&nbsp;file&nbsp;are&nbsp;correct.<br>
+&nbsp;<br>
+Both&nbsp;tjserver.py&nbsp;(in&nbsp;the&nbsp;Teljoy&nbsp;directory&nbsp;on&nbsp;the&nbsp;telescope&nbsp;control&nbsp;computer)&nbsp;and&nbsp;this&nbsp;file&nbsp;must&nbsp;load&nbsp;a&nbsp;KEYFILE<br>
+containing&nbsp;the&nbsp;same&nbsp;encryption&nbsp;password,&nbsp;or&nbsp;the&nbsp;communications&nbsp;link&nbsp;will&nbsp;not&nbsp;work.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
