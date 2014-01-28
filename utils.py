@@ -242,7 +242,7 @@ def offset(ora, odec):
   if detevent.current.Dec > 0:
     newDEC = '+' + newDEC
   lst = sexstring(detevent.current.Time.LST, sp=' ')[:5]
-  print "TPoint input data:"
+  print "TPoint input data: oldRA, oldDEC, newRA, newDEC, LST"
   print "%s   %s   %s   %s   %s" % (oldRA, oldDEC, newRA, newDEC, lst)
 
 
