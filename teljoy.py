@@ -34,6 +34,7 @@ import traceback
 
 from globals import *
 import usbcon
+import digio
 
 if __name__ == '__main__':
   logger.info('* Resetting controller hardware with hardware_reset()')
@@ -104,6 +105,7 @@ def cleanup():
   """
   logger.info("Exiting teljoy.py program - here's why: %s" % traceback.print_exc())
   try:
+    digio.DomeStop()
     while motion.motors.Moving or motion.motors.Paddling:
       logger.info("Waiting for slew and hand paddle motion to finish")
       time.sleep(5)
