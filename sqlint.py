@@ -933,7 +933,7 @@ def GetObject(name, db=None):
     return None
   else:
     if db is None:
-      db = gdb
+      db = InitSQL()
     curs = db.cursor()
   querystr = ( "select ObjID,ObjRA,ObjDec,ObjEpoch from teljoy.objects where " +
                "UPPER(ObjID)='%s'" % name.upper() )
