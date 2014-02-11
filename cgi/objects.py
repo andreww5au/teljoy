@@ -300,7 +300,7 @@ def filtobjects(curs=None,
     for c in ulist:        
       fObjRA = globals.stringsex(c['ObjRA'])
       fObjDec = globals.stringsex(c['ObjDec'])
-      curs.execute('''replace into teljoy.objtemp set ObjID=""''' + c['ObjID'] + '", '
+      curs.execute('''replace into teljoy.objtemp set ObjID="''' + c['ObjID'] + '", '
                    'fObjRA=' + `fObjRA` + ', fObjDec=' + `fObjDec` + ' ')
 
   db.commit()
