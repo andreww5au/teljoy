@@ -264,12 +264,6 @@ class Driver(controller.Driver):
     # configuration.mc_b_positive_limit_input = controller.PIN_GPIO_2
     # configuration.mc_b_negative_limit_input = controller.PIN_GPIO_3
 
-    # Set the guider input pins. The SBIG socket has pins: 1=+RA, 2=+DEC, 3=-DEC, 4=-RA, 5=ground:
-    configuration.mc_a_positive_guider_input = controller.PIN_GPIO_32     # +RA
-    configuration.mc_a_negative_guider_input = controller.PIN_GPIO_35     # -RA
-    configuration.mc_b_positive_guider_input = controller.PIN_GPIO_33     # +DEC
-    configuration.mc_b_negative_guider_input = controller.PIN_GPIO_34     # -DEC
-
     # Set the guider sample interval, in cycles of the controller clock frequency.
     # In this example, the guider is polled every 1ms, giving a maximum of
     # 100 for the guider value in each 100ms frame:
@@ -286,6 +280,12 @@ class Driver(controller.Driver):
     configuration.mc_guider_b_limit = 20
 
     if SITE == 'NZ':
+      # Set the guider input pins. The SBIG socket has pins: 1=+RA, 2=+DEC, 3=-DEC, 4=-RA, 5=ground:
+      configuration.mc_a_positive_guider_input = controller.PIN_GPIO_32     # +RA
+      configuration.mc_a_negative_guider_input = controller.PIN_GPIO_35     # -RA
+      configuration.mc_b_positive_guider_input = controller.PIN_GPIO_33     # +DEC
+      configuration.mc_b_negative_guider_input = controller.PIN_GPIO_34     # -DEC
+
       # Set 8 pins to outputs, the rest to inputs, with values reported (paddles, limits, power state):
       for pin in configuration.pins[0:8] + configuration.pins[16:48]:
         pin.direction = controller.CONTROLLER_PIN_INPUT
@@ -297,6 +297,12 @@ class Driver(controller.Driver):
         configuration.pins[pin_number].invert_input = False   # Normally all inputs to be inverted, see top of this method
 #      configuration.shutdown_0_input = 21    # The 'Power' input triggers a hardware shutdown if it goes active
     elif SITE == 'PERTH':
+      # Set the guider input pins. The SBIG socket has pins: 1=+RA, 2=+DEC, 3=-DEC, 4=-RA, 5=ground:
+      configuration.mc_a_positive_guider_input = controller.PIN_GPIO_0     # +RA
+      configuration.mc_a_negative_guider_input = controller.PIN_GPIO_1     # -RA
+      configuration.mc_b_positive_guider_input = controller.PIN_GPIO_2     # +DEC
+      configuration.mc_b_negative_guider_input = controller.PIN_GPIO_3     # -DEC
+
       for pin in configuration.pins[0:48]:   # Set all pins to inputs with values reported (paddles)
         pin.direction = controller.CONTROLLER_PIN_INPUT
         pin.report_input = True

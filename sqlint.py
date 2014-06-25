@@ -125,20 +125,22 @@ import os
 from globals import *
 import correct
 
-PWFILE = '~mjuo/teljoy.dbpass'
+
+if SITE == 'NZ':
+  HOST = 'localhost'
+  PWFILE = '~mjuo/teljoy.dbpass'
+elif SITE == 'PERTH':
+  HOST = 'mysql'
+  PWFILE = '~observer/teljoy.dbpass'
+
+try:
+  PASSWORD = file(os.path.expanduser(PWFILE), 'r').read().strip()
+except IOError:
+  logger.error("Can't load MySQL database pasword file: %s" % PWFILE)
+  PASSWORD = ''
 
 
 USER = 'honcho'
-if SITE == 'NZ':
-  HOST = 'localhost'
-  try:
-    PASSWORD = file(os.path.expanduser(PWFILE), 'r').read().strip()
-  except IOError:
-    logger.error("Can't load MySQL database pasword file: %s" % PWFILE)
-    PASSWORD = ''
-elif SITE == 'PERTH':
-  HOST = 'mysql'
-  PASSWORD = ''
 DATABASE = ''
 
 

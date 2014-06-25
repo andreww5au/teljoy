@@ -11,9 +11,22 @@
     containing the same encryption password, or the communications link will not work.
 """
 
-DEFHOST = 'cynosure.canterbury.ac.nz'
+# Uncomment the appropriate definition:
+SITE = 'NZ'
+# SITE = 'PERTH'
+
 DEFPORT = 9696
-DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
+
+if SITE == 'NZ':
+  DEFHOST = 'cynosure.canterbury.ac.nz'
+  DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
+  KEYFILE = '~mjuo/teljoy.pyrokey'
+elif SITE == 'PERTH':
+  DEFHOST = '10.92.10.185'
+  DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
+  KEYFILE = '~observer/teljoy.pyrokey'
+  # Or, for example, KEYFILE = 'c:/teljoy.pyrokey' when running under Windows
+
 
 import Pyro4
 
@@ -22,7 +35,6 @@ import os
 import time
 import traceback
 
-KEYFILE = '~mjuo/teljoy.pyrokey'
 
 try:
   hmac = file(os.path.expanduser(KEYFILE), 'r').read().strip()

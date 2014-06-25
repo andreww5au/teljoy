@@ -76,7 +76,7 @@ def ReadCoarse():
   if SITE == 'PERTH':
     val = (inputs >> 24) & 0x3F
   else:
-    val = (inputs >> 0) & 0x3F     # bits 0-5 of port 2_A
+    val = (inputs >> 0) & 0x3F     # bits 0-4 of port 2_A
   if ((val & 0x03) == 0x03) or ((val & 0x0C) == 0x0C):
     return 0    # more than one button pressed, so ignore inputs
   else:
