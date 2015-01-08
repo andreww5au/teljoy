@@ -34,15 +34,16 @@ slowloop&nbsp;is&nbsp;for&nbsp;weather&nbsp;sensing&nbsp;and&nbsp;other&nbsp;les
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
 <a href="copy.html">copy</a><br>
 <a href="correct.html">correct</a><br>
-</td><td width="25%" valign=top><a href="nzdome.html">nzdome</a><br>
-<a href="logging.html">logging</a><br>
+<a href="pdome.html">pdome</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
 <a href="math.html">math</a><br>
-</td><td width="25%" valign=top><a href="motion.html">motion</a><br>
+<a href="motion.html">motion</a><br>
 <a href="random.html">random</a><br>
-<a href="sqlint.html">sqlint</a><br>
-</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="sqlint.html">sqlint</a><br>
+<a href="threading.html">threading</a><br>
 <a href="time.html">time</a><br>
 <a href="traceback.html">traceback</a><br>
+</td><td width="25%" valign=top><a href="weather.html">weather</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -313,19 +314,19 @@ It's&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slow
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
-<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/observer/PyDevel/teljoy/teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
 <strong>CPfile</strong> = ['./teljoy.ini']<br>
-<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', 'DNP': '0.0', ...}<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'AskDomeStatus': 0, 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', ...}<br>
 <strong>DBLastTime</strong> = 0<br>
-<strong>DEBUG</strong> = False<br>
+<strong>DEBUG</strong> = True<br>
 <strong>DFCOARSESETRATE</strong> = 3600<br>
 <strong>DFFINESETRATE</strong> = 1200<br>
 <strong>DFGUIDERATE</strong> = 100<br>
 <strong>DFPRESS</strong> = 1015.92<br>
 <strong>DFSLEWRATE</strong> = 108000<br>
 <strong>DFTEMP</strong> = 0<br>
-<strong>DOBSLAT</strong> = -43.9866666667<br>
-<strong>DOBSLONG</strong> = -170.465<br>
+<strong>DOBSLAT</strong> = -32.008083333<br>
+<strong>DOBSLONG</strong> = -116.13501944<br>
 <strong>DRASID</strong> = -15.04106868<br>
 <strong>DTABLE</strong> = 'current'<br>
 <strong>DUMMYPADDLES</strong> = []<br>
@@ -342,8 +343,8 @@ It's&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slow
 <strong>MSIDDY</strong> = 0.99726956637<br>
 <strong>MSOLDY</strong> = 1.00273790931<br>
 <strong>PULSE</strong> = 0.05<br>
-<strong>ProspLastTime</strong> = 1390386878.478295<br>
-<strong>SITE</strong> = 'NZ'<br>
+<strong>ProspLastTime</strong> = 1420699115.347006<br>
+<strong>SITE</strong> = 'PERTH'<br>
 <strong>SLOWLOOP</strong> = 30<br>
 <strong>TIMEOUT</strong> = 0<br>
 <strong>TJboxAction</strong> = 'none'<br>

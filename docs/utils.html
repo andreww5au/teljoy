@@ -82,11 +82,6 @@ Then&nbsp;wait&nbsp;for&nbsp;a&nbsp;keypress&nbsp;indicating&nbsp;that&nbsp;the&
 STOW&nbsp;position,&nbsp;while&nbsp;closing&nbsp;the&nbsp;chutter.<br>
 &nbsp;<br>
 &nbsp;&nbsp;This&nbsp;function&nbsp;is&nbsp;intended&nbsp;to&nbsp;be&nbsp;called&nbsp;manually,&nbsp;by&nbsp;the&nbsp;user&nbsp;at&nbsp;the&nbsp;command&nbsp;line.</tt></dd></dl>
- <dl><dt><a name="-domecal"><strong>domecal</strong></a>()</dt><dd><tt>Call&nbsp;this&nbsp;function&nbsp;when&nbsp;the&nbsp;dome&nbsp;is&nbsp;pointing&nbsp;due&nbsp;North.&nbsp;It&nbsp;will&nbsp;calculate&nbsp;a<br>
-current&nbsp;value&nbsp;for&nbsp;the&nbsp;dome&nbsp;encoder&nbsp;offset,&nbsp;and&nbsp;set&nbsp;the&nbsp;current&nbsp;encoder&nbsp;offset<br>
-in&nbsp;the&nbsp;dome&nbsp;object.<br>
-&nbsp;<br>
-&nbsp;&nbsp;This&nbsp;function&nbsp;is&nbsp;intended&nbsp;to&nbsp;be&nbsp;called&nbsp;manually,&nbsp;by&nbsp;the&nbsp;user&nbsp;at&nbsp;the&nbsp;command&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-freeze"><strong>freeze</strong></a>(force<font color="#909090">=False</font>)</dt><dd><tt>Freeze&nbsp;the&nbsp;telescope.&nbsp;Stops&nbsp;all&nbsp;sidereal&nbsp;and&nbsp;non-sidereal&nbsp;tracking,&nbsp;but&nbsp;maintain&nbsp;position&nbsp;accuracy.<br>
 &nbsp;<br>
 This&nbsp;function&nbsp;is&nbsp;intended&nbsp;to&nbsp;be&nbsp;called&nbsp;manually,&nbsp;by&nbsp;the&nbsp;user&nbsp;at&nbsp;the&nbsp;command&nbsp;line.</tt></dd></dl>
@@ -124,23 +119,23 @@ This&nbsp;function&nbsp;is&nbsp;intended&nbsp;to&nbsp;be&nbsp;called&nbsp;manual
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(06:03:22.733, 30:00:00.00,  ...zi= 0.01
-      Time: [UT:10:34:42 LST:06:03:23] &gt;<br>
+<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(17:03:12.563, -32:00:00.00, ...i=250.51
+      Time: [UT:06:38:39 LST:21:33:13] &gt;<br>
 <strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
-<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
+<strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/observer/PyDevel/teljoy/teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
 <strong>CPfile</strong> = ['./teljoy.ini']<br>
-<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', 'DNP': '0.0', ...}<br>
-<strong>DEBUG</strong> = False<br>
+<strong>ConfigDefaults</strong> = {'AltCutoffFrom': '6', 'AltCutoffHi': '30', 'AltCutoffLo': '15', 'AltWarning': '10', 'AskDomeStatus': 0, 'CH': '0.0', 'CoarseSet': '180', 'DAF': '0.0', 'DCEC': '0.0', 'DCES': '0.0', ...}<br>
+<strong>DEBUG</strong> = True<br>
 <strong>DFCOARSESETRATE</strong> = 3600<br>
 <strong>DFFINESETRATE</strong> = 1200<br>
 <strong>DFGUIDERATE</strong> = 100<br>
 <strong>DFPRESS</strong> = 1015.92<br>
 <strong>DFSLEWRATE</strong> = 108000<br>
 <strong>DFTEMP</strong> = 0<br>
-<strong>DOBSLAT</strong> = -43.9866666667<br>
-<strong>DOBSLONG</strong> = -170.465<br>
-<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(06:03:22.733, 17:45:00....zi= 0.01
-      Time: [UT:10:34:42 LST:06:03:23] &gt;<br>
+<strong>DOBSLAT</strong> = -32.008083333<br>
+<strong>DOBSLONG</strong> = -116.13501944<br>
+<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(18:52:24.564, -20:54:00...i=277.16
+      Time: [UT:06:38:39 LST:21:33:13] &gt;<br>
 <strong>DRASID</strong> = -15.04106868<br>
 <strong>DTABLE</strong> = 'current'<br>
 <strong>DUMMYPADDLES</strong> = []<br>
@@ -153,11 +148,11 @@ This&nbsp;function&nbsp;is&nbsp;intended&nbsp;to&nbsp;be&nbsp;called&nbsp;manual
 <strong>MSIDDY</strong> = 0.99726956637<br>
 <strong>MSOLDY</strong> = 1.00273790931<br>
 <strong>PULSE</strong> = 0.05<br>
-<strong>SITE</strong> = 'NZ'<br>
-<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(06:03:22.734, -44:00:00....i=163.53
-      Time: [UT:10:34:42 LST:06:03:23] &gt;<br>
-<strong>STOW</strong> = &lt;Position Stowed: Org=(06:03:22.732, 30:00:00.00...zi= 0.01
-      Time: [UT:10:34:42 LST:06:03:23] &gt;<br>
+<strong>SITE</strong> = 'PERTH'<br>
+<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(21:33:12.565, -32:00:00....i=331.37
+      Time: [UT:06:38:39 LST:21:33:13] &gt;<br>
+<strong>STOW</strong> = &lt;Position Stowed: Org=(21:33:12.563, -32:00:00.0...i=331.37
+      Time: [UT:06:38:39 LST:21:33:13] &gt;<br>
 <strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
 <strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
 <strong>dome</strong> = {'DomeInUse': False, 'queue': [], 'CommandSent':...zi': -10, 'Command': None, 'DomeTracking': False}<br>
