@@ -1,0 +1,58 @@
+[Toggles]
+FlexureOn=1        ;Is flexure correction on?
+RefractionOn=1     ;Is refraction correction on?
+RealTimeOn=1       ;Are ref and/or flexure corrections made in real time too?
+DomeTracking=0     ;Does dome follow telescope motion automatically?
+EastOfPier=0       ;Is telescope inverted, and east of the pier?
+DefaultAutoDome=1  ;Does dome mode default to automatic?
+HighHorizonOn=0    ;Do we use the AltCutoffHi value instead of the AltCutoffLo value for jump validation
+
+[Environment]
+Pressure=1000          ;in mbar
+Temp=10                ;in degrees C
+ObsLat=-43.9866666667
+ObsLong=-170.465        ;East is negative, West positive
+TimeZone=-12            ;Local Time=UT - TimeZone
+
+[Presets]
+CapHourAngle=0
+CapDec=+30            ;Hour angle and Dec to move to for end cap replacement on shutdown
+StowHourAngle=0
+StowDec=+30           ;Hour angle and Dec to move to for telescope stowage on shutdown
+StowDomeAzi=285        ;Azimuth to leave dome on shutdown
+DomeFlatHourAngle=0.0   ;Hour angle to point at the flatfield screen
+DomeFlatDec=+17.75         ;Dec to point at the flatfield screen
+DomeFlatDomeAzi=85      ;Dome azimuth to point at the flatfield screen
+SkyFlatHourAngle=0      ;Hour angle to use for sky flats
+SkyFlatDec=-44         ;Dec to use for sky flats
+
+[Paths]
+LogDirName=/tmp/
+
+[FlexureEast]
+
+[FlexureWest]
+NP=-47.4
+CH=-62.3
+ME=+31.32
+MA=-8.77
+HCEC=+60.1
+DCES=+48.5
+DCEC=-39.7
+
+[Alarms]
+AltWarning=10      ;Below this altitude, freeze telescope and flag an 'AltError'
+AltCutoffLo=15     ;No jumps TO allowed below this angle
+AltCutoffHi=30     ;Like AltCutoffLo but used when 'HighHorizon' toggle is on, if not working near horizon
+AltCutoffFrom=6    ;No jumps FROM allowed positions below this altitude
+
+[Rates]
+Slew=5400
+CoarseSet=180
+FineSet=61
+Guide=4            ;All in arcseconds per second (or steps/second for test motors with DIVIDER=20)
+WaitTime=0.5       ;Seconds after move finish before any 'costly' actions
+
+[Dome]
+MinBetween=5            ;Minimum wait between dome moves, in seconds, when AutoDome is on.
+DomeEncoderOffset=10    ;Number to add to the dome encoder (0-255) before converting to az in degrees

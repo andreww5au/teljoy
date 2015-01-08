@@ -63,10 +63,14 @@ class Paddles(object):
         self.DECdir = 'fineNorth'
         Paddle_max_vel = FinePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "fineNorth"
     elif self.ButtonPressedDEC and (self.DECdir == 'fineNorth'):
       # Mask does not match but the motor is running
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
+      if DEBUG:
+        print "Stop fineNorth"
 
     if (fb & digio.FSouth) == digio.FSouth:            # Check with South Mask
       if not self.ButtonPressedDEC:
@@ -74,10 +78,14 @@ class Paddles(object):
         self.DECdir = 'fineSouth'
         Paddle_max_vel = -FinePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "fineSouth"
     elif self.ButtonPressedDEC and (self.DECdir == 'fineSouth'):
       # Mask does not match but the motor is runnin
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
+      if DEBUG:
+        print "Stop fineSouth"
 
     if (fb & digio.FEast) == digio.FEast:              # Check the Eastmask
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
@@ -85,10 +93,14 @@ class Paddles(object):
         self.RAdir = 'fineEast'
         Paddle_max_vel = FinePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "fineEast"
     elif self.ButtonPressedRA and (self.RAdir == 'fineEast'):
       #Mask does not match but the motor is running}
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
+      if DEBUG:
+        print "Stop fineEast"
 
     if (fb & digio.FWest) == digio.FWest:               # Check the West mask
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
@@ -96,10 +108,14 @@ class Paddles(object):
         self.RAdir = 'fineWest'
         Paddle_max_vel = -FinePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "fineWest"
     elif self.ButtonPressedRA and (self.RAdir == 'fineWest'):
       # Mask does not match but the motor is running
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
+      if DEBUG:
+        print "Stop fineWest"
 
     # check the Coarse paddle speed switches and set appropriate mode and velocity
     if SITE == 'NZ':
@@ -128,10 +144,14 @@ class Paddles(object):
         self.DECdir = 'coarseNorth'
         Paddle_max_vel = CoarsePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "coarseNorth"
     elif self.ButtonPressedDEC and (self.DECdir == 'coarseNorth'):
       #Mask does not match but the motor is running
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
+      if DEBUG:
+        print "Stop coarseNorth"
 
     if (cb & digio.CSouth) == digio.CSouth:
       if not self.ButtonPressedDEC:
@@ -139,10 +159,13 @@ class Paddles(object):
         self.DECdir = 'coarseSouth'
         Paddle_max_vel = -CoarsePaddleRate
         motion.motors.DEC.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "coarseSouth"
     elif self.ButtonPressedDEC and (self.DECdir == 'coarseSouth'):
       # Mask does not match but the motor is running
       self.ButtonPressedDEC = False
       motion.motors.DEC.StopPaddle()
+      print "Stop coarseSouth"
 
     if (cb & digio.CEast) == digio.CEast:
       if (not self.ButtonPressedRA) and motion.limits.CanEast():
@@ -150,10 +173,14 @@ class Paddles(object):
         self.RAdir = 'coarseEast'
         Paddle_max_vel = CoarsePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "coarseEast"
     elif self.ButtonPressedRA and (self.RAdir == 'coarseEast'):
       # Mask does not match but the motor is running
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
+      if DEBUG:
+        print "Stop coarseEast"
 
     if (cb & digio.CWest) == digio.CWest:
       if (not self.ButtonPressedRA) and motion.limits.CanWest():
@@ -161,10 +188,14 @@ class Paddles(object):
         self.RAdir = 'coarseWest'
         Paddle_max_vel = -CoarsePaddleRate
         motion.motors.RA.StartPaddle(Paddle_max_vel)
+        if DEBUG:
+          print "coarseWest"
     elif self.ButtonPressedRA and (self.RAdir == 'coarseWest'):
       # Mask does not match but the motor is running
       self.ButtonPressedRA = False
       motion.motors.RA.StopPaddle()
+      if DEBUG:
+        print "Stop coarseWest"
 
 
 paddles = Paddles()

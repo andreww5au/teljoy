@@ -29,7 +29,7 @@ if SITE == 'NZ':
   KEYFILE = '~mjuo/teljoy.pyrokey'
 else:
   import pdome as dome
-  TESTHOST = 'www.google.com.au'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
+  TESTHOST = 'mysql'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
   KEYFILE = '~observer/teljoy.pyrokey'
 import utils
 
@@ -70,17 +70,18 @@ class Telescope(object):
         except:   # Fails if the above DNS name isn't found, eg no internet connection
           pyro_daemon = Pyro4.Daemon(port=existing.port)   # Bind to the loopback address if we can't find an external interface
         # register the object in the daemon with the old objectId
-        pyro_daemon.register(self, objectId=existing.object)
+        print "Pyro4 registered: ", pyro_daemon.register(self, objectId=existing.object)
       except (AssertionError, Pyro4.errors.PyroError, socket.error):
         try:
           # just start a new daemon on a random port, and try to detect the IP address of an external interface.
           try:
-            pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress('google.com.au'), port=PYROPORT)
+            pyro_daemon = Pyro4.Daemon(host=Pyro4.socketutil.getInterfaceAddress(TESTHOST), port=PYROPORT)
           except:     # Fails if the above DNS name isn't found, eg no internet connection
             pyro_daemon = Pyro4.Daemon(port=PYROPORT)     # Bind to the loopback address if we can't find an external interface
           # register the object in the daemon and let it get a new objectId
           # also need to register in name server because it's not there yet.
           uri =  pyro_daemon.register(self, objectId='Teljoy')
+          print "Pyro4 uri is: ", uri
           if ns is not None:
             ns.register("Teljoy", uri)
         except:

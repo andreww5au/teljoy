@@ -54,8 +54,8 @@ def Lookup(objid=''):
 
   if obj is None:
     obj = pyephem.getObject(name=objid)
-  if obj is None:
-    obj = GetSesame(name=objid)
+#  if obj is None:
+#    obj = GetSesame(name=objid)
   return obj
 
 

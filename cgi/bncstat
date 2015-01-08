@@ -6,7 +6,7 @@ import sys
 import traceback
 import time
 
-sys.path.append('/home/mjuo/')
+sys.path.append('/home/observer/PyDevel')
 from teljoy.globals import *
 from teljoy.extras import tjclient
 

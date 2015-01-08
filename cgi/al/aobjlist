@@ -9,7 +9,7 @@ import sys
 print 'Content-Type: text/html'
 print
 
-sys.path.append('/home/mjuo/')
+sys.path.append('/home/observer/PyDevel')
 
 from teljoy.cgi import objects
 from teljoy import globals

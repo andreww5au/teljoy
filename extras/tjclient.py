@@ -12,8 +12,8 @@
 """
 
 # Uncomment the appropriate definition:
-SITE = 'NZ'
-# SITE = 'PERTH'
+#SITE = 'NZ'
+SITE = 'PERTH'
 
 DEFPORT = 9696
 
@@ -22,7 +22,7 @@ if SITE == 'NZ':
   DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
   KEYFILE = '~mjuo/teljoy.pyrokey'
 elif SITE == 'PERTH':
-  DEFHOST = '10.92.10.185'
+  DEFHOST = '10.92.10.160'
   DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
   KEYFILE = '~observer/teljoy.pyrokey'
   # Or, for example, KEYFILE = 'c:/teljoy.pyrokey' when running under Windows

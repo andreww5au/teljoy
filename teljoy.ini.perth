@@ -4,7 +4,7 @@ RefractionOn=1     ;Is refraction correction on?
 RealTimeOn=1       ;Are ref and/or flexure corrections made in real time too?
 DomeTracking=0     ;Does dome follow telescope motion automatically?
 EastOfPier=0       ;Is telescope inverted, and east of the pier?
-DefaultAutoDome=0  ;Does dome mode default to automatic?
+DefaultAutoDome=1  ;Does dome mode default to automatic?
 HighHorizonOn=0    ;Do we use the AltCutoffHi value instead of the AltCutoffLo value for jump validation
 
 [Environment]
