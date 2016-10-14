@@ -17,6 +17,7 @@
    slowloop is for weather sensing and other less time-critical actions.
 """
 
+import cPickle
 import math
 import time
 import threading
@@ -24,15 +25,26 @@ import copy
 import traceback
 
 from globals import *
-if SITE == 'PERTH':
+if 'PERTH' in SITE:   # PERTH or NEWPERTH
   import pdome as dome
+
+if SITE == 'PERTH':
   import weather
 elif SITE == 'NZ':
   import nzdome as dome
+
 import correct
 import motion
-import sqlint
+
+if (SITE == 'PERTH') or (SITE == 'NZ'):
+  import sqlint
+  GOTSQL = True
+else:
+  GOTSQL = False
+
 from handpaddles import paddles
+
+POSPICKLEFILE = '/tmp/currentpos.pickle'
 
 TIMEOUT = 0   # Set to the number of seconds you want to wait without any contact via the tjbox table before closing down.
               # In NZ, nothing uses tjbox, so the timeout is set to zero (disabled).
@@ -371,7 +383,11 @@ class CurrentPosition(correct.CalcPosition):
        detevent.ChecKDBUpdate and sqlint.UpdateSQLCurrent approximately
        once per second.
     """
-    info, HA, LastMod = sqlint.ReadSQLCurrent(self)
+    if GOTSQL:
+      info, HA = ReadPickleCurrent(self)
+      LastMod = None
+    else:
+      info, HA, LastMod = sqlint.ReadSQLCurrent(self)
     if info is None:            # Flag a Calibration Error if there was no valid data in the table
       errors.CalError = True
       logger.error('DANGER - no initial position, you MUST check and reset the position before slewing!')
@@ -443,6 +459,33 @@ class CurrentPosition(correct.CalcPosition):
         self.DecA += odec
         self.RaC += ora / math.cos(self.DecC / 3600 * math.pi / 180)
         self.DecC += odec
+
+
+def ReadPickleCurrent(posn=None):
+  """Read a pickled telescope status, populate the fields in the position object
+     passed in 'posn', and return a tuple of other data.
+  """
+  f = open(POSPICKLEFILE, 'r')
+  info, LastMod, newpos = cPickle.load(f)
+  f.close()
+  for attname, attvalue in newpos.__dict__.items():
+    posn.__setattr__(attname, attvalue)
+
+  HA = newpos.RaC/54000.0 - newpos.Time.LST
+  if HA < -12:
+    HA += 24
+  if HA > 12:
+    HA -= 24
+
+  return info, HA
+
+
+def UpdatePickleCurrent(current=None, info=None):
+  """Write a pickled telescope status.
+  """
+  f = open(POSPICKLEFILE, 'w')
+  cPickle.dump((info, current), f)
+  f.close()
 
 
 def CheckDirtyPos():
@@ -523,9 +566,10 @@ def CheckDirtyDome():
     dome.dome.move(dome.dome.CalcAzi(current))
 
 
-def CheckDBUpdate():
-  """Make sure that the current state is saved to the SQL database approximately once 
-     every second. Exits without an error if the SQL connection isn't available.
+def CheckPosUpdate():
+  """Make sure that the current state is saved approximately once
+     every second. Uses sqlint.UpdateSQLCurrent() if we are using
+     SQL, otherwise saves to a pickle file in /tmp.
      
      The state data is used by external clients (eg Prosp, the CCD camera controller)
      and also used by Teljoy to set the initial position on startup, using the last
@@ -534,21 +578,27 @@ def CheckDBUpdate():
      This function is called at regular intervals by the 'fastloop'.
   """
   global db, DBLastTime
-  if sqlint.SQLActive and ((time.time() - DBLastTime) > 1.0):
-    foo = sqlint.Info() 
-    foo.posviolate = current.posviolate
-    foo.moving = motion.motors.Moving
-    foo.EastOfPier = prefs.EastOfPier
-    foo.DomeInUse = dome.dome.DomeInUse
-    foo.ShutterInUse = dome.dome.DomeInUse
-    foo.ShutterOpen = dome.dome.IsShutterOpen
-    foo.DomeTracking = dome.dome.DomeTracking
-    foo.Frozen = motion.motors.Frozen
-    foo.RA_guideAcc = paddles.RA_GuideAcc
-    foo.DEC_guideAcc = paddles.DEC_GuideAcc
-    foo.LastError = LastError
+  if ((time.time() - DBLastTime) < 1.0):
+    return
+  foo = Info()
+  foo.posviolate = current.posviolate
+  foo.moving = motion.motors.Moving
+  foo.EastOfPier = prefs.EastOfPier
+  foo.DomeInUse = dome.dome.DomeInUse
+  foo.ShutterInUse = dome.dome.DomeInUse
+  foo.ShutterOpen = dome.dome.IsShutterOpen
+  foo.DomeTracking = dome.dome.DomeTracking
+  foo.Frozen = motion.motors.Frozen
+  foo.RA_guideAcc = paddles.RA_GuideAcc
+  foo.DEC_guideAcc = paddles.DEC_GuideAcc
+  foo.LastError = LastError
+  if (not GOTSQL):
+    UpdatePickleCurrent(current=current, info=foo)
+  elif sqlint.SQLActive:
     sqlint.UpdateSQLCurrent(current, foo, db)
-    DBLastTime = time.time()
+  else:
+    return
+  DBLastTime = time.time()
 
 
 def DoTJbox():
@@ -558,7 +608,7 @@ def DoTJbox():
      This function is called by CheckTJBox.
   """
   global db, ProspLastTime, TJboxAction
-  if not sqlint.SQLActive:
+  if (not GOTSQL) or (not sqlint.SQLActive):
     return
   BObj, other = sqlint.ReadTJbox(db=db)
   if BObj is None or other is None:
@@ -678,7 +728,7 @@ def CheckTJbox():
      This function is called at regular intervals by the 'fastloop'.
   """
   global db, TJboxAction
-  if not sqlint.SQLActive:
+  if (not GOTSQL) or (not sqlint.SQLActive):
     return
   if TJboxAction == 'none':
     if sqlint.ExistsTJbox(db=db):
@@ -764,9 +814,10 @@ def Init():
   global db, fastloop, slowloop, fastthread, slowthread, current, LastObj
   logger.debug('Detevent unit init started')
 
-  db = sqlint.InitSQL()    # Get a new db object and use it for this detevent thread
-  if db is None:
-    logger.warn('detevent.DetermineEvent: Detevent loop started, but with no SQL access.')
+  if GOTSQL:
+    db = sqlint.InitSQL()    # Get a new db object and use it for this detevent thread
+    if db is None:
+      logger.warn('detevent.DetermineEvent: Detevent loop started, but with no SQL access.')
 
   current = CurrentPosition()
   LastObj = correct.CalcPosition()
@@ -774,13 +825,15 @@ def Init():
 
   fastloop = EventLoop(name='FastLoop', looptime=FASTLOOP)
   fastloop.register('UpdateCurrent', current.UpdatePosition)         # add all motion to 'current' object coordinates
-  fastloop.register('CheckDBUpdate', CheckDBUpdate)              # Update database at intervals with saved state information
+  if GOTSQL:
+    fastloop.register('CheckDBUpdate', CheckDBUpdate)              # Update database at intervals with saved state information
+    fastloop.register('CheckTJbox', CheckTJbox)  # Look for a new database record in the command table for automatic control events
+
   fastloop.register('CheckDirtyPos', CheckDirtyPos)         # Check to see if the PosDirty flag needs to be cleared
   fastloop.register('CheckDirtyDome', CheckDirtyDome)       # Check to see if dome needs moving if DomeTracking is on
   fastloop.register('dome.dome.check', dome.dome.check)  # Check to see if dome has reached destination azimuth
   fastloop.register('motion.limits.check', motion.limits.check)  # Test to see if any hardware limits are active (doesn't do much for Perth telescope)
   fastloop.register('CheckLimitClear', CheckLimitClear)          # Test to see if the hardware limits are clear now, and if safe, clear the global limit flag
-  fastloop.register('CheckTJbox', CheckTJbox)               # Look for a new database record in the command table for automatic control events
   fastloop.register('paddles.check', paddles.check)         # Check and act on changes to hand-paddle buttons and switch state.
 
   slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)

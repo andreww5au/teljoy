@@ -15,7 +15,12 @@ elif SITE == 'NZ':
 import correct
 import detevent
 import motion
-import sqlint
+
+GOTSQL = False
+if (SITE == 'PERTH') or (SITE == 'NZ'):
+  import sqlint
+  GOTSQL = True
+
 import pyephem
 
 STOW = correct.HADecPosition(ha=prefs.StowHourAngle,
@@ -44,7 +49,9 @@ def Lookup(objid=''):
 
      This function is intended to be called manually, by the user at the command line.
   """
-  obj = sqlint.GetObject(name=objid)
+  obj = None
+  if (SITE == 'PERTH') or (SITE == 'NZ'):
+    obj = sqlint.GetObject(name=objid)   # Try looking up object in automation schedule
 
   if SITE == 'PERTH':   # Old Perth Observatory supernova search galaxy catalogues
     if obj is None:
@@ -53,9 +60,10 @@ def Lookup(objid=''):
       obj = sqlint.GetRC3(gid=objid.upper())
 
   if obj is None:
-    obj = pyephem.getObject(name=objid)
-#  if obj is None:
-#    obj = GetSesame(name=objid)
+    obj = pyephem.getObject(name=objid)  # Try looking up object in solar system names
+
+  if obj is None:
+    obj = GetSesame(name=objid)   # Try looking up name in VO name server via internet
   return obj
 
 

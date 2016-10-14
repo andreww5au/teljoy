@@ -36,22 +36,22 @@ from globals import *
 import usbcon
 import digio
 
-if __name__ == '__main__':
-  logger.info('* Resetting controller hardware with hardware_reset()')
-  try:
-    instance = usbcon.controller.Controller(None)
-  except libusb1.USBError:
-    logger.critical("Can't open USB device for telescope controller. Make sure that the controller " +
-                    "is plugged in, and that there isn't another copy of teljoy running.")
-    sys.exit(-1)
-  instance.hardware_reset()
-  time.sleep(0.5)
-  del instance
-  time.sleep(0.5)
+#if __name__ == '__main__':
+#  logger.info('* Resetting controller hardware with hardware_reset()')
+#  try:
+#     instance = usbcon.controller.Controller(None)
+#  except:
+#    logger.critical("Can't open USB device for telescope controller. Make sure that the controller " +
+#                    "is plugged in, and that there isn't another copy of teljoy running.")
+#    sys.exit(-1)
+#  instance.hardware_reset()
+#  time.sleep(0.5)
+# del instance
+#  time.sleep(0.5)
 
 import motion
 import detevent
-if SITE == 'PERTH':
+if 'PERTH' in SITE:
   from pdome import dome
 elif SITE == 'NZ':
   from nzdome import dome

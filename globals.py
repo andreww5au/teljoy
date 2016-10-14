@@ -11,7 +11,8 @@ import traceback
 import ConfigParser
 import logging
 
-SITE = 'PERTH'
+SITE = "NEWPERTH"   # Perth telescope, minus all SQL support for standalone use.
+#SITE = 'PERTH'
 #SITE = 'NZ'
 
 INIF = 'teljoy.ini'
@@ -439,6 +440,36 @@ class SafetyInterlock(object):
   def __str__(self):
     return self.__repr__()
 
+
+class Info(object):
+  """Used to pass miscellaneous state information to and from the a pickle file or
+     the database function/s.
+     Names reflect the original attribute names in correct.CalcPosition,
+     motors.MotorControl, globals.Prefs, dome.Dome as well as the detevent.LastError
+     variable.
+
+     Used to let clients access Teljoy internal state, required to interface to Prosp, the
+     CCD control software for automatic observing.
+  """
+  def __init__(self):
+    self.posviolate = False
+    self.moving = False
+    self.EastOfPier = False
+    self.DomeInUse = False
+    self.ShutterInUse = False
+    self.ShutterOpen = False
+    self.DomeTracking = False
+    self.Frozen = False
+    self.RA_GuideAcc = 0.0
+    self.DEC_GuideAcc = 0.0
+    self.LastError = ''
+
+  def __getstate__(self):
+    """Can't pickle the __setattr__ function when saving state
+    """
+    d = self.__dict__.copy()
+    del d['__setattr__']
+    return d
 
 def UpdateConfig():
   """Load the .ini file and populate the ConfigParser object with the contents.

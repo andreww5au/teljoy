@@ -151,36 +151,6 @@ def getdb(user=None, password=None, host=None, database=None):
   return dblib.connect(user=user, passwd=password, host=host)
 
 
-class Info(object):
-  """Used to pass miscellaneous state information to and from the database function/s.
-     Names reflect the original attribute names in correct.CalcPosition, 
-     motors.MotorControl, globals.Prefs, dome.Dome as well as the detevent.LastError
-     variable.
-
-     Used to let clients access Teljoy internal state, required to interface to Prosp, the
-     CCD control software for automatic observing.
-  """
-  def __init__(self):
-    self.posviolate = False
-    self.moving = False
-    self.EastOfPier = False
-    self.DomeInUse = False
-    self.ShutterInUse = False
-    self.ShutterOpen = False
-    self.DomeTracking = False
-    self.Frozen = False
-    self.RA_GuideAcc = 0.0
-    self.DEC_GuideAcc = 0.0
-    self.LastError = ''
-
-  def __getstate__(self):
-    """Can't pickle the __setattr__ function when saving state
-    """
-    d = self.__dict__.copy()
-    del d['__setattr__']
-    return d
-
-
 class TJboxrec(object):
   """Stores the extra information in the TJbox table, that can't be stored in a 
      correct.CalcPosition object.
@@ -593,7 +563,7 @@ def sprocess(s):
 
 def ReadSQLCurrent(Here, db=None):
   """Read the current position data and other state information
-     into an correct.CalcPosition object and an sqlint.Info object. 
+     into an correct.CalcPosition object and an globals.Info object.
      Return (CurrentInfo, HA, LastMod), and modify 'Here' in place.
      
      Used by Teljoy to read the last saved telescope position on
@@ -667,7 +637,7 @@ def ReadSQLCurrent(Here, db=None):
 
 def UpdateSQLCurrent(Here, CurrentInfo, db=None):
   """The reverse of the above function - take a correct.CalcPosition
-     object and sqlint.Info object containing position and state information,
+     object and globals.Info object containing position and state information,
      and write them to the database.
      
      Used to let external clients (Prosp, etc) access internal teljoy state
