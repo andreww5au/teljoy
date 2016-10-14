@@ -8,7 +8,7 @@ import time
 import urllib2
 
 from globals import *
-if SITE == 'PERTH':
+if 'PERTH' in SITE:
   from pdome import dome
 elif SITE == 'NZ':
   from nzdome import dome

@@ -18,6 +18,7 @@
 """
 
 import cPickle
+import os
 import math
 import time
 import threading
@@ -155,20 +156,20 @@ class CurrentPosition(correct.CalcPosition):
   def __repr__(self):
     if self.posviolate:
       l1 = "Top RA:  %s    LST: %s         ObjID:   --" % (sexstring(self.RaC / 15.0 / 3600, dp=1), sexstring(self.Time.LST, dp=0))
-      l2 = "Top Dec: %s     UT:  %s" % (sexstring(self.DecC / 3600, dp=0), self.Time.UT.time().isoformat()[:-4])
-      l3 = "Alt:     %s      HA:  %s        ObjRA:   --" % (sexstring(self.Alt, dp=0), sexstring(self.RaC / 15 / 3600 - self.Time.LST, dp=0))
+      l2 = "Top Dec: %s     UT:  %s" % (sexstring(self.DecC / 3600, dp=0, signed=True), self.Time.UT.time().isoformat()[:-4])
+      l3 = "Alt:     %s      HA:  %s        ObjRA:   --" % (sexstring(self.Alt, dp=0), sexstring(self.RaC / 15 / 3600 - self.Time.LST, dp=0, signed=True))
       l4 = "Airmass: %6.4f                              ObjDec:  --" % (1 / math.cos((90 - self.Alt) / 180 * math.pi))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch: --" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen])
     else:
       l1 = "Top RA:  %s    LST: %s         ObjID:   %s" % (sexstring(self.RaC / 15.0 / 3600, dp=1), sexstring(self.Time.LST, dp=0), self.ObjID)
-      l2 = "Top Dec: %s     UT:  %s" % (sexstring(self.DecC / 3600, dp=0), self.Time.UT.time().isoformat()[:-4])
-      l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, dp=0), sexstring(self.RaC / 15 / 3600 - self.Time.LST, dp=0),
-                                                            sexstring(self.Ra / 15 / 3600, dp=1))
+      l2 = "Top Dec: %s     UT:  %s" % (sexstring(self.DecC / 3600, dp=0, signed=True), self.Time.UT.time().isoformat()[:-4])
+      l3 = "Alt:     %s      HA:  %s        ObjRA:   %s" % (sexstring(self.Alt, dp=0), sexstring(self.RaC / 15 / 3600 - self.Time.LST, dp=0, signed=True),
+                                                            sexstring(self.Ra / 15 / 3600, dp=1, signed=True))
       l4 = "Airmass: %6.4f                              ObjDec:  %s" % (1 / math.cos((90 - self.Alt) / 180 * math.pi),
-                                                                        sexstring(self.Dec / 3600, dp=0))
+                                                                        sexstring(self.Dec / 3600, dp=0, signed=True))
       l5 = "Moving:  %s           Frozen: %s           ObjEpoch:%6.1f" % ({False:" No", True:"Yes"}[motion.motors.Moving], {False:" No", True:"Yes"}[motion.motors.Frozen],
                                                                           self.Epoch)
-    l6 = "Dome:  %s        Dome Tracking: %s           %s" % ({False:"Inactive", True:"  Active"}[dome.dome.DomeInUse],
+    l6 = "Dome:  %s        Dome Tracking: %s    %s" % ({False:"Inactive", True:"  Active"}[dome.dome.DomeInUse],
                                                               {False:" No", True:"Yes"}[dome.dome.DomeTracking],
                                                               str(errors))
     return '\n'.join([l1, l2, l3, l4, l5, l6]) + '\n'
@@ -383,7 +384,7 @@ class CurrentPosition(correct.CalcPosition):
        detevent.ChecKDBUpdate and sqlint.UpdateSQLCurrent approximately
        once per second.
     """
-    if GOTSQL:
+    if not GOTSQL:
       info, HA = ReadPickleCurrent(self)
       LastMod = None
     else:
@@ -465,17 +466,24 @@ def ReadPickleCurrent(posn=None):
   """Read a pickled telescope status, populate the fields in the position object
      passed in 'posn', and return a tuple of other data.
   """
-  f = open(POSPICKLEFILE, 'r')
-  info, LastMod, newpos = cPickle.load(f)
-  f.close()
-  for attname, attvalue in newpos.__dict__.items():
-    posn.__setattr__(attname, attvalue)
+  info = None
+  HA = 0
+  if os.path.exists(POSPICKLEFILE):
+    f = open(POSPICKLEFILE, 'r')
+    info, newpos = cPickle.load(f)
+    f.close()
+    for attname, attvalue in newpos.__dict__.items():
+      posn.__setattr__(attname, attvalue)
+    newpos.Time = correct.TimeRec()
+    newpos.Time.__dict__.update(newpos.TimeDict)
+    posn.Time = correct.TimeRec()
+    posn.Time.__dict__.update(newpos.TimeDict)
 
-  HA = newpos.RaC/54000.0 - newpos.Time.LST
-  if HA < -12:
-    HA += 24
-  if HA > 12:
-    HA -= 24
+    HA = newpos.RaC/54000.0 - newpos.Time.LST
+    if HA < -12:
+      HA += 24
+    if HA > 12:
+      HA -= 24
 
   return info, HA
 
@@ -825,8 +833,8 @@ def Init():
 
   fastloop = EventLoop(name='FastLoop', looptime=FASTLOOP)
   fastloop.register('UpdateCurrent', current.UpdatePosition)         # add all motion to 'current' object coordinates
+  fastloop.register('CheckPosUpdate', CheckPosUpdate)  # Update database at intervals with saved state information
   if GOTSQL:
-    fastloop.register('CheckDBUpdate', CheckDBUpdate)              # Update database at intervals with saved state information
     fastloop.register('CheckTJbox', CheckTJbox)  # Look for a new database record in the command table for automatic control events
 
   fastloop.register('CheckDirtyPos', CheckDirtyPos)         # Check to see if the PosDirty flag needs to be cleared

@@ -58,11 +58,11 @@ DUMMYPADDLES = []
 
 CPPATH = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/observer/PyDevel/teljoy/teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']    # Initialisation file path
 
-LOGLEVEL_CONSOLE = logging.INFO     # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
-LOGLEVEL_LOGFILE = logging.INFO      # Logging level for logfile
+LOGLEVEL_CONSOLE = logging.DEBUG     # Logging level for console messages (INFO, DEBUG, ERROR, CRITICAL, etc)
+LOGLEVEL_LOGFILE = logging.DEBUG      # Logging level for logfile
 LOGFILE = "/tmp/teljoy.log"
 
-# create global logger object for Facility Controller
+# create global logger object
 logger = logging.getLogger("teljoy")
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages, formatted with timestamps
@@ -242,11 +242,14 @@ class Prefs(object):
     self.SkyFlatDec = CP.getfloat('Presets', 'SkyFlatDec')
 
 
-def sexstring(value=0.0, sp=':', fixed=False, dp=None):
+def sexstring(value=0.0, sp=':', fixed=False, dp=None, signed=False):
   """Convert the floating point 'value' into a sexagecimal string.
      The character in 'sp' is used as a spacer between components. Useful for
      within functions, not on its own.
      eg: sexstring(current.ObjRA/3600,' ')
+
+     If 'signed' is True, reserve a space in front of the output if the value is not negative, so positive and
+     negative values give the same number of characters output.
   """
   if fixed:
     dp = 0
@@ -265,7 +268,10 @@ def sexstring(value=0.0, sp=':', fixed=False, dp=None):
   if value < 0:
     outs = '-'
   else:
-    outs = ''
+    if signed:
+      outs = ' '
+    else:
+      outs = ''
   D = int(aval)
   M = int((aval - float(D)) * 60)
   S = (aval - float(D) - (float(M) / 60)) * 3600
@@ -373,7 +379,7 @@ class SafetyInterlock(object):
         self.Active.clear()
         for name, action in self._stopfunctions.iteritems():
           try:
-            logger.info("Calling safety stop function: %s" % name)
+            logger.info("Calling safety stop function: %s: %s" % (name, comment))
             function, args, kwargs = action
             function(*args, **kwargs)
           except:
@@ -468,7 +474,10 @@ class Info(object):
     """Can't pickle the __setattr__ function when saving state
     """
     d = self.__dict__.copy()
-    del d['__setattr__']
+    try:
+      del d['__setattr__']
+    except:
+      pass
     return d
 
 def UpdateConfig():

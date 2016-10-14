@@ -36,18 +36,20 @@ from globals import *
 import usbcon
 import digio
 
-#if __name__ == '__main__':
-#  logger.info('* Resetting controller hardware with hardware_reset()')
-#  try:
-#     instance = usbcon.controller.Controller(None)
-#  except:
-#    logger.critical("Can't open USB device for telescope controller. Make sure that the controller " +
-#                    "is plugged in, and that there isn't another copy of teljoy running.")
+GOTCONTROLLER = False
+if __name__ == '__main__':
+  logger.info('* Resetting controller hardware with hardware_reset()')
+  try:
+    instance = usbcon.controller.Controller(None)
+    GOTCONTROLLER = True
+    instance.hardware_reset()
+    time.sleep(0.5)
+    del instance
+    time.sleep(0.5)
+  except:
+    logger.critical("Can't open USB device for telescope controller. Make sure that the controller " +
+                    "is plugged in, and that there isn't another copy of teljoy running.")
 #    sys.exit(-1)
-#  instance.hardware_reset()
-#  time.sleep(0.5)
-# del instance
-#  time.sleep(0.5)
 
 import motion
 import detevent
@@ -191,4 +193,7 @@ if __name__ == '__main__':
   current = detevent.current
   c = current
   tjserver.InitServer()
+  if not GOTCONTROLLER:
+    safety.add_tag('No controller found')
+
 
