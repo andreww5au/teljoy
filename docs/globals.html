@@ -1,6 +1,7 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html><head><title>Python: module globals</title>
+<meta charset="utf-8">
 </head><body bgcolor="#f0f0f8">
 
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
@@ -8,7 +9,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>globals</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/globals.py">/home/andrew/PyDevel/teljoy/globals.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/tmp/teljoy/globals.py">/tmp/teljoy/globals.py</a></font></td></tr></table>
     <p><tt>Constants,&nbsp;classes&nbsp;and&nbsp;utility&nbsp;functions&nbsp;used&nbsp;by&nbsp;most&nbsp;of&nbsp;the&nbsp;other<br>
 modules&nbsp;in&nbsp;Teljoy.&nbsp;Most&nbsp;of&nbsp;the&nbsp;modules&nbsp;do&nbsp;'from&nbsp;globals&nbsp;import&nbsp;*',&nbsp;which<br>
 is&nbsp;ugly&nbsp;and&nbsp;not&nbsp;ideal,&nbsp;but&nbsp;a&nbsp;working&nbsp;compromise&nbsp;between&nbsp;utility&nbsp;and&nbsp;purity.</tt></p>
@@ -37,6 +38,7 @@ is&nbsp;ugly&nbsp;and&nbsp;not&nbsp;ideal,&nbsp;but&nbsp;a&nbsp;working&nbsp;com
 </font></dt><dd>
 <dl>
 <dt><font face="helvetica, arial"><a href="globals.html#Errors">Errors</a>
+</font></dt><dt><font face="helvetica, arial"><a href="globals.html#Info">Info</a>
 </font></dt><dt><font face="helvetica, arial"><a href="globals.html#Position">Position</a>
 </font></dt><dt><font face="helvetica, arial"><a href="globals.html#Prefs">Prefs</a>
 </font></dt><dt><font face="helvetica, arial"><a href="globals.html#SafetyInterlock">SafetyInterlock</a>
@@ -60,6 +62,35 @@ is&nbsp;ugly&nbsp;and&nbsp;not&nbsp;ideal,&nbsp;but&nbsp;a&nbsp;working&nbsp;com
 <dl><dt><a name="Errors-__repr__"><strong>__repr__</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="Errors-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Info">class <strong>Info</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Used&nbsp;to&nbsp;pass&nbsp;miscellaneous&nbsp;state&nbsp;information&nbsp;to&nbsp;and&nbsp;from&nbsp;the&nbsp;a&nbsp;pickle&nbsp;file&nbsp;or<br>
+the&nbsp;database&nbsp;function/s.<br>
+Names&nbsp;reflect&nbsp;the&nbsp;original&nbsp;attribute&nbsp;names&nbsp;in&nbsp;correct.CalcPosition,<br>
+motors.MotorControl,&nbsp;globals.<a href="#Prefs">Prefs</a>,&nbsp;dome.Dome&nbsp;as&nbsp;well&nbsp;as&nbsp;the&nbsp;detevent.LastError<br>
+variable.<br>
+&nbsp;<br>
+Used&nbsp;to&nbsp;let&nbsp;clients&nbsp;access&nbsp;Teljoy&nbsp;internal&nbsp;state,&nbsp;required&nbsp;to&nbsp;interface&nbsp;to&nbsp;Prosp,&nbsp;the<br>
+CCD&nbsp;control&nbsp;software&nbsp;for&nbsp;automatic&nbsp;observing.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Info-__getstate__"><strong>__getstate__</strong></a>(self)</dt><dd><tt>Can't&nbsp;pickle&nbsp;the&nbsp;__setattr__&nbsp;function&nbsp;when&nbsp;saving&nbsp;state</tt></dd></dl>
+
+<dl><dt><a name="Info-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
 <hr>
 Data descriptors defined here:<br>
@@ -210,10 +241,13 @@ Data descriptors defined here:<br>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-UpdateConfig"><strong>UpdateConfig</strong></a>()</dt><dd><tt>Load&nbsp;the&nbsp;.ini&nbsp;file&nbsp;and&nbsp;populate&nbsp;the&nbsp;ConfigParser&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;the&nbsp;contents.</tt></dd></dl>
- <dl><dt><a name="-sexstring"><strong>sexstring</strong></a>(value<font color="#909090">=0.0</font>, sp<font color="#909090">=':'</font>, fixed<font color="#909090">=False</font>, dp<font color="#909090">=None</font>)</dt><dd><tt>Convert&nbsp;the&nbsp;floating&nbsp;point&nbsp;'value'&nbsp;into&nbsp;a&nbsp;sexagecimal&nbsp;string.<br>
+ <dl><dt><a name="-sexstring"><strong>sexstring</strong></a>(value<font color="#909090">=0.0</font>, sp<font color="#909090">=':'</font>, fixed<font color="#909090">=False</font>, dp<font color="#909090">=None</font>, signed<font color="#909090">=False</font>)</dt><dd><tt>Convert&nbsp;the&nbsp;floating&nbsp;point&nbsp;'value'&nbsp;into&nbsp;a&nbsp;sexagecimal&nbsp;string.<br>
 The&nbsp;character&nbsp;in&nbsp;'sp'&nbsp;is&nbsp;used&nbsp;as&nbsp;a&nbsp;spacer&nbsp;between&nbsp;components.&nbsp;Useful&nbsp;for<br>
 within&nbsp;functions,&nbsp;not&nbsp;on&nbsp;its&nbsp;own.<br>
-eg:&nbsp;<a href="#-sexstring">sexstring</a>(current.ObjRA/3600,'&nbsp;')</tt></dd></dl>
+eg:&nbsp;<a href="#-sexstring">sexstring</a>(current.ObjRA/3600,'&nbsp;')<br>
+&nbsp;<br>
+If&nbsp;'signed'&nbsp;is&nbsp;True,&nbsp;reserve&nbsp;a&nbsp;space&nbsp;in&nbsp;front&nbsp;of&nbsp;the&nbsp;output&nbsp;if&nbsp;the&nbsp;value&nbsp;is&nbsp;not&nbsp;negative,&nbsp;so&nbsp;positive&nbsp;and<br>
+negative&nbsp;values&nbsp;give&nbsp;the&nbsp;same&nbsp;number&nbsp;of&nbsp;characters&nbsp;output.</tt></dd></dl>
  <dl><dt><a name="-stringsex"><strong>stringsex</strong></a>(value<font color="#909090">=''</font>, compressed<font color="#909090">=False</font>)</dt><dd><tt>Convert&nbsp;the&nbsp;sexagesimal&nbsp;coordinate&nbsp;'value'&nbsp;into&nbsp;a&nbsp;floating&nbsp;point<br>
 result.&nbsp;Handles&nbsp;either&nbsp;a&nbsp;colon&nbsp;or&nbsp;a&nbsp;space&nbsp;as&nbsp;seperator,&nbsp;but&nbsp;currently<br>
 requires&nbsp;all&nbsp;three&nbsp;components&nbsp;(H:M:S&nbsp;not&nbsp;H:M&nbsp;or&nbsp;H:M.mmm).<br>
@@ -246,13 +280,13 @@ fractional&nbsp;seconds&nbsp;(eg&nbsp;'123456.78'&nbsp;==&nbsp;12:34:56.78.</tt>
 <strong>DirtyTime</strong> = 0<br>
 <strong>INIF</strong> = 'teljoy.ini'<br>
 <strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
-<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
-<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 10<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 10<br>
 <strong>MOTOR_ACCEL</strong> = 50000<br>
 <strong>MSIDDY</strong> = 0.99726956637<br>
 <strong>MSOLDY</strong> = 1.00273790931<br>
 <strong>PULSE</strong> = 0.05<br>
-<strong>SITE</strong> = 'PERTH'<br>
+<strong>SITE</strong> = 'NEWPERTH'<br>
 <strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
 <strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
 <strong>errors</strong> = 

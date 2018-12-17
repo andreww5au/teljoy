@@ -1,6 +1,7 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html><head><title>Python: module teljoy</title>
+<meta charset="utf-8">
 </head><body bgcolor="#f0f0f8">
 
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
@@ -8,7 +9,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>teljoy</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/teljoy.py">/home/andrew/PyDevel/teljoy/teljoy.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/tmp/teljoy/teljoy.py">/tmp/teljoy/teljoy.py</a></font></td></tr></table>
     <p><tt>Telescope&nbsp;control&nbsp;software&nbsp;using&nbsp;a&nbsp;'velocity&nbsp;streaming'&nbsp;controller,&nbsp;where&nbsp;every&nbsp;frame<br>
 (typically&nbsp;50ms)&nbsp;a&nbsp;pair&nbsp;of&nbsp;integers&nbsp;are&nbsp;read&nbsp;by&nbsp;the&nbsp;control&nbsp;hardware,&nbsp;and&nbsp;the&nbsp;control&nbsp;hardware<br>
 generates&nbsp;exactly&nbsp;that&nbsp;many&nbsp;motor&nbsp;steps&nbsp;over&nbsp;the&nbsp;next&nbsp;50ms.<br>
@@ -50,15 +51,13 @@ Hit&nbsp;'c'&nbsp;then&nbsp;enter&nbsp;to&nbsp;see&nbsp;the&nbsp;current&nbsp;te
 <a href="pyephem.html">pyephem</a><br>
 <a href="random.html">random</a><br>
 </td><td width="25%" valign=top><a href="signal.html">signal</a><br>
-<a href="sqlint.html">sqlint</a><br>
 <a href="sys.html">sys</a><br>
 <a href="threading.html">threading</a><br>
 <a href="time.html">time</a><br>
-</td><td width="25%" valign=top><a href="tjserver.html">tjserver</a><br>
-<a href="traceback.html">traceback</a><br>
+<a href="tjserver.html">tjserver</a><br>
+</td><td width="25%" valign=top><a href="traceback.html">traceback</a><br>
 <a href="urllib2.html">urllib2</a><br>
 <a href="usbcon.html">usbcon</a><br>
-<a href="weather.html">weather</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -90,8 +89,8 @@ Waits&nbsp;for&nbsp;any&nbsp;hand&nbsp;paddle&nbsp;motion&nbsp;or&nbsp;slews&nbs
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(17:03:11.290, -32:00:00.00, ...i=250.51
-      Time: [UT:06:38:37 LST:21:33:11] &gt;<br>
+<td width="100%"><strong>CAP</strong> = &lt;Position Cap: Org=(01:08:01.640, -32:00:00.00, ...i=250.50
+      Time: [UT:16:08:32 LST:05:38:02] &gt;<br>
 <strong>CLEANUP_FUNCTION</strong> = None<br>
 <strong>CP</strong> = &lt;ConfigParser.SafeConfigParser instance&gt;<br>
 <strong>CPPATH</strong> = ['/usr/local/etc/teljoy.ini', './teljoy.ini', '/home/observer/PyDevel/teljoy/teljoy.ini', '/home/mjuo/teljoy/teljoy.ini']<br>
@@ -106,26 +105,28 @@ Waits&nbsp;for&nbsp;any&nbsp;hand&nbsp;paddle&nbsp;motion&nbsp;or&nbsp;slews&nbs
 <strong>DFTEMP</strong> = 0<br>
 <strong>DOBSLAT</strong> = -32.008083333<br>
 <strong>DOBSLONG</strong> = -116.13501944<br>
-<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(18:52:23.291, -20:54:00...i=277.16
-      Time: [UT:06:38:37 LST:21:33:11] &gt;<br>
+<strong>DOMEFLAT</strong> = &lt;Position DomeFlat: Org=(02:57:13.640, -20:54:00...i=277.15
+      Time: [UT:16:08:32 LST:05:38:02] &gt;<br>
 <strong>DRASID</strong> = -15.04106868<br>
 <strong>DTABLE</strong> = 'current'<br>
 <strong>DUMMYPADDLES</strong> = []<br>
 <strong>DirtyTime</strong> = 0<br>
+<strong>GOTCONTROLLER</strong> = False<br>
+<strong>GOTSQL</strong> = False<br>
 <strong>INIF</strong> = 'teljoy.ini'<br>
 <strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
-<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
-<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 10<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 10<br>
 <strong>MOTOR_ACCEL</strong> = 50000<br>
 <strong>MSIDDY</strong> = 0.99726956637<br>
 <strong>MSOLDY</strong> = 1.00273790931<br>
 <strong>PULSE</strong> = 0.05<br>
 <strong>SIGNAL_HANDLERS</strong> = {}<br>
-<strong>SITE</strong> = 'PERTH'<br>
-<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(21:33:11.291, -32:00:00....i=331.37
-      Time: [UT:06:38:37 LST:21:33:11] &gt;<br>
-<strong>STOW</strong> = &lt;Position Stowed: Org=(21:33:11.289, -32:00:00.0...i=331.37
-      Time: [UT:06:38:37 LST:21:33:11] &gt;<br>
+<strong>SITE</strong> = 'NEWPERTH'<br>
+<strong>SKYFLAT</strong> = &lt;Position SkyFlat: Org=(05:38:01.641, -32:00:00....zi=54.04
+      Time: [UT:16:08:32 LST:05:38:02] &gt;<br>
+<strong>STOW</strong> = &lt;Position Stowed: Org=(05:38:01.640, -32:00:00.0...zi=54.04
+      Time: [UT:16:08:32 LST:05:38:02] &gt;<br>
 <strong>cf</strong> = &lt;logging.Formatter object&gt;<br>
 <strong>ch</strong> = &lt;logging.StreamHandler object&gt;<br>
 <strong>dome</strong> = {'DomeInUse': False, 'queue': [], 'CommandSent':...zi': -10, 'Command': None, 'DomeTracking': False}<br>

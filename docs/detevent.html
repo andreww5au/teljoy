@@ -1,6 +1,7 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html><head><title>Python: module detevent</title>
+<meta charset="utf-8">
 </head><body bgcolor="#f0f0f8">
 
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
@@ -8,7 +9,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>detevent</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andrew/PyDevel/teljoy/detevent.py">/home/andrew/PyDevel/teljoy/detevent.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/tmp/teljoy/detevent.py">/tmp/teljoy/detevent.py</a></font></td></tr></table>
     <p><tt>This&nbsp;module&nbsp;contains&nbsp;the&nbsp;code&nbsp;needed&nbsp;to&nbsp;support&nbsp;higher-level&nbsp;telescope&nbsp;control,&nbsp;<br>
 including&nbsp;maintaining&nbsp;the&nbsp;current&nbsp;telescope&nbsp;coordinates,&nbsp;as&nbsp;well&nbsp;as&nbsp;checking&nbsp;and<br>
 acting&nbsp;on&nbsp;external&nbsp;inputs&nbsp;(hand-paddle&nbsp;buttons,&nbsp;commanded&nbsp;actions&nbsp;via&nbsp;the&nbsp;SQL&nbsp;<br>
@@ -32,18 +33,18 @@ slowloop&nbsp;is&nbsp;for&nbsp;weather&nbsp;sensing&nbsp;and&nbsp;other&nbsp;les
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ConfigParser.html">ConfigParser</a><br>
+<a href="cPickle.html">cPickle</a><br>
 <a href="copy.html">copy</a><br>
 <a href="correct.html">correct</a><br>
-<a href="pdome.html">pdome</a><br>
-</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="pdome.html">pdome</a><br>
+<a href="logging.html">logging</a><br>
 <a href="math.html">math</a><br>
 <a href="motion.html">motion</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
 <a href="random.html">random</a><br>
-</td><td width="25%" valign=top><a href="sqlint.html">sqlint</a><br>
 <a href="threading.html">threading</a><br>
 <a href="time.html">time</a><br>
-<a href="traceback.html">traceback</a><br>
-</td><td width="25%" valign=top><a href="weather.html">weather</a><br>
+</td><td width="25%" valign=top><a href="traceback.html">traceback</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -244,15 +245,7 @@ Data descriptors defined here:<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-CheckDBUpdate"><strong>CheckDBUpdate</strong></a>()</dt><dd><tt>Make&nbsp;sure&nbsp;that&nbsp;the&nbsp;current&nbsp;state&nbsp;is&nbsp;saved&nbsp;to&nbsp;the&nbsp;SQL&nbsp;database&nbsp;approximately&nbsp;once&nbsp;<br>
-every&nbsp;second.&nbsp;Exits&nbsp;without&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;SQL&nbsp;connection&nbsp;isn't&nbsp;available.<br>
-&nbsp;<br>
-The&nbsp;state&nbsp;data&nbsp;is&nbsp;used&nbsp;by&nbsp;external&nbsp;clients&nbsp;(eg&nbsp;Prosp,&nbsp;the&nbsp;CCD&nbsp;camera&nbsp;controller)<br>
-and&nbsp;also&nbsp;used&nbsp;by&nbsp;Teljoy&nbsp;to&nbsp;set&nbsp;the&nbsp;initial&nbsp;position&nbsp;on&nbsp;startup,&nbsp;using&nbsp;the&nbsp;last<br>
-recorded&nbsp;RA,&nbsp;DEC&nbsp;and&nbsp;LST.<br>
-&nbsp;<br>
-This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
- <dl><dt><a name="-CheckDirtyDome"><strong>CheckDirtyDome</strong></a>()</dt><dd><tt>When&nbsp;prefs.DomeTracking&nbsp;is&nbsp;on,&nbsp;make&nbsp;sure&nbsp;that&nbsp;the&nbsp;dome&nbsp;is&nbsp;moved&nbsp;to&nbsp;the&nbsp;current<br>
+<td width="100%"><dl><dt><a name="-CheckDirtyDome"><strong>CheckDirtyDome</strong></a>()</dt><dd><tt>When&nbsp;prefs.DomeTracking&nbsp;is&nbsp;on,&nbsp;make&nbsp;sure&nbsp;that&nbsp;the&nbsp;dome&nbsp;is&nbsp;moved&nbsp;to&nbsp;the&nbsp;current<br>
 telescope&nbsp;azimuth&nbsp;after&nbsp;each&nbsp;telescope&nbsp;more,&nbsp;or&nbsp;if&nbsp;the&nbsp;telescope&nbsp;has&nbsp;tracked<br>
 far&nbsp;enough&nbsp;since&nbsp;the&nbsp;last&nbsp;dome&nbsp;move&nbsp;that&nbsp;the&nbsp;dome&nbsp;azimuth&nbsp;is&nbsp;more&nbsp;than&nbsp;6&nbsp;degrees<br>
 off.&nbsp;<br>
@@ -283,6 +276,15 @@ and&nbsp;it's&nbsp;now&nbsp;safe&nbsp;to&nbsp;resume&nbsp;motion&nbsp;(we&nbsp;a
 global&nbsp;limit&nbsp;flag.<br>
 &nbsp;<br>
 This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
+ <dl><dt><a name="-CheckPosUpdate"><strong>CheckPosUpdate</strong></a>()</dt><dd><tt>Make&nbsp;sure&nbsp;that&nbsp;the&nbsp;current&nbsp;state&nbsp;is&nbsp;saved&nbsp;approximately&nbsp;once<br>
+every&nbsp;second.&nbsp;Uses&nbsp;sqlint.UpdateSQLCurrent()&nbsp;if&nbsp;we&nbsp;are&nbsp;using<br>
+SQL,&nbsp;otherwise&nbsp;saves&nbsp;to&nbsp;a&nbsp;pickle&nbsp;file&nbsp;in&nbsp;/tmp.<br>
+&nbsp;<br>
+The&nbsp;state&nbsp;data&nbsp;is&nbsp;used&nbsp;by&nbsp;external&nbsp;clients&nbsp;(eg&nbsp;Prosp,&nbsp;the&nbsp;CCD&nbsp;camera&nbsp;controller)<br>
+and&nbsp;also&nbsp;used&nbsp;by&nbsp;Teljoy&nbsp;to&nbsp;set&nbsp;the&nbsp;initial&nbsp;position&nbsp;on&nbsp;startup,&nbsp;using&nbsp;the&nbsp;last<br>
+recorded&nbsp;RA,&nbsp;DEC&nbsp;and&nbsp;LST.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;is&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'fastloop'.</tt></dd></dl>
  <dl><dt><a name="-CheckTJbox"><strong>CheckTJbox</strong></a>()</dt><dd><tt>Check&nbsp;the&nbsp;command&nbsp;table&nbsp;in&nbsp;the&nbsp;database&nbsp;and&nbsp;carry&nbsp;out&nbsp;any&nbsp;commanded&nbsp;actions.<br>
 Check&nbsp;the&nbsp;progress&nbsp;of&nbsp;any&nbsp;previous&nbsp;commands&nbsp;still&nbsp;being&nbsp;acted&nbsp;on.<br>
 Exits&nbsp;without&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;SQL&nbsp;connection&nbsp;isn't&nbsp;available.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
@@ -306,6 +308,9 @@ This&nbsp;function&nbsp;is&nbsp;called&nbsp;by&nbsp;CheckTJBox.</tt></dd></dl>
 table,&nbsp;and&nbsp;start&nbsp;the&nbsp;fast&nbsp;and&nbsp;slow&nbsp;event&nbsp;loops&nbsp;in&nbsp;two&nbsp;separate&nbsp;threads,&nbsp;to&nbsp;handle&nbsp;all&nbsp;the&nbsp;high-level&nbsp;actions.</tt></dd></dl>
  <dl><dt><a name="-LogGuider"><strong>LogGuider</strong></a>()</dt><dd><tt>This&nbsp;function&nbsp;logs&nbsp;the&nbsp;autoguider&nbsp;steps&nbsp;to&nbsp;a&nbsp;file&nbsp;in&nbsp;/tmp.<br>
 It's&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slowloop'.</tt></dd></dl>
+ <dl><dt><a name="-ReadPickleCurrent"><strong>ReadPickleCurrent</strong></a>(posn<font color="#909090">=None</font>)</dt><dd><tt>Read&nbsp;a&nbsp;pickled&nbsp;telescope&nbsp;status,&nbsp;populate&nbsp;the&nbsp;fields&nbsp;in&nbsp;the&nbsp;position&nbsp;<a href="__builtin__.html#object">object</a><br>
+passed&nbsp;in&nbsp;'posn',&nbsp;and&nbsp;return&nbsp;a&nbsp;tuple&nbsp;of&nbsp;other&nbsp;data.</tt></dd></dl>
+ <dl><dt><a name="-UpdatePickleCurrent"><strong>UpdatePickleCurrent</strong></a>(current<font color="#909090">=None</font>, info<font color="#909090">=None</font>)</dt><dd><tt>Write&nbsp;a&nbsp;pickled&nbsp;telescope&nbsp;status.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -332,19 +337,21 @@ It's&nbsp;called&nbsp;at&nbsp;regular&nbsp;intervals&nbsp;by&nbsp;the&nbsp;'slow
 <strong>DUMMYPADDLES</strong> = []<br>
 <strong>DirtyTime</strong> = 0<br>
 <strong>FASTLOOP</strong> = 0.2<br>
+<strong>GOTSQL</strong> = False<br>
 <strong>INIF</strong> = 'teljoy.ini'<br>
 <strong>LOGFILE</strong> = '/tmp/teljoy.log'<br>
-<strong>LOGLEVEL_CONSOLE</strong> = 20<br>
-<strong>LOGLEVEL_LOGFILE</strong> = 20<br>
+<strong>LOGLEVEL_CONSOLE</strong> = 10<br>
+<strong>LOGLEVEL_LOGFILE</strong> = 10<br>
 <strong>LastError</strong> = ''<br>
 <strong>LastObj</strong> = None<br>
 <strong>MAXOFFSETSTEPS</strong> = 36000<br>
 <strong>MOTOR_ACCEL</strong> = 50000<br>
 <strong>MSIDDY</strong> = 0.99726956637<br>
 <strong>MSOLDY</strong> = 1.00273790931<br>
+<strong>POSPICKLEFILE</strong> = '/tmp/currentpos.pickle'<br>
 <strong>PULSE</strong> = 0.05<br>
-<strong>ProspLastTime</strong> = 1420699115.347006<br>
-<strong>SITE</strong> = 'PERTH'<br>
+<strong>ProspLastTime</strong> = 1545062911.643816<br>
+<strong>SITE</strong> = 'NEWPERTH'<br>
 <strong>SLOWLOOP</strong> = 30<br>
 <strong>TIMEOUT</strong> = 0<br>
 <strong>TJboxAction</strong> = 'none'<br>
