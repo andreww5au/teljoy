@@ -73,7 +73,7 @@ def ReadCoarse():
   inputs = motion.motors.Driver.inputs
   if 'C' in DUMMYPADDLES:
     return CB
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     val = (inputs >> 24) & 0x3F
   else:
     val = (inputs >> 0) & 0x3F     # bits 0-4 of port 2_A
@@ -108,7 +108,7 @@ def ReadLimit(inputs=None):
      Note that if the power switch is off (0x20 is set), then all the other
      limit inputs will go high as well, as the relays all open.
   """
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     return []     # Hardware limits can't be read in Perth
   if inputs is None:
     inputs = motion.motors.Driver.inputs
@@ -130,7 +130,7 @@ def ReadLimit(inputs=None):
 def DomeGoingLeft():
   """Returns true if the dome motor is moving left. This happens if the user presses the 'Dome Left' button on the paddle.
   """
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
   val = (inputs >> 0) & 0xFF                 # bit 6 of port 2_A
@@ -140,7 +140,7 @@ def DomeGoingLeft():
 def DomeGoingRight():
   """Returns true if the dome motor is moving right. This happens if the user presses the 'Dome Right' button on the paddle.
   """
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     return False     # No digital IO for dome in Perth
   inputs = motion.motors.Driver.inputs
   val = (inputs >> 0) & 0xFF                 # bit 7 of port 2_A
@@ -150,7 +150,7 @@ def DomeGoingRight():
 def DomeStop():
   """Turn off both dome motors.
   """
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     return      # No digital IO for dome in Perth
   clear_outputs((1 << RightBit) + (1 << LeftBit))
 
@@ -158,7 +158,7 @@ def DomeStop():
 def DomeLeft():
   """Move the dome left.
   """
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     return      # No digital IO for dome in Perth
   if DomeGoingRight():
     DomeStop()
@@ -171,7 +171,7 @@ def DomeLeft():
 def DomeRight():
   """Move the dome right.
   """
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     return      # No digital IO for dome in Perth
   if DomeGoingLeft():
     DomeStop()

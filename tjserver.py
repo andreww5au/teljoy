@@ -30,7 +30,7 @@ if SITE == 'NZ':
 else:
   import pdome as dome
   TESTHOST = 'mysql'   # Host to use to try and determine the externally-visible IP address for Pyro4 to bind to
-  KEYFILE = '~observer/teljoy.pyrokey'
+  KEYFILE = '~/teljoy.pyrokey'
 import utils
 
 try:

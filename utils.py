@@ -323,7 +323,7 @@ def shutdown():
     return
   if not dome.AutoDome:
     print "Dome not in automatic mode - can't park dome or close shutter"
-  if SITE == 'PERTH':
+  if 'PERTH' in SITE:
     jump(CAP, force=True)
     print "Press 'ENTER' when cap is on, to stow the telescope at zenith"
     ans = raw_input()

@@ -129,9 +129,9 @@ import correct
 if SITE == 'NZ':
   HOST = 'localhost'
   PWFILE = '~mjuo/teljoy.dbpass'
-elif SITE == 'PERTH':
+elif 'PERTH' in SITE:
   HOST = 'mysql'
-  PWFILE = '~observer/teljoy.dbpass'
+  PWFILE = '~/teljoy.dbpass'
 
 try:
   PASSWORD = file(os.path.expanduser(PWFILE), 'r').read().strip()

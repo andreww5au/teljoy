@@ -24,7 +24,7 @@ if SITE == 'NZ':
 elif SITE == 'PERTH':
   DEFHOST = '10.92.10.160'
   DEFURL = 'PYRO:Teljoy@%s:%d' % (DEFHOST, DEFPORT)
-  KEYFILE = '~observer/teljoy.pyrokey'
+  KEYFILE = '~/teljoy.pyrokey'
   # Or, for example, KEYFILE = 'c:/teljoy.pyrokey' when running under Windows
 
 

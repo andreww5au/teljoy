@@ -296,7 +296,7 @@ class Driver(controller.Driver):
       for pin_number in [16,17,18, 21,22]:   # Pin numbers for limit inputs, which (unlike paddles) are active HIGH
         configuration.pins[pin_number].invert_input = False   # Normally all inputs to be inverted, see top of this method
 #      configuration.shutdown_0_input = 21    # The 'Power' input triggers a hardware shutdown if it goes active
-    elif SITE == 'PERTH':
+    elif 'PERTH' in SITE:
       # Set the guider input pins. The SBIG socket has pins: 1=+RA, 2=+DEC, 3=-DEC, 4=-RA, 5=ground:
       configuration.mc_a_positive_guider_input = controller.PIN_GPIO_0     # +RA
       configuration.mc_a_negative_guider_input = controller.PIN_GPIO_1     # -RA
