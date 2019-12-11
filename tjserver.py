@@ -39,7 +39,7 @@ except IOError:
   logger.error('Pyro4 key file not found: %s' % KEYFILE)
   hmac = ''
 
-Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
+Pyro4.config.HMAC_KEY = hmac   # or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696
 
