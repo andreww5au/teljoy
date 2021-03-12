@@ -1,1 +1,1 @@
-__author__ = 'andrew'
+__author__ = 'Andrew Williams: Andrew.Williams@curtin.edu.au'

@@ -5,34 +5,42 @@
 # This file is internal, confidential source code and is protected by
 # trade secret and copyright laws.
 
-import select, struct, time, math, heapq, sys
-import usb1, libusb1
+import heapq
+import math
+import select
+import struct
+import time
+from functools import total_ordering
+
+import usb1
+from usb1 import libusb1
 
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 7, 1)
+module_version = (0, 8, 0)
+
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
 # of the library has been notified about them:
 class _patched_Poller(object):
-  def __init__(self, poller):
-    self._poller = poller
+    def __init__(self, poller):
+        self._poller = poller
 
-  def register(self, fd, event_flags):
-    self._poller.register(fd, event_flags)
+    def register(self, fd, event_flags):
+        self._poller.register(fd, event_flags)
 
-  def unregister(self, fd):
-    self._poller.unregister(fd)
+    def unregister(self, fd):
+        self._poller.unregister(fd)
 
-  def poll(self, timeout_in_seconds):
-    if timeout_in_seconds is not None:
-      self._poller.poll(int(math.ceil(timeout_in_seconds * 1000)))
-    else:
-      self._poller.poll(None)
+    def poll(self, timeout_in_seconds):
+        if timeout_in_seconds is not None:
+            self._poller.poll(int(math.ceil(timeout_in_seconds * 1000)))
+        else:
+            self._poller.poll(None)
 
-assert getattr(usb1.USBTransfer, "getUserData") is not None, \
-  "A newer version of the python-libusb1 library is required."
+
+assert getattr(usb1.USBTransfer, "getUserData") is not None, "A newer version of the python-libusb1 library is required."
 
 TC_ISSUE_STATE_COMMAND = 0x00
 TC_GET_VERSION = 0x01
@@ -87,14 +95,14 @@ TC_EXCEPTION_FPGA_READBACK_ERROR = 0x00000014
 TC_EXCEPTION_UNEXPECTED_STEPPER_STOP = 0x00000015
 TC_EXCEPTION_CLEARING_EXCEPTION_FAILED = 0x00000016
 
-clearable_exceptions = [ \
-  TC_EXCEPTION_QUEUE_UNDERFLOW,
-  TC_EXCEPTION_SHUTDOWN_REQUESTED,
-  TC_EXCEPTION_MCA_POSITIVE_LIMITED,
-  TC_EXCEPTION_MCA_NEGATIVE_LIMITED,
-  TC_EXCEPTION_MCB_POSITIVE_LIMITED,
-  TC_EXCEPTION_MCB_NEGATIVE_LIMITED,
-  TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED]
+clearable_exceptions = [
+    TC_EXCEPTION_QUEUE_UNDERFLOW,
+    TC_EXCEPTION_SHUTDOWN_REQUESTED,
+    TC_EXCEPTION_MCA_POSITIVE_LIMITED,
+    TC_EXCEPTION_MCA_NEGATIVE_LIMITED,
+    TC_EXCEPTION_MCB_POSITIVE_LIMITED,
+    TC_EXCEPTION_MCB_NEGATIVE_LIMITED,
+    TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED]
 
 TC_DETAIL_KIND_AXIS_TRACE = 0x00000001
 TC_DETAIL_KIND_FPGA_ERRORS = 0x00000002
@@ -193,71 +201,71 @@ GUIDER_RUN_AT_NEXT_AVAILABLE_FRAME = 1
 GUIDER_RUN_AT_FRAME = 2
 GUIDER_RUN_AT_NOT_BEFORE_FRAME = 3
 
-fpga_control_bit_descriptions = [ \
-  "CONTROL_BIT_ENABLE_MC", \
-  "CONTROL_BIT_ENABLE_IO", \
-  "CONTROL_BIT_ERRORS_PENDING", \
-  "CONTROL_BIT_INPUTS_CHANGED", \
-  "CONTROL_BIT_SLOTS_EMPTY", \
-  "CONTROL_BIT_SLOTS_EMPTIED", \
-  "CONTROL_BIT_INDICATOR_BITS_CHANGED", \
-  "CONTROL_BIT_ERRORS_CHANGED", \
-  "CONTROL_BIT_POWERED_ON", \
-  "CONTROL_BIT_IO_READY", \
-  "CONTROL_BIT_CONFIGURED"]
+fpga_control_bit_descriptions = [
+    "CONTROL_BIT_ENABLE_MC",
+    "CONTROL_BIT_ENABLE_IO",
+    "CONTROL_BIT_ERRORS_PENDING",
+    "CONTROL_BIT_INPUTS_CHANGED",
+    "CONTROL_BIT_SLOTS_EMPTY",
+    "CONTROL_BIT_SLOTS_EMPTIED",
+    "CONTROL_BIT_INDICATOR_BITS_CHANGED",
+    "CONTROL_BIT_ERRORS_CHANGED",
+    "CONTROL_BIT_POWERED_ON",
+    "CONTROL_BIT_IO_READY",
+    "CONTROL_BIT_CONFIGURED"]
 
-fpga_error_bit_descriptions = [ \
-  "ERROR_BIT_MCA_S_CONFIGURATION", \
-  "ERROR_BIT_MCA_D_CONFIGURATION", \
-  "ERROR_BIT_MCA_O_CONFIGURATION", \
-  "ERROR_BIT_MCB_S_CONFIGURATION", \
-  "ERROR_BIT_MCB_D_CONFIGURATION", \
-  "ERROR_BIT_MCB_O_CONFIGURATION", \
-  "ERROR_BIT_MCA_Q_CONFIGURATION", \
-  "ERROR_BIT_MCB_Q_CONFIGURATION", \
-  "ERROR_BIT_MC_SYNCHRONISATION_LOSS", \
-  "ERROR_BIT_MCA_SLOTS_OVERUN", \
-  "ERROR_BIT_MCA_SLOTS_UNDERRUN", \
-  "ERROR_BIT_MCB_SLOTS_OVERUN", \
-  "ERROR_BIT_MCB_SLOTS_UNDERRUN", \
-  "ERROR_BIT_IO_SUPPLY_ERROR", \
-  "ERROR_BIT_REGISTERS_MISO_UNDERRUN", \
-  "ERROR_BIT_IO_SPI_OVERRUN", \
-  "ERROR_BIT_MCA_POSITIVE_LIMITED", \
-  "ERROR_BIT_MCA_NEGATIVE_LIMITED", \
-  "ERROR_BIT_MCB_POSITIVE_LIMITED", \
-  "ERROR_BIT_MCB_NEGATIVE_LIMITED", \
-  "ERROR_BIT_ISOLATOR_ERROR", \
-  "ERROR_BIT_CONFIGURATION_LOCK_ERROR", \
-  "ERROR_BIT_SHUTDOWN_INPUT_TRIGGERED", \
-  "ERROR_BIT_SHUTDOWN_TIMEOUT_EXCEEDED", \
-  "ERROR_BIT_ERROR_CLEARING_ERROR", \
-  "ERROR_BIT_LAST"]
+fpga_error_bit_descriptions = [
+    "ERROR_BIT_MCA_S_CONFIGURATION",
+    "ERROR_BIT_MCA_D_CONFIGURATION",
+    "ERROR_BIT_MCA_O_CONFIGURATION",
+    "ERROR_BIT_MCB_S_CONFIGURATION",
+    "ERROR_BIT_MCB_D_CONFIGURATION",
+    "ERROR_BIT_MCB_O_CONFIGURATION",
+    "ERROR_BIT_MCA_Q_CONFIGURATION",
+    "ERROR_BIT_MCB_Q_CONFIGURATION",
+    "ERROR_BIT_MC_SYNCHRONISATION_LOSS",
+    "ERROR_BIT_MCA_SLOTS_OVERUN",
+    "ERROR_BIT_MCA_SLOTS_UNDERRUN",
+    "ERROR_BIT_MCB_SLOTS_OVERUN",
+    "ERROR_BIT_MCB_SLOTS_UNDERRUN",
+    "ERROR_BIT_IO_SUPPLY_ERROR",
+    "ERROR_BIT_REGISTERS_MISO_UNDERRUN",
+    "ERROR_BIT_IO_SPI_OVERRUN",
+    "ERROR_BIT_MCA_POSITIVE_LIMITED",
+    "ERROR_BIT_MCA_NEGATIVE_LIMITED",
+    "ERROR_BIT_MCB_POSITIVE_LIMITED",
+    "ERROR_BIT_MCB_NEGATIVE_LIMITED",
+    "ERROR_BIT_ISOLATOR_ERROR",
+    "ERROR_BIT_CONFIGURATION_LOCK_ERROR",
+    "ERROR_BIT_SHUTDOWN_INPUT_TRIGGERED",
+    "ERROR_BIT_SHUTDOWN_TIMEOUT_EXCEEDED",
+    "ERROR_BIT_ERROR_CLEARING_ERROR",
+    "ERROR_BIT_LAST"]
 
-exception_descriptions = [ \
-  "TC_EXCEPTION_NONE", \
-  "TC_EXCEPTION_QUEUE_UNDERFLOW", \
-  "TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER", \
-  "TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED", \
-  "TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED", \
-  "TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY", \
-  "TC_EXCEPTION_SHUTDOWN_REQUESTED", \
-  "TC_EXCEPTION_INVALID_CONFIGURATION", \
-  "TC_EXCEPTION_INTERNAL_UNDERRUN", \
-  "TC_EXCEPTION_INTERNAL_ERROR", \
-  "TC_EXCEPTION_MCA_POSITIVE_LIMITED", \
-  "TC_EXCEPTION_MCA_NEGATIVE_LIMITED", \
-  "TC_EXCEPTION_MCB_POSITIVE_LIMITED", \
-  "TC_EXCEPTION_MCB_NEGATIVE_LIMITED", \
-  "TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED", \
-  "TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP", \
-  "TC_EXCEPTION_IO_SUPPLY_ERROR", \
-  "TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW", \
-  "TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED", \
-  "TC_EXCEPTION_UNEXPECTED_FPGA_RESET", \
-  "TC_EXCEPTION_FPGA_READBACK_ERROR", \
-  "TC_EXCEPTION_UNEXPECTED_STEPPER_STOP", \
-  "TC_EXCEPTION_CLEARING_EXCEPTION_FAILED"]
+exception_descriptions = [
+    "TC_EXCEPTION_NONE",
+    "TC_EXCEPTION_QUEUE_UNDERFLOW",
+    "TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER",
+    "TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED",
+    "TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED",
+    "TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY",
+    "TC_EXCEPTION_SHUTDOWN_REQUESTED",
+    "TC_EXCEPTION_INVALID_CONFIGURATION",
+    "TC_EXCEPTION_INTERNAL_UNDERRUN",
+    "TC_EXCEPTION_INTERNAL_ERROR",
+    "TC_EXCEPTION_MCA_POSITIVE_LIMITED",
+    "TC_EXCEPTION_MCA_NEGATIVE_LIMITED",
+    "TC_EXCEPTION_MCB_POSITIVE_LIMITED",
+    "TC_EXCEPTION_MCB_NEGATIVE_LIMITED",
+    "TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED",
+    "TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP",
+    "TC_EXCEPTION_IO_SUPPLY_ERROR",
+    "TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW",
+    "TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED",
+    "TC_EXCEPTION_UNEXPECTED_FPGA_RESET",
+    "TC_EXCEPTION_FPGA_READBACK_ERROR",
+    "TC_EXCEPTION_UNEXPECTED_STEPPER_STOP",
+    "TC_EXCEPTION_CLEARING_EXCEPTION_FAILED"]
 
 CONTROLLER_PIN_INPUT = 0
 CONTROLLER_PIN_OUTPUT = 1
@@ -265,1093 +273,1121 @@ CONTROLLER_PIN_OUTPUT = 1
 CONTROLLER_PIN_FUNCTION_GPIO = 0
 CONTROLLER_PIN_FUNCTION_SPECIAL = 1
 
+
 class ControllerPin(object):
-  def __init__(self, number):
-    self.number = number
-    self.direction = CONTROLLER_PIN_INPUT
-    self.function = CONTROLLER_PIN_FUNCTION_GPIO
-    self.invert_input = False
-    self.report_input = False
+    def __init__(self, number):
+        self.number = number
+        self.direction = CONTROLLER_PIN_INPUT
+        self.function = CONTROLLER_PIN_FUNCTION_GPIO
+        self.invert_input = False
+        self.report_input = False
+
 
 class ControllerException(Exception):
-  pass
+    pass
+
 
 class ControllerUsageException(Exception):
-  pass
+    pass
+
 
 class ControllerVersionException(Exception):
-  pass
+    pass
+
 
 class ControllerConfigurationException(ControllerException):
-  pass
+    pass
+
 
 class ControllerNotConnectedException(ControllerException):
-  pass
+    pass
+
 
 class MultipleControllersConnectedException(ControllerException):
-  pass
+    pass
+
 
 class InterruptTransferFailedException(ControllerException):
-  pass
+    pass
+
 
 class ControllerConfiguration(object):
-  def __init__(self, controller):
-    self._controller = controller
+    def __init__(self, controller):
+        self._controller = controller
 
-    self.mc_prefill_frames = 8
-    self.mc_pin_flags = 0
-    self.mc_a_shutdown_acceleration = 0
-    self.mc_b_shutdown_acceleration = 0
-    self.mc_a_acceleration_limit = 500
-    self.mc_b_acceleration_limit = 500
-    self.mc_a_velocity_limit = 7600
-    self.mc_b_velocity_limit = 7600
-    self.mc_frame_period = 1200000
-    self.mc_pulse_width = 120
-    self.mc_pulse_minimum_off_time = None
-    self.mc_a_positive_limit_input = None
-    self.mc_a_negative_limit_input = None
-    self.mc_b_positive_limit_input = None
-    self.mc_b_negative_limit_input = None
-    self.mc_a_positive_guider_input = None
-    self.mc_a_negative_guider_input = None
-    self.mc_b_positive_guider_input = None
-    self.mc_b_negative_guider_input = None
+        self.mc_prefill_frames = 8
+        self.mc_pin_flags = 0
+        self.mc_a_shutdown_acceleration = 0
+        self.mc_b_shutdown_acceleration = 0
+        self.mc_a_acceleration_limit = 500
+        self.mc_b_acceleration_limit = 500
+        self.mc_a_velocity_limit = 7600
+        self.mc_b_velocity_limit = 7600
+        self.mc_frame_period = 1200000
+        self.mc_pulse_width = 120
+        self.mc_pulse_minimum_off_time = None
+        self.mc_a_positive_limit_input = None
+        self.mc_a_negative_limit_input = None
+        self.mc_b_positive_limit_input = None
+        self.mc_b_negative_limit_input = None
+        self.mc_a_positive_guider_input = None
+        self.mc_a_negative_guider_input = None
+        self.mc_b_positive_guider_input = None
+        self.mc_b_negative_guider_input = None
 
-    self.mc_guider_counter_divider = 12000
-    self.mc_guider_a_numerator = 1
-    self.mc_guider_a_denominator = 10
-    self.mc_guider_a_limit = 20
-    self.mc_guider_b_numerator = 1
-    self.mc_guider_b_denominator = 10
-    self.mc_guider_b_limit = 20
+        self.mc_guider_counter_divider = 12000
+        self.mc_guider_a_numerator = 1
+        self.mc_guider_a_denominator = 10
+        self.mc_guider_a_limit = 20
+        self.mc_guider_b_numerator = 1
+        self.mc_guider_b_denominator = 10
+        self.mc_guider_b_limit = 20
 
-    self.shutdown_0_input = None
-    self.shutdown_1_input = None
-    self.shutdown_2_input = None
-    self.shutdown_3_input = None
+        self.shutdown_0_input = None
+        self.shutdown_1_input = None
+        self.shutdown_2_input = None
+        self.shutdown_3_input = None
 
-    self.pins = []
+        self.pins = []
 
-    for i in range(64):
-      self.pins.append(ControllerPin(i))
+        for i in range(64):
+            self.pins.append(ControllerPin(i))
 
-  def _validate(self):
-    if self.mc_prefill_frames < 2:
-      raise ControllerConfigurationException( \
-        "The mc_prefill_frames property can not be less than two.")
+    def _validate(self):
+        if self.mc_prefill_frames < 2:
+            raise ControllerConfigurationException("The mc_prefill_frames property can not be less than two.")
 
-    if self.mc_a_shutdown_acceleration < 1:
-      raise ControllerConfigurationException( \
-        "The mc_a_shutdown_acceleration property must be greater than zero.")
+        if self.mc_a_shutdown_acceleration < 1:
+            raise ControllerConfigurationException("The mc_a_shutdown_acceleration property must be greater than zero.")
 
-    if self.mc_b_shutdown_acceleration < 1:
-      raise ControllerConfigurationException( \
-        "The mc_b_shutdown_acceleration property must be greater than zero.")
+        if self.mc_b_shutdown_acceleration < 1:
+            raise ControllerConfigurationException("The mc_b_shutdown_acceleration property must be greater than zero.")
 
-    if self.mc_frame_period < self._controller.clock_frequency / 100:
-      raise ControllerConfigurationException( \
-        "The mc_frame_period property must be set to give a frame of at least 10 " \
-        "milliseconds.")
+        if self.mc_frame_period < self._controller.clock_frequency / 100:
+            raise ControllerConfigurationException("The mc_frame_period property must be set to give a frame of at least 10 milliseconds.")
 
-    if self.mc_pulse_width < 1:
-      raise ControllerConfigurationException( \
-        "The mc_pulse_width property must not be less than one.")
+        if self.mc_pulse_width < 1:
+            raise ControllerConfigurationException("The mc_pulse_width property must not be less than one.")
 
-    if self.mc_pulse_minimum_off_time is None:
-      raise ControllerConfigurationException( \
-        "The mc_pulse_minimum_off_time must be specified.")
+        if self.mc_pulse_minimum_off_time is None:
+            raise ControllerConfigurationException("The mc_pulse_minimum_off_time must be specified.")
 
-    a_full_frame_cycles = (self.mc_pulse_width + self.mc_pulse_minimum_off_time) * \
-      self.mc_a_velocity_limit
+        a_full_frame_cycles = (self.mc_pulse_width + self.mc_pulse_minimum_off_time) * self.mc_a_velocity_limit
 
-    b_full_frame_cycles = (self.mc_pulse_width + self.mc_pulse_minimum_off_time) * \
-      self.mc_b_velocity_limit
+        b_full_frame_cycles = (self.mc_pulse_width + self.mc_pulse_minimum_off_time) * self.mc_b_velocity_limit
 
-    if a_full_frame_cycles > self.mc_frame_period or \
-      b_full_frame_cycles > self.mc_frame_period:
-      raise ControllerConfigurationException( \
-        "The minimum off time (mc_pulse_minimum_off_time) will be violated at " \
-        "the currently configured velocity limits. Reduce the maximum velocity " \
-        "or adjust the pulse on or off times.")
+        if ((a_full_frame_cycles > self.mc_frame_period) or
+                (b_full_frame_cycles > self.mc_frame_period)):
+            raise ControllerConfigurationException(
+                "The minimum off time (mc_pulse_minimum_off_time) will be violated at "
+                "the currently configured velocity limits. Reduce the maximum velocity "
+                "or adjust the pulse on or off times.")
 
-  def encode_gpio(self):
-    self._validate()
+    def encode_gpio(self):
+        self._validate()
 
-    direction = 0L
-    function = 0L
-    invert_input = 0L
-    report_input = 0L
+        direction = 0
+        function = 0
+        invert_input = 0
+        report_input = 0
 
-    for i in range(64):
-      if self.pins[i].direction == CONTROLLER_PIN_OUTPUT:
-        direction |= (1L << i)
+        for i in range(64):
+            if self.pins[i].direction == CONTROLLER_PIN_OUTPUT:
+                direction |= (1 << i)
 
-      if self.pins[i].function == CONTROLLER_PIN_FUNCTION_SPECIAL:
-        function |= (1L << i)
+            if self.pins[i].function == CONTROLLER_PIN_FUNCTION_SPECIAL:
+                function |= (1 << i)
 
-      if self.pins[i].invert_input:
-        invert_input |= (1L << i)
+            if self.pins[i].invert_input:
+                invert_input |= (1 << i)
 
-      if self.pins[i].report_input:
-        report_input |= (1L << i)
+            if self.pins[i].report_input:
+                report_input |= (1 << i)
 
-    return struct.pack("<QQQQ", \
-      direction, \
-      function, \
-      invert_input, \
-      report_input)
+        return struct.pack("<QQQQ",
+                           direction,
+                           function,
+                           invert_input,
+                           report_input)
 
-  def encode_safety(self):
-    self._validate()
+    def encode_safety(self):
+        self._validate()
 
-    return struct.pack("<BBBB", \
-      self._encode_input(self.shutdown_0_input),
-      self._encode_input(self.shutdown_1_input),
-      self._encode_input(self.shutdown_2_input),
-      self._encode_input(self.shutdown_3_input))
+        return struct.pack("<BBBB",
+                           self._encode_input(self.shutdown_0_input),
+                           self._encode_input(self.shutdown_1_input),
+                           self._encode_input(self.shutdown_2_input),
+                           self._encode_input(self.shutdown_3_input))
 
-  def _encode_input(self, value):
-    if value is None:
-      return TC_MC_UNUSED_INPUT
-    elif 0 <= value <= 64:
-      return value
-    else:
-      raise ControllerConfigurationException( \
-        "An invalid input was specified.")
+    def _encode_input(self, value):
+        if value is None:
+            return TC_MC_UNUSED_INPUT
+        elif 0 <= value <= 64:
+            return value
+        else:
+            raise ControllerConfigurationException(
+                "An invalid input was specified.")
 
-  def encode_mc(self):
-    self._validate()
+    def encode_mc(self):
+        self._validate()
 
-    return struct.pack("<HHHHHHHHLLBBBBBBBBLHHHHHH", \
-      self.mc_prefill_frames, \
-      self.mc_pin_flags, \
-      self.mc_a_shutdown_acceleration, \
-      self.mc_b_shutdown_acceleration, \
-      self.mc_a_acceleration_limit, \
-      self.mc_b_acceleration_limit, \
-      self.mc_a_velocity_limit, \
-      self.mc_b_velocity_limit, \
-      self.mc_frame_period, \
-      self.mc_pulse_width, \
-      self._encode_input(self.mc_a_positive_limit_input), \
-      self._encode_input(self.mc_a_negative_limit_input), \
-      self._encode_input(self.mc_b_positive_limit_input), \
-      self._encode_input(self.mc_b_negative_limit_input), \
-      self._encode_input(self.mc_a_positive_guider_input), \
-      self._encode_input(self.mc_a_negative_guider_input), \
-      self._encode_input(self.mc_b_positive_guider_input), \
-      self._encode_input(self.mc_b_negative_guider_input), \
-      self.mc_guider_counter_divider, \
-      self.mc_guider_a_numerator, \
-      self.mc_guider_a_denominator, \
-      self.mc_guider_a_limit, \
-      self.mc_guider_b_numerator, \
-      self.mc_guider_b_denominator, \
-      self.mc_guider_b_limit)
+        return struct.pack("<HHHHHHHHLLBBBBBBBBLHHHHHH",
+                           self.mc_prefill_frames,
+                           self.mc_pin_flags,
+                           self.mc_a_shutdown_acceleration,
+                           self.mc_b_shutdown_acceleration,
+                           self.mc_a_acceleration_limit,
+                           self.mc_b_acceleration_limit,
+                           self.mc_a_velocity_limit,
+                           self.mc_b_velocity_limit,
+                           self.mc_frame_period,
+                           self.mc_pulse_width,
+                           self._encode_input(self.mc_a_positive_limit_input),
+                           self._encode_input(self.mc_a_negative_limit_input),
+                           self._encode_input(self.mc_b_positive_limit_input),
+                           self._encode_input(self.mc_b_negative_limit_input),
+                           self._encode_input(self.mc_a_positive_guider_input),
+                           self._encode_input(self.mc_a_negative_guider_input),
+                           self._encode_input(self.mc_b_positive_guider_input),
+                           self._encode_input(self.mc_b_negative_guider_input),
+                           self.mc_guider_counter_divider,
+                           self.mc_guider_a_numerator,
+                           self.mc_guider_a_denominator,
+                           self.mc_guider_a_limit,
+                           self.mc_guider_b_numerator,
+                           self.mc_guider_b_denominator,
+                           self.mc_guider_b_limit)
+
 
 class UsbTransferError(object):
-  def __init__(self, command, status):
-    self.command = command
-    self.status = status
+    def __init__(self, command, status):
+        self.command = command
+        self.status = status
 
-  def __repr__(self):
-    return "<UsbTransferError %s (%s), command %s>" % \
-      (libusb1.libusb_transfer_status(self.status), self.status, self.command)
+    def __repr__(self):
+        return "<UsbTransferError %s (%s), command %s>" % (libusb1.libusb_transfer_status(self.status), self.status, self.command)   # needs libusb1, not usb1
+
 
 class EnqueueDetails(object):
-  def __init__(self, controller):
-    self.last_transmitted_frame = controller._last_transmitted_frame
-    self.last_enqueued_frame = controller._last_enqueued_frame
-    self.last_dequeued_frame = controller._last_dequeued_frame
+    # noinspection PyProtectedMember
+    def __init__(self, controller):
+        self.last_transmitted_frame = controller._last_transmitted_frame
+        self.last_enqueued_frame = controller._last_enqueued_frame
+        self.last_dequeued_frame = controller._last_dequeued_frame
 
-    self.frames_in_queue = \
-      (self.last_transmitted_frame - self.last_dequeued_frame) % 0x100000000L
-    self.frames_queue_capacity = controller.mc_frames_capacity
+        self.frames_in_queue = (self.last_transmitted_frame - self.last_dequeued_frame) % 0x100000000
+        self.frames_queue_capacity = controller.mc_frames_capacity
+
 
 class ExceptionDetails(object):
-  def __init__(self, exception, properties):
-    self.exception = exception
-    self.properties = properties
+    def __init__(self, exception, properties):
+        self.exception = exception
+        self.properties = properties
 
-  def __repr__(self):
-    if 0 <= self.exception <= len(exception_descriptions):
-      description = exception_descriptions[self.exception]
-    else:
-      description = "(Unknown Exception Code %s)" % self.exception
+    def __repr__(self):
+        if 0 <= self.exception <= len(exception_descriptions):
+            description = exception_descriptions[self.exception]
+        else:
+            description = "(Unknown Exception Code %s)" % self.exception
 
-    return "<ExceptionDetails %s %s>" % (description, self.properties)
+        return "<ExceptionDetails %s %s>" % (description, self.properties)
+
 
 class StateDetails(object):
-  def __init__(self, controller, state, exception):
-    self.state = state
-    self.exception = exception
+    # noinspection PyUnusedLocal
+    def __init__(self, controller, state, exception):
+        self.state = state
+        self.exception = exception
 
-  def __repr__(self):
-    if self.state == TC_STATE_EXCEPTION:
-      return "<StateDetails %s (%s)>" % \
-        (self.state_description, self.exception_description)
-    else:
-      return "<StateDetails %s>" % self.state_description
+    def __repr__(self):
+        if self.state == TC_STATE_EXCEPTION:
+            return "<StateDetails %s (%s)>" % (self.state_description, self.exception_description)
+        else:
+            return "<StateDetails %s>" % self.state_description
 
-  @property
-  def state_description(self):
-    if self.state == TC_STATE_IDLE:
-      return "TC_STATE_IDLE"
-    elif self.state == TC_STATE_RUNNING:
-      return "TC_STATE_RUNNING"
-    elif self.state == TC_STATE_STOPPING:
-      return "TC_STATE_STOPPING"
-    elif self.state == TC_STATE_EXCEPTION:
-      return "TC_STATE_EXCEPTION"
-    else:
-      return "(Unknown State Code)"
+    @property
+    def state_description(self):
+        if self.state == TC_STATE_IDLE:
+            return "TC_STATE_IDLE"
+        elif self.state == TC_STATE_RUNNING:
+            return "TC_STATE_RUNNING"
+        elif self.state == TC_STATE_STOPPING:
+            return "TC_STATE_STOPPING"
+        elif self.state == TC_STATE_EXCEPTION:
+            return "TC_STATE_EXCEPTION"
+        else:
+            return "(Unknown State Code)"
 
-  @property
-  def exception_description(self):
-    if 0 <= self.exception <= len(exception_descriptions):
-      return exception_descriptions[self.exception]
-    else:
-      return "(Unknown Exception Code)"
+    @property
+    def exception_description(self):
+        if 0 <= self.exception <= len(exception_descriptions):
+            return exception_descriptions[self.exception]
+        else:
+            return "(Unknown Exception Code)"
+
 
 class CounterDetails(object):
-  pass
+    pass
+
 
 class GuiderResult(object):
-  pass
+    pass
 
+
+@total_ordering
 class ControllerTimer(object):
-  def __init__(self, controller, expiry_time, callback):
-    self._controller = controller
-    self._expiry_time = expiry_time
-    self._callback = callback
-    self._cancelled = False
+    def __init__(self, controller, expiry_time, callback):
+        self._controller = controller
+        self._expiry_time = expiry_time
+        self._callback = callback
+        self._cancelled = False
 
-  def __cmp__(self, rhs):
-    return cmp(self._expiry_time, rhs._expiry_time)
+    def __lt__(self, other):
+        # noinspection PyProtectedMember
+        return (self._expiry_time < other._expiry_time)
+
+    def __eq__(self, other):
+        # noinspection PyProtectedMember
+        return (self._expiry_time == other._expiry_time)
+
 
 class Controller(object):
-  def __init__(self, driver):
-    # Keep a reference to the driver:
-    self._driver = driver
+    def __init__(self, driver):
+        # Keep a reference to the driver:
+        self._driver = driver
 
-    # Open and set the USB configuration of the controller:
-    self._context = usb1.LibUSBContext()
-    self._device_handle = self._find_and_open_device()
-    self._device = self._device_handle.getDevice()
+        # Open and set the USB configuration of the controller:
+        try:
+            self._context = usb1.USBContext()
+        except AttributeError:
+            # noinspection PyDeprecation
+            self._context = usb1.LibUSBContext()  # Deprecated, renamed to USBContext
 
-    self._configuration = self._device[0]
-    self._interface = self._configuration[0]
-    self._setting = self._interface[0]
+        self._device_handle = self._find_and_open_device()
+        self._device = self._device_handle.getDevice()
 
-    self._device_handle.setConfiguration( \
-      self._configuration.getConfigurationValue())
+        self._configuration = self._device[0]
+        self._interface = self._configuration[0]
+        self._setting = self._interface[0]
 
-    self._device_handle.claimInterface(0)
+        self._device_handle.setConfiguration(self._configuration.getConfigurationValue())
 
-    # Initialise state:
-    self._last_transmitted_frame = 0xffffffffL
-    self._last_enqueued_frame = 0xffffffffL
-    self._last_dequeued_frame = 0xffffffffL
+        self._device_handle.claimInterface(0)
 
-    self._enqueue_in_progress = False
+        # Initialise state:
+        self._last_transmitted_frame = 0xffffffff
+        self._last_enqueued_frame = 0xffffffff
+        self._last_dequeued_frame = 0xffffffff
 
-    self._last_inputs = 0L
-    self._last_outputs = 0L
-    self._last_state = None
-    self._last_state_details = None
-    self._last_state_callback = None
+        self._enqueue_in_progress = False
 
-    self._running = True
-    self._run_failure = None
+        self._last_inputs = 0
+        self._last_outputs = 0
+        self._last_state = None
+        self._last_state_details = None
+        self._last_state_callback = None
 
-    self._timers_heap = []
+        self._running = True
+        self._run_failure = None
 
-    self._driver_initialised = False
+        self._timers_heap = []
 
-  def _find_and_open_device(self):
-    device_handles = []
+        self._driver_initialised = False
 
-    vendor_id = 0x1bad
-    product_id = 0xbeef
+    def _find_and_open_device(self):
+        device_handles = []
 
-    # Build a list of the connected controllers:
-    for device_handle in self._context.getDeviceList():
-      if device_handle.getVendorID() == vendor_id and \
-        device_handle.getProductID() == product_id:
-        device_handles.append(device_handle)
-        break
+        vendor_id = 0x1bad
+        product_id = 0xbeef
 
-    # Complain if we don't have exactly one:
-    if len(device_handles) == 0:
-      raise ControllerNotConnectedException( \
-        "No controllers were found.")
-    elif len(device_handles) > 1:
-      raise MultipleControllersConnectedException( \
-        "More than one controller was found, and using multiple " \
-        "controllers is not currently supported.")
+        device_handle = None
+        # Build a list of the connected controllers:
+        for device_handle in self._context.getDeviceList():
+            if device_handle.getVendorID() == vendor_id and \
+                    device_handle.getProductID() == product_id:
+                device_handles.append(device_handle)
+                break
 
-    # Open and return it:
-    return device_handle.open()
+        # Complain if we don't have exactly one:
+        if len(device_handles) == 0:
+            raise ControllerNotConnectedException("No controllers were found.")
+        elif len(device_handles) > 1:
+            raise MultipleControllersConnectedException("More than one controller was found, and using multiple controllers is not currently supported.")
 
-  def _close(self):
-    self._device_handle.close()
-    self._device_handle = None
+        # Open and return it:
+        return device_handle.open()
 
-    self._context.exit()
+    def _close(self):
+        self._device_handle.close()
+        self._device_handle = None
 
-  def _control_write(self, command, data = ""):
-    d = defer.Deferred()
+        self._context.exit()
 
-    transfer = self._device_handle.getTransfer()
-    transfer.setControl( \
-      libusb1.LIBUSB_TYPE_VENDOR | \
-      libusb1.LIBUSB_ENDPOINT_OUT | \
-      libusb1.LIBUSB_RECIPIENT_DEVICE, \
-      command, 0, 0, data, self._complete_control_write, (d, command))
-    transfer.submit()
+    def _control_write(self, command, data=b""):
+        d = defer.Deferred()
 
-    return d
+        transfer = self._device_handle.getTransfer()
+        # noinspection PyUnresolvedReferences
+        transfer.setControl((libusb1.LIBUSB_TYPE_VENDOR | libusb1.LIBUSB_ENDPOINT_OUT | libusb1.LIBUSB_RECIPIENT_DEVICE),
+                            command,
+                            0,
+                            0,
+                            data,
+                            self._complete_control_write,
+                            (d, command))
+        transfer.submit()
 
-  def _complete_control_write(self, transfer):
-    deferred, command = transfer.getUserData()
+        return d
 
-    status = transfer.getStatus()
+    def _complete_control_write(self, transfer):
+        deferred, command = transfer.getUserData()
+        status = transfer.getStatus()
+        # noinspection PyUnresolvedReferences
+        if status == libusb1.LIBUSB_TRANSFER_COMPLETED:
+            written = transfer.getActualLength()
+            transfer.close()
+            deferred.callback(written)
+        else:
+            transfer.close()
+            deferred.errback(UsbTransferError(command, status))
 
-    if status == libusb1.LIBUSB_TRANSFER_COMPLETED:
-      written = transfer.getActualLength()
+    def _control_read(self, command, data_length=0):
+        d = defer.Deferred()
 
-      transfer.close()
+        transfer = self._device_handle.getTransfer()
+        # noinspection PyUnresolvedReferences
+        transfer.setControl(libusb1.LIBUSB_TYPE_VENDOR | libusb1.LIBUSB_ENDPOINT_IN | libusb1.LIBUSB_RECIPIENT_DEVICE,
+                            command,
+                            0,
+                            0,
+                            data_length,
+                            self._complete_control_read,
+                            (d, command))
+        transfer.submit()
 
-      deferred.callback(written)
-    else:
-      transfer.close()
+        return d
 
-      deferred.errback(UsbTransferError(command, status))
+    def _complete_control_read(self, transfer):
+        deferred, command = transfer.getUserData()
 
-  def _control_read(self, command, data_length = 0):
-    d = defer.Deferred()
+        status = transfer.getStatus()
 
-    transfer = self._device_handle.getTransfer()
-    transfer.setControl( \
-      libusb1.LIBUSB_TYPE_VENDOR | \
-      libusb1.LIBUSB_ENDPOINT_IN | \
-      libusb1.LIBUSB_RECIPIENT_DEVICE, \
-      command, 0, 0, data_length, self._complete_control_read, (d, command))
-    transfer.submit()
+        # noinspection PyUnresolvedReferences
+        if status == libusb1.LIBUSB_TRANSFER_COMPLETED:
+            read = transfer.getBuffer()
 
-    return d
+            transfer.close()
 
-  def _complete_control_read(self, transfer):
-    deferred, command = transfer.getUserData()
+            deferred.callback(read)
+        else:
+            transfer.close()
 
-    status = transfer.getStatus()
+            deferred.errback(UsbTransferError(command, status))
 
-    if status == libusb1.LIBUSB_TRANSFER_COMPLETED:
-      read = transfer.getBuffer()
+    def _initiate_interrupt_read(self):
+        transfer = self._device_handle.getTransfer()
+        transfer.setInterrupt(
+            0x81, 24, self._complete_interrupt_read)
+        transfer.submit()
 
-      transfer.close()
+    def _complete_interrupt_read(self, transfer):
+        try:
+            # noinspection PyUnresolvedReferences
+            if transfer.getStatus() == libusb1.LIBUSB_TRANSFER_COMPLETED:
+                buffer = transfer.getBuffer()
 
-      deferred.callback(read)
-    else:
-      transfer.close()
+                changed, state, flags, exception, inputs, last_enqueued_frame, last_dequeued_frame = struct.unpack("<BBHLQLL", buffer)
 
-      deferred.errback(UsbTransferError(command, status))
+                self._last_enqueued_frame = last_enqueued_frame
+                self._last_dequeued_frame = last_dequeued_frame
 
-  def _initiate_interrupt_read(self):
-    transfer = self._device_handle.getTransfer()
-    transfer.setInterrupt(
-      0x81, 24, self._complete_interrupt_read)
-    transfer.submit()
+                if self._last_inputs != inputs:
+                    self._last_inputs = inputs
 
-  def _complete_interrupt_read(self, transfer):
-    try:
-      if transfer.getStatus() == libusb1.LIBUSB_TRANSFER_COMPLETED:
-        buffer = transfer.getBuffer()
+                    if self._driver_initialised:
+                        self._driver.inputs_changed(inputs)
 
-        changed, state, flags, exception, inputs, \
-          last_enqueued_frame, last_dequeued_frame = \
-          struct.unpack("<BBHLQLL", buffer)
+                if self._last_state != state:
+                    self._last_state = state
 
-        self._last_enqueued_frame = last_enqueued_frame
-        self._last_dequeued_frame = last_dequeued_frame
+                    self._last_state_details = StateDetails(self, state, exception)
 
-        if self._last_inputs != inputs:
-          self._last_inputs = inputs
+                    if self._last_state_callback is not None:
+                        callback = self._last_state_callback
+                        self._last_state_callback = None
 
-          if self._driver_initialised:
-            self._driver.inputs_changed(inputs)
+                        callback()
 
-        if self._last_state != state:
-          self._last_state = state
+                    if self._driver_initialised:
+                        self._driver.state_changed(self._last_state_details)
 
-          self._last_state_details = StateDetails(self, state, exception)
+                self._initiate_interrupt_read()
 
-          if self._last_state_callback is not None:
-            callback = self._last_state_callback
-            self._last_state_callback = None
+                if not self._enqueue_in_progress:
+                    self._call_enqueue_available()
 
-            callback()
+            else:
+                if self._running:
+                    self.stop(failure.Failure(InterruptTransferFailedException("The USB interrupt transfer to the controller failed.", transfer.getStatus())))
 
-          if self._driver_initialised:
-            self._driver.state_changed(self._last_state_details)
+                    self._driver.runtime_error(failure.Failure(InterruptTransferFailedException("The USB interrupt transfer to the controller failed.", transfer.getStatus())))
+        finally:
+            transfer.close()
+
+    def shutdown(self):
+        """Raises a controller exception that causes the controller to start a ramped shutdown.
+
+        After running this command, the exception state will be reported with the
+        controller.TC_EXCEPTION_SHUTDOWN_REQUESTED exception. To use the controller again
+        a queue reset must be issued.
+
+        The returned deferred completes when the command has been issued; the shutdown exception
+        may be delivered before or after the deferred callbacks are run.
+        """
+
+        d = self._control_write(TC_ISSUE_STATE_COMMAND, struct.pack("<L", TC_STATE_COMMAND_SHUTDOWN))
+
+        d.addCallback(self._state_command_completed)
+
+        return d
+
+    def hardware_reset(self):
+        """Forces the controller to do a hardware reset.
+
+        This command will only work from TC_STATE_IDLE or TC_STATE_EXCEPTION.
+
+        Unless an error occurs the hardware will be reset before the request returns.
+        """
+
+        d = self._control_write(TC_ISSUE_STATE_COMMAND, struct.pack("<L", TC_STATE_COMMAND_HARDWARE_RESET))
+
+        d.addCallback(self._state_command_completed)
+
+        return d
+
+    def force_hardware_reset(self):
+        """Forces the controller to do a hardware reset, regardless of the control state.
+
+        This command will work in any state, and will reset the hardware even if
+        motor control is active. It should only be used for manual resets.
+
+        Unless an error occurs the hardware will be reset before the request returns.
+        """
+
+        d = self._control_write(TC_ISSUE_STATE_COMMAND, struct.pack("<L", TC_STATE_COMMAND_FORCE_HARDWARE_RESET))
+
+        d.addCallback(self._state_command_completed)
+
+        return d
+
+    def clear_exception(self, exception):
+        """Clears the specified controller exception. The exception must be the current reported exception.
+
+        Once the command returns the next exception should be available through the (synchronous) get
+        exception control request.
+
+        The returned deferred completes when the command has been issued; a state change exception to
+        idle may be delivered before or after the deferred callbacks are run.
+        """
+
+        d = self._control_write(TC_CLEAR_EXCEPTION, struct.pack("<L", exception))
+
+        d.addCallback(self._state_command_completed)
+
+        return d
+
+    # noinspection PyUnusedLocal
+    def _clear_exception_completed(self, bytes_written):
+        return None
+
+    def enable_guider(self):
+        """Starts adding guider steps to the motor control frames.
+
+        The returned deferred completes when the command has been successfully issued.
+        """
+
+        d = self._control_write(TC_ISSUE_STATE_COMMAND, struct.pack("<L", TC_STATE_COMMAND_ENABLE_GUIDER))
+
+        d.addCallback(self._state_command_completed)
+
+        return d
+
+    def disable_guider(self):
+        """Stops adding guider steps to the motor control frames.
+
+        The returned deferred completes when the command has been successfully issued.
+        """
+
+        d = self._control_write(TC_ISSUE_STATE_COMMAND, struct.pack("<L", TC_STATE_COMMAND_DISABLE_GUIDER))
+
+        d.addCallback(self._state_command_completed)
+
+        return d
+
+    # noinspection PyUnusedLocal
+    def _state_command_completed(self, bytes_written):
+        return None
+
+    def configure(self, configuration):
+        """Writes a configuration to the controller.
+
+        The returned deferred completes when the configuration has been
+        successfully written.
+        """
+        d = self._control_write(TC_MC_CONFIGURE, configuration.encode_mc())
+
+        d.addCallback(self._configure_mc_completed, configuration)
+
+        return d
+
+    # noinspection PyUnusedLocal
+    def _configure_mc_completed(self, bytes_written, configuration):
+        d = self._control_write(TC_GPIO_CONFIGURE, configuration.encode_gpio())
+
+        d.addCallback(self._configure_gpio_completed, configuration)
+
+        return d
+
+    # noinspection PyUnusedLocal
+    def _configure_gpio_completed(self, bytes_written, configuration):
+        d = self._control_write(TC_SAFETY_CONFIGURE, configuration.encode_safety())
+
+        d.addCallback(self._configure_safety_completed, configuration)
+
+        return d
+
+    # noinspection PyUnusedLocal
+    def _configure_safety_completed(self, bytes_written, configuration):
+        return configuration
+
+    def _handle_initialise_error(self, failure):
+        self.stop(failure)
+
+        self._driver.initialisation_error(failure)
+
+    def _initialise_internals(self):
+        d = self._control_read(TC_GET_VERSION, 16)
+
+        d.addCallback(self._initialise_internals_handle_version)
+        d.addErrback(self._handle_initialise_error)
+
+    def _initialise_internals_handle_version(self, buffer):
+        mcu_minor, mcu_major, fpga_minor, fpga_major, self.clock_frequency, self.mc_frames_capacity, reserved = struct.unpack("<HHHHLHH", buffer)
+
+        self.mcu_version = (mcu_major, mcu_minor)
+        self.fpga_version = (fpga_major, fpga_minor)
+
+        if self.mcu_version != self.fpga_version:
+            raise ControllerVersionException("The version of the firmware in the " 
+                                             "MCU (Version %s.%s) does not match the version of the firmware in " 
+                                             "the FPGA (Version %s.%s)." % (mcu_major, mcu_minor, fpga_major, fpga_minor))
+
+        if module_version[:2] != self.mcu_version:
+            raise ControllerVersionException("The version of this Python module "
+                                             "(Version %s.%s.%s) does not match the version of the firmware in "
+                                             "the MCU (Version %s.%s)." % (module_version[0],
+                                                                           module_version[1],
+                                                                           module_version[2],
+                                                                           fpga_major,
+                                                                           fpga_minor))
+
+        expected_version = self._driver.get_expected_controller_version()
+
+        if len(expected_version) != 3:
+            raise ControllerVersionException("This version of the controller "
+                                             "library requires a three element version number tuple from your driver "
+                                             "(version %s.%s.%s). Update the \"get_expected_controller_version\" "
+                                             "method in your driver class, and then carefully check any "
+                                             "release notes for this module and thoroughly test the new version." % (module_version[0],
+                                                                                                                     module_version[1],
+                                                                                                                     module_version[2]))
+
+        if expected_version != module_version:
+            raise ControllerVersionException("Your code is expecting version "
+                                             "%s.%s.%s of the controller module, but the controller module is "
+                                             "version %s.%s.%s. Update the \"get_expected_controller_version\" "
+                                             "method in your driver class, and then carefully check any "
+                                             "release notes for this module and thoroughly test the new version." % (expected_version[0],
+                                                                                                                     expected_version[1],
+                                                                                                                     expected_version[2],
+                                                                                                                     module_version[0],
+                                                                                                                     module_version[1],
+                                                                                                                     module_version[2]))
+
+        # Force an interrupt so that the driver can be provided with it:
+        d = self._control_write(TC_ISSUE_STATE_COMMAND, struct.pack("<L", TC_STATE_COMMAND_FORCE_INTERRUPT))
+
+        d.addCallback(self._initialise_force_interrupt_completed)
+        d.addErrback(self._handle_initialise_error)
+
+    # noinspection PyUnusedLocal
+    def _initialise_force_interrupt_completed(self, bytes_written):
+        if self._last_state_details is not None:
+            self._initialise_start_driver_initialise()
+        else:
+            self._last_state_callback = self._initialise_start_driver_initialise
+
+    def _initialise_start_driver_initialise(self):
+        if self._last_state == TC_STATE_RUNNING:
+            d = self.shutdown()
+
+            d.addCallback(self._initialise_wait_for_stop)
+            d.addErrback(self._handle_initialise_error)
+        elif self._last_state_details.state == TC_STATE_STOPPING:
+            self._initialise_wait_for_stop()
+        else:
+            self._initialise_call_driver_initialise()
+
+    def _initialise_wait_for_stop(self, _=None):
+        # Wait for the state to change to an exception:
+        if self._last_state != TC_STATE_EXCEPTION:
+            self._last_state_callback = self._initialise_wait_for_stop
+        else:
+            self._initialise_call_driver_initialise()
+
+    def _initialise_call_driver_initialise(self):
+        d = self._driver.initialise(self._last_state_details)
+
+        if not isinstance(d, defer.Deferred):
+            raise ControllerUsageException("The driver initialise method must return a deferred.")
+
+        d.addCallback(self._driver_initialise_completed)
+        d.addErrback(self._handle_initialise_error)
+
+    def _driver_initialise_completed(self, _):
+        self._driver_initialised = True
+
+        # Give the driver the most recent status and inputs:
+        self._driver.state_changed(self._last_state_details)
+        self._driver.inputs_changed(self._last_inputs)
+
+    def add_timer(self, seconds, callback):
+        """Schedules a (once off) call to the callback function.
+
+        The returned handle can be passed to cancel_timer to cancel the callback before
+        it has occurred."""
+        timer = ControllerTimer(self, time.time() + seconds, callback)
+
+        heapq.heappush(self._timers_heap, timer)
+
+        return timer
+
+    def cancel_timer(self, timer):
+        """Cancels a callback."""
+        timer._cancelled = True
+
+    def _run_timer_callbacks(self):
+        now = time.time()
+
+        while len(self._timers_heap) >= 1:
+            timer = self._timers_heap[0]
+
+            # noinspection PyProtectedMember
+            if now > timer._expiry_time:
+                heapq.heappop(self._timers_heap)
+
+                # noinspection PyProtectedMember
+                if not timer._cancelled:
+                    # noinspection PyProtectedMember
+                    timer._callback()
+            else:
+                break
+
+    def run(self, system_poller):
+        """Runs the event loop, after calling the driver initialisation method.
+
+        Driver event handlers and timers are handled by the event loop. Optionally, a
+        user supplied poller can be passed in. The poller must implement the interface
+        described in the python-libusb1 library."""
+        poller = usb1.USBPoller(self._context, system_poller)
 
         self._initiate_interrupt_read()
 
-        if not self._enqueue_in_progress:
-          self._call_enqueue_available()
+        self._initialise_internals()
 
-      else:
-        if self._running:
-          self.stop(failure.Failure(InterruptTransferFailedException( \
-            "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
+        self._running = True
 
-          self._driver.runtime_error(failure.Failure(InterruptTransferFailedException( \
-            "The USB interrupt transfer to the controller failed.", transfer.getStatus())))
-    finally:
-      transfer.close()
+        while self._running:
+            if len(self._timers_heap) >= 1:
+                # There are timers to eventually call:
+                next_timer = self._timers_heap[0]
 
-  def shutdown(self):
-    """Raises a controller exception that causes the controller to start a ramped shutdown.
+                # noinspection PyProtectedMember
+                next_timer_time = next_timer._expiry_time - time.time()
 
-    After running this command, the exception state will be reported with the
-    controller.TC_EXCEPTION_SHUTDOWN_REQUESTED exception. To use the controller again
-    a queue reset must be issued.
+                if next_timer_time < 0.0:
+                    next_timer_time = 0.0
 
-    The returned deferred completes when the command has been issued; the shutdown exception
-    may be delivered before or after the deferred callbacks are run.
-    """
+                poller.poll(next_timer_time)
 
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_SHUTDOWN))
+                self._run_timer_callbacks()
+            else:
+                # No timers, just wait for file events:
+                poller.poll()
 
-    d.addCallback(self._state_command_completed)
+        self._close()
 
-    return d
+        # If stop was called with an exception (wrapped in a twisted
+        # failure), raise it now:
+        if self._run_failure is not None:
+            self._run_failure.raiseException()
 
-  def hardware_reset(self):
-    """Forces the controller to do a hardware reset.
+    def stop(self, run_failure=None):
+        """Called in event handlers or timers to stop the event loop."""
+        self._running = False
+        self._run_failure = run_failure
 
-    This command will only work from TC_STATE_IDLE or TC_STATE_EXCEPTION.
+    def set_outputs(self, outputs):
+        """Sets the specified GPIO bits high on the controller card.
 
-    Unless an error occurs the hardware will be reset before the request returns.
-    """
+        The outputs should be specified as a 64 bit long bitmask. Bits not in the
+        bitmask are left in their current state."""
+        self._last_outputs = self._last_outputs | outputs
 
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_HARDWARE_RESET))
+        d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
 
-    d.addCallback(self._state_command_completed)
+        return d
 
-    return d
+    def clear_outputs(self, outputs):
+        """Sets the specified GPIO bits low on the controller card.
 
-  def force_hardware_reset(self):
-    """Forces the controller to do a hardware reset, regardless of the control state.
+        The outputs should be specified as a 64 bit long bitmask. Bits not in the
+        bitmask are left in their current state."""
+        self._last_outputs = self._last_outputs & ~outputs
 
-    This command will work in any state, and will reset the hardware even if
-    motor control is active. It should only be used for manual resets.
+        d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
 
-    Unless an error occurs the hardware will be reset before the request returns.
-    """
+        return d
 
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_FORCE_HARDWARE_RESET))
+    def force_outputs(self, outputs):
+        """Sets all GPIO bits to the specified value on the controller card.
 
-    d.addCallback(self._state_command_completed)
+        The outputs should be specified as a 64 bit long bitmask."""
+        self._last_outputs = outputs
 
-    return d
+        d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
 
-  def clear_exception(self, exception):
-    """Clears the specified controller exception. The exception must be the current reported exception.
+        return d
 
-    Once the command returns the next exception should be available through the (synchronous) get
-    exception control request.
+    def _handle_error(self, failure):
+        failure.printTraceback()
 
-    The returned deferred completes when the command has been issued; a state change exception to
-    idle may be delivered before or after the deferred callbacks are run.
-    """
+        return failure
 
-    d = self._control_write(TC_CLEAR_EXCEPTION, \
-      struct.pack("<L", exception))
+    def enqueue_frame(self, a_steps, b_steps):
+        """Enqueues a frame and returns the frame number of the enqueued frame.
 
-    d.addCallback(self._state_command_completed)
+        This method should only be called from within the enqueue_frame_available driver
+        event, and should only be called once per call to enqueue_frame_available. Once
+        the frame has been successfully enqueued another call to enqueue_frame_available is
+        made, allowing more frames to be enqueued if required."""
+        assert not self._enqueue_in_progress
 
-    return d
+        self._enqueue_in_progress = True
 
-  def _clear_exception_completed(self, bytes_written):
-    return None
+        self._last_transmitted_frame = \
+            (self._last_transmitted_frame + 1) % 0x100000000
 
-  def enable_guider(self):
-    """Starts adding guider steps to the motor control frames.
+        frame_number = self._last_transmitted_frame
 
-    The returned deferred completes when the command has been successfully issued.
-    """
+        assert -32768 <= a_steps <= 32767
+        assert -32768 <= b_steps <= 32767
 
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_ENABLE_GUIDER))
+        control_data = struct.pack("<Lhh", frame_number, a_steps, b_steps)
 
-    d.addCallback(self._state_command_completed)
+        d = self._control_write(TC_ENQUEUE, control_data)
+        d.addCallback(self._handle_enqueue_completed)
+        d.addErrback(self._handle_error)
 
-    return d
+        return frame_number
 
-  def disable_guider(self):
-    """Stops adding guider steps to the motor control frames.
+    # noinspection PyUnusedLocal
+    def _handle_enqueue_completed(self, bytes_written):
+        self._enqueue_in_progress = False
 
-    The returned deferred completes when the command has been successfully issued.
-    """
+        self._call_enqueue_available()
 
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_DISABLE_GUIDER))
+    def _handle_enqueue_error(self, failure):
+        self._enqueue_in_progress = False
 
-    d.addCallback(self._state_command_completed)
+        failure.printTraceback()
 
-    return d
+    def _call_enqueue_available(self):
+        details = EnqueueDetails(self)
 
-  def _state_command_completed(self, bytes_written):
-    return None
+        self._driver.enqueue_frame_available(details)
 
-  def configure(self, configuration):
-    """Writes a configuration to the controller.
+    def get_counters(self):
+        d = self._control_read(TC_GET_COUNTERS, 28)
 
-    The returned deferred completes when the configuration has been
-    successfully written.
-    """
-    d = self._control_write(TC_MC_CONFIGURE, \
-      configuration.encode_mc())
+        d.addCallback(self._get_counters_completed)
+        d.addErrback(self._handle_error)
 
-    d.addCallback(self._configure_mc_completed, configuration)
+        return d
 
-    return d
+    def get_debug_registers(self):
+        d = self._control_read(TC_GET_DEBUG_REGISTERS, 8)
 
-  def _configure_mc_completed(self, bytes_written, configuration):
-    d = self._control_write(TC_GPIO_CONFIGURE, \
-      configuration.encode_gpio())
+        d.addCallback(self._get_debug_registers_completed)
+        d.addErrback(self._handle_error)
 
-    d.addCallback(self._configure_gpio_completed, configuration)
+        return d
 
-    return d
+    def _get_debug_registers_completed(self, buffer):
+        return struct.unpack("<LL", buffer)
 
-  def _configure_gpio_completed(self, bytes_written, configuration):
-    d = self._control_write(TC_SAFETY_CONFIGURE, \
-      configuration.encode_safety())
+    def _get_counters_completed(self, buffer):
+        counters = CounterDetails()
 
-    d.addCallback(self._configure_safety_completed, configuration)
+        (counters.reference_frame_number,
+         counters.a_total_steps,
+         counters.b_total_steps,
+         counters.a_guider_steps,
+         counters.b_guider_steps,
+         counters.a_measured_steps,
+         counters.b_measured_steps) = struct.unpack("<Lllllll", buffer)
 
-    return d
+        return counters
 
-  def _configure_safety_completed(self, bytes_written, configuration):
-    return configuration
+    def set_guider_values(self, run_at, frame_number, values):
+        reserved = 0
 
-  def _handle_initialise_error(self, failure):
-    self.stop(failure)
+        if frame_number is None:
+            frame_number = 0
 
-    self._driver.initialisation_error(failure)
+        buffer = struct.pack("<BBHL", run_at, reserved, reserved, frame_number)
 
-  def _initialise_internals(self):
-    d = self._control_read(TC_GET_VERSION, 16)
+        for a_steps, b_steps in values:
+            buffer += struct.pack("<hh", a_steps, b_steps)
 
-    d.addCallback(self._initialise_internals_handle_version)
-    d.addErrback(self._handle_initialise_error)
+        if len(buffer) > 64:
+            raise ControllerUsageException("Too many guider values were specified.")
 
-  def _initialise_internals_handle_version(self, buffer):
-    mcu_minor, mcu_major, fpga_minor, fpga_major, \
-      self.clock_frequency, self.mc_frames_capacity, reserved = \
-      struct.unpack("<HHHHLHH", buffer)
+        d = self._control_write(TC_SET_GUIDER_VALUES, buffer)
+        d.addCallback(self._handle_set_guider_values_completed)
+        d.addErrback(self._handle_error)
 
-    self.mcu_version = (mcu_major, mcu_minor)
-    self.fpga_version = (fpga_major, fpga_minor)
+        return d
 
-    if self.mcu_version != self.fpga_version:
-      raise ControllerVersionException("The version of the firmware in the " \
-        "MCU (Version %s.%s) does not match the version of the firmware in " \
-        "the FPGA (Version %s.%s)." % (mcu_major, mcu_minor, fpga_major, fpga_minor))
+    # noinspection PyUnusedLocal
+    def _handle_set_guider_values_completed(self, bytes_written):
+        d = self._control_read(TC_GET_GUIDER_RESULT, 8)
+        d.addCallback(self._handle_convert_guider_result)
+        d.addErrback(self._handle_error)
 
-    if module_version[:2] != self.mcu_version:
-      raise ControllerVersionException("The version of this Python module " \
-        "(Version %s.%s.%s) does not match the version of the firmware in " \
-        "the MCU (Version %s.%s)." % \
-        (module_version[0], module_version[1], module_version[2], fpga_major, fpga_minor))
+        return d
 
-    expected_version = self._driver.get_expected_controller_version()
+    def _handle_convert_guider_result(self, buffer):
+        frame, count = struct.unpack("<LL", buffer)
 
-    if len(expected_version) != 3:
-      raise ControllerVersionException("This version of the controller " \
-        "library requires a three element version number tuple from your driver " \
-        "(version %s.%s.%s). Update the \"get_expected_controller_version\" " \
-        "method in your driver class, and then carefully check any " \
-        "release notes for this module and thoroughly test the new version." %
-        (module_version[0], module_version[1], module_version[2]))
+        result = GuiderResult()
+        result.frame = frame
+        result.count = count
 
-    if expected_version != module_version:
-      raise ControllerVersionException("Your code is expecting version " \
-        "%s.%s.%s of the controller module, but the controller module is " \
-        "version %s.%s.%s. Update the \"get_expected_controller_version\" " \
-        "method in your driver class, and then carefully check any " \
-        "release notes for this module and thoroughly test the new version." %
-        (expected_version[0], expected_version[1], expected_version[2], \
-        module_version[0], module_version[1], module_version[2]))
+        return result
 
-    # Force an interrupt so that the driver can be provided with it:
-    d = self._control_write(TC_ISSUE_STATE_COMMAND, \
-      struct.pack("<L", TC_STATE_COMMAND_FORCE_INTERRUPT))
+    def get_raw_exception_details(self):
+        d = self._control_read(TC_GET_EXCEPTION_DETAILS_LENGTH, 4)
+        d.addCallback(self._handle_get_exception_details_got_length)
+        d.addErrback(self._handle_error)
 
-    d.addCallback(self._initialise_force_interrupt_completed)
-    d.addErrback(self._handle_initialise_error)
+        return d
 
-  def _initialise_force_interrupt_completed(self, bytes_written):
-    if self._last_state_details is not None:
-      self._initialise_start_driver_initialise()
-    else:
-      self._last_state_callback = self._initialise_start_driver_initialise
+    def _handle_get_exception_details_got_length(self, buffer):
+        (length,) = struct.unpack("<L", buffer)
 
-  def _initialise_start_driver_initialise(self):
-    if self._last_state == TC_STATE_RUNNING:
-      d = self.shutdown()
+        if length > 0:
+            d = self._control_read(TC_GET_EXCEPTION_DETAILS, length)
+            d.addErrback(self._handle_error)
 
-      d.addCallback(self._initialise_wait_for_stop)
-      d.addErrback(self._handle_initialise_error)
-    elif self._last_state_details.state == TC_STATE_STOPPING:
-      self._initialise_wait_for_stop()
-    else:
-      self._initialise_call_driver_initialise()
+            return d
+        else:
+            return None
 
-  def _initialise_wait_for_stop(self, _ = None):
-    # Wait for the state to change to an exception:
-    if self._last_state != TC_STATE_EXCEPTION:
-      self._last_state_callback = self._initialise_wait_for_stop
-    else:
-      self._initialise_call_driver_initialise()
+    def get_exception(self):
+        d = self._control_read(TC_GET_EXCEPTION, 4)
 
-  def _initialise_call_driver_initialise(self):
-    d = self._driver.initialise(self._last_state_details)
+        d.addCallback(self._handle_get_exception_completed)
+        d.addErrback(self._handle_error)
 
-    if not isinstance(d, defer.Deferred):
-      raise ControllerUsageException("The driver initialise method must return a deferred.")
+        return d
 
-    d.addCallback(self._driver_initialise_completed)
-    d.addErrback(self._handle_initialise_error)
+    def _handle_get_exception_completed(self, buffer):
+        (exception,) = struct.unpack("<L", buffer)
 
-  def _driver_initialise_completed(self, _):
-    self._driver_initialised = True
+        if exception == TC_EXCEPTION_NONE:
+            return None
+        else:
+            d = self.get_raw_exception_details()
+            d.addCallback(self._handle_get_exception_details_completed, exception)
+            d.addErrback(self._handle_error)
 
-    # Give the driver the most recent status and inputs:
-    self._driver.state_changed(self._last_state_details)
-    self._driver.inputs_changed(self._last_inputs)
+            return d
 
-  def add_timer(self, seconds, callback):
-    """Schedules a (once off) call to the callback function.
+    def _handle_get_exception_details_completed(self, details_buffer, exception):
+        properties = {}
 
-    The returned handle can be passed to cancel_timer to cancel the callback before
-    it has occurred."""
-    timer = ControllerTimer(self, time.time() + seconds, callback)
+        if details_buffer is not None:
+            detail_kind = struct.unpack("<L", details_buffer[:4])[0]
 
-    heapq.heappush(self._timers_heap, timer)
+            properties = {}
 
-    return timer
+            properties["kind"] = detail_kind
 
-  def cancel_timer(self, timer):
-    """Cancels a callback."""
-    timer._cancelled = True
+            if detail_kind == TC_DETAIL_KIND_AXIS_TRACE:
+                properties["kind_description"] = "TC_DETAIL_KIND_AXIS_TRACE"
 
-  def _run_timer_callbacks(self):
-    now = time.time()
+                (detail_kind, axis_index, steps, guider_steps,
+                 previous_remainder_steps, current_remainder_steps,
+                 previous_negative_direction, current_negative_direction,
+                 reserved_a, reserved_b) = struct.unpack("<LLiiiiBBBB", details_buffer)
 
-    while len(self._timers_heap) >= 1:
-      timer = self._timers_heap[0]
+                properties["axis_index"] = axis_index
+                properties["steps"] = steps
+                properties["guider_steps"] = guider_steps
+                properties["previous_remainder_steps"] = previous_remainder_steps
+                properties["current_remainder_steps"] = current_remainder_steps
+                properties["previous_negative_direction"] = previous_negative_direction
+                properties["current_negative_direction"] = current_negative_direction
+            elif detail_kind == TC_DETAIL_KIND_FPGA_ERRORS:
+                properties["kind_description"] = "TC_DETAIL_KIND_FPGA_ERRORS"
 
-      if now > timer._expiry_time:
-        heapq.heappop(self._timers_heap)
+                detail_kind, fpga_error_bits = struct.unpack("<LL", details_buffer)
 
-        if not timer._cancelled:
-          timer._callback()
-      else:
-        break
+                properties["fpga_error_bits"] = fpga_error_bits
 
-  def run(self, system_poller):
-    """Runs the event loop, after calling the driver initialisation method.
+                descriptions = []
 
-    Driver event handlers and timers are handled by the event loop. Optionally, a
-    user supplied poller can be passed in. The poller must implement the interface
-    described in the python-libusb1 library."""
-    poller = usb1.USBPoller(self._context, system_poller)
+                for i in range(len(fpga_error_bit_descriptions)):
+                    if fpga_error_bits & (1 << i):
+                        descriptions.append(fpga_error_bit_descriptions[i])
 
-    self._initiate_interrupt_read()
+                properties["fpga_error_bit_descriptions"] = descriptions
+            else:
+                properties["kind_description"] = "TC_DETAIL_KIND_UNKNOWN"
 
-    self._initialise_internals()
+        return ExceptionDetails(exception, properties)
 
-    self._running = True
-
-    while self._running:
-      if len(self._timers_heap) >= 1:
-        # There are timers to eventually call:
-        next_timer = self._timers_heap[0]
-
-        next_timer_time = next_timer._expiry_time - time.time()
-
-        if next_timer_time < 0.0: next_timer_time = 0.0
-
-        poller.poll(next_timer_time)
-
-        self._run_timer_callbacks()
-      else:
-        # No timers, just wait for file events:
-        poller.poll()
-
-    self._close()
-
-    # If stop was called with an exception (wrapped in a twisted
-    # failure), raise it now:
-    if self._run_failure is not None:
-      self._run_failure.raiseException()
-
-  def stop(self, run_failure = None):
-    """Called in event handlers or timers to stop the event loop."""
-    self._running = False
-    self._run_failure = run_failure
-
-  def set_outputs(self, outputs):
-    """Sets the specified GPIO bits high on the controller card.
-
-    The outputs should be specified as a 64 bit long bitmask. Bits not in the
-    bitmask are left in their current state."""
-    self._last_outputs = self._last_outputs | outputs
-
-    d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
-
-    return d
-
-  def clear_outputs(self, outputs):
-    """Sets the specified GPIO bits low on the controller card.
-
-    The outputs should be specified as a 64 bit long bitmask. Bits not in the
-    bitmask are left in their current state."""
-    self._last_outputs = self._last_outputs & ~outputs
-
-    d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
-
-    return d
-
-  def force_outputs(self, outputs):
-    """Sets all GPIO bits to the specified value on the controller card.
-
-    The outputs should be specified as a 64 bit long bitmask."""
-    self._last_outputs = outputs
-
-    d = self._control_write(TC_WRITE_OUTPUTS, struct.pack("<Q", self._last_outputs))
-
-    return d
-
-  def _handle_error(self, failure):
-    failure.printTraceback()
-
-    return failure
-
-  def enqueue_frame(self, a_steps, b_steps):
-    """Enqueues a frame and returns the frame number of the enqueued frame.
-
-    This method should only be called from within the enqueue_frame_available driver
-    event, and should only be called once per call to enqueue_frame_available. Once
-    the frame has been successfully enqueued another call to enqueue_frame_available is
-    made, allowing more frames to be enqueued if required."""
-    assert not self._enqueue_in_progress
-
-    self._enqueue_in_progress = True
-
-    self._last_transmitted_frame = \
-      (self._last_transmitted_frame + 1) % 0x100000000L
-
-    frame_number = self._last_transmitted_frame
-
-    assert -32768 <= a_steps <= 32767
-    assert -32768 <= b_steps <= 32767
-
-    control_data = struct.pack("<Lhh", frame_number, a_steps, b_steps)
-
-    d = self._control_write(TC_ENQUEUE, control_data)
-    d.addCallback(self._handle_enqueue_completed)
-    d.addErrback(self._handle_error)
-
-    return frame_number
-
-  def _handle_enqueue_completed(self, bytes_written):
-    self._enqueue_in_progress = False
-
-    self._call_enqueue_available()
-
-  def _handle_enqueue_error(self, failure):
-    self._enqueue_in_progress = False
-
-    failure.printTraceback()
-
-  def _call_enqueue_available(self):
-    details = EnqueueDetails(self)
-
-    self._driver.enqueue_frame_available(details)
-
-  def get_counters(self):
-    d = self._control_read(TC_GET_COUNTERS, 28)
-
-    d.addCallback(self._get_counters_completed)
-    d.addErrback(self._handle_error)
-
-    return d
-
-  def get_debug_registers(self):
-    d = self._control_read(TC_GET_DEBUG_REGISTERS, 8)
-
-    d.addCallback(self._get_debug_registers_completed)
-    d.addErrback(self._handle_error)
-
-    return d
-
-  def _get_debug_registers_completed(self, buffer):
-    return struct.unpack("<LL", buffer)
-
-  def _get_counters_completed(self, buffer):
-    counters = CounterDetails()
-
-    counters.reference_frame_number, \
-    counters.a_total_steps, \
-    counters.b_total_steps, \
-    counters.a_guider_steps, \
-    counters.b_guider_steps, \
-    counters.a_measured_steps, \
-    counters.b_measured_steps = struct.unpack("<Lllllll", buffer)
-
-    return counters
-
-  def set_guider_values(self, run_at, frame_number, values):
-    reserved = 0
-
-    if frame_number is None: frame_number = 0
-
-    buffer = struct.pack("<BBHL", run_at, reserved, reserved, frame_number)
-
-    for a_steps, b_steps in values:
-      buffer += struct.pack("<hh", a_steps, b_steps)
-
-    if len(buffer) > 64:
-      raise ControllerUsageException("Too many guider values were specified.")
-
-    d = self._control_write(TC_SET_GUIDER_VALUES, buffer)
-    d.addCallback(self._handle_set_guider_values_completed)
-    d.addErrback(self._handle_error)
-
-    return d
-
-  def _handle_set_guider_values_completed(self, bytes_written):
-    d = self._control_read(TC_GET_GUIDER_RESULT, 8)
-    d.addCallback(self._handle_convert_guider_result)
-    d.addErrback(self._handle_error)
-
-    return d
-
-  def _handle_convert_guider_result(self, buffer):
-    frame, count = struct.unpack("<LL", buffer)
-
-    result = GuiderResult()
-    result.frame = frame
-    result.count = count
-
-    return result
-
-  def get_raw_exception_details(self):
-    d = self._control_read(TC_GET_EXCEPTION_DETAILS_LENGTH, 4)
-    d.addCallback(self._handle_get_exception_details_got_length)
-    d.addErrback(self._handle_error)
-
-    return d
-
-  def _handle_get_exception_details_got_length(self, buffer):
-    (length,) = struct.unpack("<L", buffer)
-
-    if length > 0:
-      d = self._control_read(TC_GET_EXCEPTION_DETAILS, length)
-      d.addErrback(self._handle_error)
-
-      return d
-    else:
-      return None
-
-  def get_exception(self):
-    d = self._control_read(TC_GET_EXCEPTION, 4)
-
-    d.addCallback(self._handle_get_exception_completed)
-    d.addErrback(self._handle_error)
-
-    return d
-
-  def _handle_get_exception_completed(self, buffer):
-    (exception,) = struct.unpack("<L", buffer)
-
-    if exception == TC_EXCEPTION_NONE:
-      return None
-    else:
-      d = self.get_raw_exception_details()
-      d.addCallback(self._handle_get_exception_details_completed, exception)
-      d.addErrback(self._handle_error)
-
-      return d
-
-  def _handle_get_exception_details_completed(self, details_buffer, exception):
-    properties = {}
-
-    if details_buffer is not None:
-      detail_kind = struct.unpack("<L", details_buffer[:4])[0]
-
-      properties = {}
-
-      properties["kind"] = detail_kind
-
-      if detail_kind == TC_DETAIL_KIND_AXIS_TRACE:
-        properties["kind_description"] = "TC_DETAIL_KIND_AXIS_TRACE"
-
-        detail_kind, axis_index, steps, guider_steps, \
-          previous_remainder_steps, current_remainder_steps, \
-          previous_negative_direction, current_negative_direction, \
-          reserved_a, reserved_b = struct.unpack("<LLiiiiBBBB", details_buffer)
-
-        properties["axis_index"] = axis_index
-        properties["steps"] = steps
-        properties["guider_steps"] = guider_steps
-        properties["previous_remainder_steps"] = previous_remainder_steps
-        properties["current_remainder_steps"] = current_remainder_steps
-        properties["previous_negative_direction"] = previous_negative_direction
-        properties["current_negative_direction"] = current_negative_direction
-      elif detail_kind == TC_DETAIL_KIND_FPGA_ERRORS:
-        properties["kind_description"] = "TC_DETAIL_KIND_FPGA_ERRORS"
-
-        detail_kind, fpga_error_bits = struct.unpack("<LL", details_buffer)
-
-        properties["fpga_error_bits"] = fpga_error_bits
-
-        descriptions = []
-
-        for i in range(len(fpga_error_bit_descriptions)):
-          if fpga_error_bits & (1 << i):
-            descriptions.append(fpga_error_bit_descriptions[i])
-
-        properties["fpga_error_bit_descriptions"] = descriptions
-      else:
-        properties["kind_description"] = "TC_DETAIL_KIND_UNKNOWN"
-
-    return ExceptionDetails(exception, properties)
 
 class Driver(object):
-  def internal_attach_host(self, host):
-    self.host = host
+    def __init__(self):
+        self.host = None
 
-  def initialise(self, state_details):
-    """Called when the controller first starts the event loop.
+    def internal_attach_host(self, host):
+        self.host = host
 
-    During initialisation, the driver can check the current state of the controller,
-    read counters from previous runs, and reset the queue or hardware. A deferred must be
-    returned. When the deferred completes, state and input events start being forwarded.
+    def initialise(self, state_details):
+        """Called when the controller first starts the event loop.
 
-    The host ensures the controller will either be in TC_STATE_IDLE or TC_STATE_EXCEPTION
-    on initialisation.
-    """
-    pass
+        During initialisation, the driver can check the current state of the controller,
+        read counters from previous runs, and reset the queue or hardware. A deferred must be
+        returned. When the deferred completes, state and input events start being forwarded.
 
-  def initialisation_error(self, failure):
-    """Called when the controller fails to initialise.
+        The host ensures the controller will either be in TC_STATE_IDLE or TC_STATE_EXCEPTION
+        on initialisation.
+        """
+        pass
 
-    The run loop will exit immediately on an initialisation failure.
-    """
-    pass
+    def initialisation_error(self, failure):
+        """Called when the controller fails to initialise.
 
-  def runtime_error(self, failure):
-    """Called when an error has caused the run loop to stop."""
-    pass
+        The run loop will exit immediately on an initialisation failure.
+        """
+        pass
 
-  def enqueue_frame_available(self, details):
-    """Called when the frame queue changes.
+    def runtime_error(self, failure):
+        """Called when an error has caused the run loop to stop."""
+        pass
 
-    This method is called when the queue changes (for example, when
-    a frame is dequeued, or when a previous enqueue completes). It should
-    check the state of the queue and, if required, enqueue at most one frame.
-    Once the frame is enqueued the controller will immediately call this method
-    to allow another to be enqueued.
+    def enqueue_frame_available(self, details):
+        """Called when the frame queue changes.
 
-    The driver is expected to manage the level of the queue itself, by setting
-    the frame prefill to the desired level and by only enqueuing frames when
-    necessary to maintain the desired queue level.
+        This method is called when the queue changes (for example, when
+        a frame is dequeued, or when a previous enqueue completes). It should
+        check the state of the queue and, if required, enqueue at most one frame.
+        Once the frame is enqueued the controller will immediately call this method
+        to allow another to be enqueued.
 
-    An instance of controller.EnqueueDetails is passed in, providing:
+        The driver is expected to manage the level of the queue itself, by setting
+        the frame prefill to the desired level and by only enqueuing frames when
+        necessary to maintain the desired queue level.
 
-    - last_transmitted_frame, the last frame number that this module transmitted
-      to the controller.
-    - last_enqueued_frame, the last frame number the controller has reported to have
-      received. This may be an earlier frame than last_transmitted_frame (because the
-      controller reports this field asynchronously) and should not be used to estimate
-      the number of frames in the queue.
-    - last_dequeued_frame, the last frame number that was dequeued and loaded on to the
-      FPGA for generation of steps.
-    - frames_in_queue, the number of frames currently either in the queue or being
-      enqueued. This count is the difference between last_transmitted_frame and
-      last_dequeued_frame. Since the dequeuing process runs independently from the
-      enqueuing process, frames_in_queue may include an extra count from a frame that
-      has been dequeued on the controller but not yet reported as dequeued.
-    - frames_queue_capacity, the maximum number of frames that can be enqueued. The
-      queue level is typically maintained below the capacity to minimise control latency.
-    """
+        An instance of controller.EnqueueDetails is passed in, providing:
 
-  def state_changed(self, details):
-    """Called when the state of the controller changes.
+        - last_transmitted_frame, the last frame number that this module transmitted
+          to the controller.
+        - last_enqueued_frame, the last frame number the controller has reported to have
+          received. This may be an earlier frame than last_transmitted_frame (because the
+          controller reports this field asynchronously) and should not be used to estimate
+          the number of frames in the queue.
+        - last_dequeued_frame, the last frame number that was dequeued and loaded on to the
+          FPGA for generation of steps.
+        - frames_in_queue, the number of frames currently either in the queue or being
+          enqueued. This count is the difference between last_transmitted_frame and
+          last_dequeued_frame. Since the dequeuing process runs independently from the
+          enqueuing process, frames_in_queue may include an extra count from a frame that
+          has been dequeued on the controller but not yet reported as dequeued.
+        - frames_queue_capacity, the maximum number of frames that can be enqueued. The
+          queue level is typically maintained below the capacity to minimise control latency.
+        """
 
-    An instance of controller.StateDetails is passed in, providing the
-    state field which is one of the following values:
+    def state_changed(self, details):
+        """Called when the state of the controller changes.
 
-    - controller.TC_STATE_IDLE
-    - controller.TC_STATE_RUNNING
-    - controller.TC_STATE_STOPPING
-    - controller.TC_STATE_EXCEPTION
+        An instance of controller.StateDetails is passed in, providing the
+        state field which is one of the following values:
 
-    And the exception field, which is one of the following values:
+        - controller.TC_STATE_IDLE
+        - controller.TC_STATE_RUNNING
+        - controller.TC_STATE_STOPPING
+        - controller.TC_STATE_EXCEPTION
 
-    - controller.TC_EXCEPTION_QUEUE_UNDERFLOW
-    - controller.TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER
-    - controller.TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED
-    - controller.TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED
-    - controller.TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY
-    - controller.TC_EXCEPTION_SHUTDOWN_REQUESTED
-    - controller.TC_EXCEPTION_INVALID_CONFIGURATION
-    - controller.TC_EXCEPTION_INTERNAL_UNDERRUN
-    - controller.TC_EXCEPTION_INTERNAL_ERROR
-    - controller.TC_EXCEPTION_MCA_POSITIVE_LIMITED
-    - controller.TC_EXCEPTION_MCA_NEGATIVE_LIMITED
-    - controller.TC_EXCEPTION_MCB_POSITIVE_LIMITED
-    - controller.TC_EXCEPTION_MCB_NEGATIVE_LIMITED
-    - controller.TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED
-    - controller.TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP
-    - controller.TC_EXCEPTION_IO_SUPPLY_ERROR
-    - controller.TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW
-    - controller.TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED
-    - controller.TC_EXCEPTION_UNEXPECTED_FPGA_RESET
-    - controller.TC_EXCEPTION_FPGA_READBACK_ERROR
-    - controller.TC_EXCEPTION_UNEXPECTED_STEPPER_STOP
-    - controller.TC_EXCEPTION_CLEARING_EXCEPTION_FAILED
+        And the exception field, which is one of the following values:
 
-    For printing state details, use the state_description and exception_description properties.
-    """
+        - controller.TC_EXCEPTION_QUEUE_UNDERFLOW
+        - controller.TC_EXCEPTION_QUEUE_NONSEQUENTIAL_FRAME_NUMBER
+        - controller.TC_EXCEPTION_ACCELERATION_LIMIT_EXCEEDED
+        - controller.TC_EXCEPTION_VELOCITY_LIMIT_EXCEEDED
+        - controller.TC_EXCEPTION_DIRECTION_CHANGE_AT_NONZERO_VELOCITY
+        - controller.TC_EXCEPTION_SHUTDOWN_REQUESTED
+        - controller.TC_EXCEPTION_INVALID_CONFIGURATION
+        - controller.TC_EXCEPTION_INTERNAL_UNDERRUN
+        - controller.TC_EXCEPTION_INTERNAL_ERROR
+        - controller.TC_EXCEPTION_MCA_POSITIVE_LIMITED
+        - controller.TC_EXCEPTION_MCA_NEGATIVE_LIMITED
+        - controller.TC_EXCEPTION_MCB_POSITIVE_LIMITED
+        - controller.TC_EXCEPTION_MCB_NEGATIVE_LIMITED
+        - controller.TC_EXCEPTION_QUEUE_INTERRUPT_UNEXPECTED
+        - controller.TC_EXCEPTION_INVALID_FPGA_EXCEPTION_BITMAP
+        - controller.TC_EXCEPTION_IO_SUPPLY_ERROR
+        - controller.TC_EXCEPTION_STEP_COMPUTATION_OVERFLOW
+        - controller.TC_EXCEPTION_SHUTDOWN_INPUT_TRIGGERED
+        - controller.TC_EXCEPTION_UNEXPECTED_FPGA_RESET
+        - controller.TC_EXCEPTION_FPGA_READBACK_ERROR
+        - controller.TC_EXCEPTION_UNEXPECTED_STEPPER_STOP
+        - controller.TC_EXCEPTION_CLEARING_EXCEPTION_FAILED
 
-  def inputs_changed(self, inputs):
-    """Called when any of the reportable inputs have changed.
+        For printing state details, use the state_description and exception_description properties.
+        """
 
-    The reportable inputs are set in the configuration. The inputs are passed in as
-    a long integer bit mask.
+    def inputs_changed(self, inputs):
+        """Called when any of the reportable inputs have changed.
 
-    During initialisation input changes are not reported. Once initialisation is completed
-    this method will be called with the current input state.
-    """
-    pass
+        The reportable inputs are set in the configuration. The inputs are passed in as
+        a long integer bit mask.
 
-def run(driver, system_poller = None):
-  instance = Controller(driver)
+        During initialisation input changes are not reported. Once initialisation is completed
+        this method will be called with the current input state.
+        """
+        pass
 
-  driver.internal_attach_host(instance)
 
-  if system_poller is None:
-    system_poller = _patched_Poller(select.poll())
+def run(driver, system_poller=None):
+    instance = Controller(driver)
 
-  instance.run(system_poller)
+    driver.internal_attach_host(instance)
 
+    if system_poller is None:
+        system_poller = _patched_Poller(select.poll())
+
+    instance.run(system_poller)

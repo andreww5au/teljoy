@@ -25,7 +25,7 @@
    Hit 'c' then enter to see the current telescope state.
 """
 
-import libusb1
+import usb1
 import sys
 import time
 import signal
@@ -40,7 +40,7 @@ if __name__ == '__main__':
   logger.info('* Resetting controller hardware with hardware_reset()')
   try:
     instance = usbcon.controller.Controller(None)
-  except libusb1.USBError:
+  except usb1.USBError:
     logger.critical("Can't open USB device for telescope controller. Make sure that the controller " +
                     "is plugged in, and that there isn't another copy of teljoy running.")
     sys.exit(-1)
