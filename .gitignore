@@ -1,3 +1,7 @@
+# Pycharm files
+.project
+.idea
+
 *.pyc
 *~
 
