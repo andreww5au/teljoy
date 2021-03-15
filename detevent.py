@@ -57,8 +57,6 @@ slowloop = None
 fastthread = None
 slowthread = None
 
-DirtyTime = 0  # Used to count time since the end of the last slew
-
 
 class EventLoop(object):
     """Allows a set of functions to be registered that must be called at
@@ -597,6 +595,7 @@ def DoTJbox():
                     found = True
             if found and (not motion.limits.HWLimit):
                 if safety.Active.is_set():
+                    # noinspection PyUnresolvedReferences
                     AltErr = current.Jump(JObj, prefs.SlewRate)  # Goto new position}
                     logger.info("detevent.DoTJbox: Remote control jump to object: %s" % JObj)
                     if dome.dome.AutoDome and (not AltErr):
@@ -615,6 +614,7 @@ def DoTJbox():
 
         elif other.action == 'jumprd':
             if safety.Active.is_set():
+                # noinspection PyUnresolvedReferences
                 AltErr = current.Jump(BObj, prefs.SlewRate)
                 logger.info("detevent.DoTJbox: Remote control jump to object: %s" % BObj)
                 if dome.dome.AutoDome and (not AltErr):
@@ -629,6 +629,7 @@ def DoTJbox():
                 sqlint.ClearTJbox(db=db)
 
         elif other.action == 'reset':
+            # noinspection PyUnresolvedReferences
             current.Reset(BObj)
             logger.info("detevent.DoTJbox: Remote control reset current position to %s" % BObj)
 
@@ -641,6 +642,7 @@ def DoTJbox():
             logger.error("detevent.DoTJbox: Remote control command 'nonsid' not supported.")
 
         elif other.action == 'offset':
+            # noinspection PyUnresolvedReferences
             current.Offset(other.OffsetRA, other.OffsetDEC)
             logger.info("detevent.DoTJbox: Remote small offset shift by %4.1f,%4.1f arcsec" % (other.OffsetRA, other.OffsetDEC))
             TJboxAction = other.action
@@ -760,6 +762,7 @@ def CheckErrors():
         errors.CalErrorTag = None
 
 
+# noinspection PyProtectedMember
 def LogGuider():
     """This function logs the autoguider steps to a file in /tmp.
        It's called at regular intervals by the 'slowloop'.
@@ -799,6 +802,7 @@ def Init():
 
     slowloop = EventLoop(name='SlowLoop', looptime=SLOWLOOP)
     if SITE == 'PERTH':
+        # noinspection PyProtectedMember
         slowloop.register('Weather', weather._background)
     slowloop.register('RelRef', current.RelRef)  # calculate refraction+flexure velocities, check alt, set 'AltError' if low
     slowloop.register("CheckErrors", CheckErrors)
