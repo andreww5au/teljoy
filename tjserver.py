@@ -11,10 +11,12 @@
     so that the path ane file name of this key file are correct.
 """
 
-import Pyro4
-
 import os
 import socket
+
+import Pyro4
+import Pyro4.socketutil
+import Pyro4.errors
 
 from globals import *
 import detevent
@@ -41,6 +43,8 @@ except IOError:
 Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696
+plat = None
+pyro_thread = None
 
 
 class Telescope(object):
@@ -98,37 +102,48 @@ class Telescope(object):
                     logger.error("Exception in Teljoy Pyro4 server. Restarting in 10 sec: %s" % (traceback.format_exc(),))
                     time.sleep(10)
 
+    @Pyro4.expose
     def Ping(self):
         detevent.ProspLastTime = time.time()
         return
 
+    @Pyro4.expose
     def Lock(self):
         self.lock.acquire()
 
+    @Pyro4.expose
     def Unlock(self):
         self.lock.release()
 
+    @Pyro4.expose
     def GetMotors(self):
         return motion.motors.__getstate__()
 
+    @Pyro4.expose
     def GetLimits(self):
         return motion.motors.limits.__getstate__()
 
+    @Pyro4.expose
     def GetCurrent(self):
         return detevent.current.__getstate__()
 
+    @Pyro4.expose
     def GetDome(self):
         return dome.dome.__getstate__()
 
+    @Pyro4.expose
     def GetPrefs(self):
         return prefs.__dict__
 
+    @Pyro4.expose
     def GetInfo(self):
         return detevent.current.__repr__()
 
+    @Pyro4.expose
     def Active(self):
         return safety.Active.is_set()
 
+    @Pyro4.expose
     def jump(self, *args, **kws):
         ob = utils.Pos(*args, **kws)
         if ob is None:
@@ -143,6 +158,7 @@ class Telescope(object):
         else:
             return "ERROR: safety interlock set, can't jump telescope"
 
+    @Pyro4.expose
     def reset(self, *args, **kws):
         """Set the current RA and DEC to the values given.
            'ra' and 'dec' can be sexagesimal strings (in hours:minutes:seconds for RA and degrees:minutes:seconds
@@ -155,12 +171,14 @@ class Telescope(object):
         detevent.current.Reset(obj=ob)
         return "Resetting current position to: %s" % ob
 
+    @Pyro4.expose
     def offset(self, ora, odec):
         """Make a tiny slew from the current position, by ora,odec arcseconds.
         """
         detevent.current.Offset(ora=ora, odec=odec)
         return "Moved small offset distance: %4.1f,%4.1f" % (ora, odec)
 
+    @Pyro4.expose
     def autoguide(self, on):
         """Turn the autoguider mode on or off.
         """
@@ -171,12 +189,14 @@ class Telescope(object):
             motion.motors.Autoguide(False)
             return "Autoguiding turned OFF"
 
+    @Pyro4.expose
     def freeze(self):
         """Freeze the telescope
         """
         motion.motors.Frozen = True
         return "Telescope frozen"
 
+    @Pyro4.expose
     def unfreeze(self):
         """Un-Freeze the telescope
         """
@@ -186,6 +206,7 @@ class Telescope(object):
         else:
             return "ERROR: Safety interlock, can't unfreeze telescope!"
 
+    @Pyro4.expose
     def dome(self, arg):
         """move, open, or close the dome.
         """

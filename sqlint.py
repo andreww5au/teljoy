@@ -116,7 +116,10 @@ create table teljoy.tjbox (
 
 """
 
-import MySQLdb as dblib
+try:
+    import MySQLdb as dblib
+except ImportError:
+    dblib = None
 
 import os
 
@@ -986,5 +989,8 @@ def InitSQL():
 
 # Create a default module-wide database connection object on startup, to be used if
 # the calling code doesn't pass its own database object
-gdb = InitSQL()
-SQLActive = (gdb is not None)
+if dblib is not None:
+    gdb = InitSQL()
+    SQLActive = (gdb is not None)
+else:
+    SQLActive = False

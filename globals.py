@@ -16,8 +16,8 @@ if sys.version_info.major == 2:
 else:
     from configparser import ConfigParser as conparser
 
-# SITE = 'PERTH'
-SITE = 'NZ'
+SITE = 'PERTH'
+# SITE = 'NZ'
 
 INIF = 'teljoy.ini'
 
@@ -448,7 +448,7 @@ class SafetyInterlock(object):
 def UpdateConfig():
     """Load the .ini file and populate the ConfigParser object with the contents.
     """
-    lCP = conparser(defaults=ConfigDefaults)
+    lCP = conparser(defaults=ConfigDefaults, inline_comment_prefixes=(';',))
     lCPfile = lCP.read(CPPATH)
     if not lCPfile:
         logger.error("None of the specified configuration files found by globals.py: %s" % (CPPATH,))

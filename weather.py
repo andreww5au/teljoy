@@ -7,9 +7,16 @@
 """
 
 from globals import *
-import MySQLdb
+
+try:
+    import MySQLdb as dblib
+except ImportError:
+    dblib = None
 
 weather = None
+db = None
+b_db = None
+status = None
 
 # These are the initial defaults, copied to the status object on module init.
 _SkyOpenTemp = -26  # Open if skytemp < this for more than WeatherOpenDelay sec
@@ -211,11 +218,15 @@ def Init():
     """Set up the database connection to access the weather data.
     """
     global db, b_db, status
+
+    if dblib is None:
+        return
+
     db = None
     b_db = None
     try:
-        db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
-        b_db = MySQLdb.Connection(host='mysql', user='honcho', passwd='', db='misc')
+        db = dblib.Connection(host='mysql', user='honcho', passwd='', db='misc')
+        b_db = dblib.Connection(host='mysql', user='honcho', passwd='', db='misc')
     except:
         print("DANGER - no weather sensor available, disabling weather monitoring")
     status = Weather()
