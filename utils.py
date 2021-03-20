@@ -18,6 +18,10 @@ import motion
 import sqlint
 import pyephem
 
+ZENITH = correct.HADecPosition(ha=0.0,
+                               dec=prefs.ObsLat,
+                               domepos=prefs.StowDomeAzi,
+                               objid='Zenith')
 STOW = correct.HADecPosition(ha=prefs.StowHourAngle,
                              dec=prefs.StowDec,
                              domepos=prefs.StowDomeAzi,

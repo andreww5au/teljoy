@@ -29,6 +29,7 @@ elif SITE == 'NZ':
 
 import correct
 import motion
+import posfile
 import sqlint
 from handpaddles import paddles
 
@@ -382,7 +383,11 @@ class CurrentPosition(correct.CalcPosition):
            detevent.ChecKDBUpdate and sqlint.UpdateSQLCurrent approximately
            once per second.
         """
-        info, HA, LastMod = sqlint.ReadSQLCurrent(self)
+        if sqlint.SQLActive:
+            info, HA, LastMod = sqlint.ReadSQLCurrent(self)
+        else:
+            info, HA, LastMod = posfile.ReadPosFile(self)
+
         if info is None:  # Flag a Calibration Error if there was no valid data in the table
             errors.CalError = True
             logger.error('DANGER - no initial position, you MUST check and reset the position before slewing!')
@@ -544,7 +549,7 @@ def CheckDBUpdate():
        This function is called at regular intervals by the 'fastloop'.
     """
     global db, DBLastTime
-    if sqlint.SQLActive and ((time.time() - DBLastTime) > 1.0):
+    if ((time.time() - DBLastTime) > 1.0):
         foo = sqlint.Info()
         # noinspection PyUnresolvedReferences
         foo.posviolate = current.posviolate
@@ -558,7 +563,10 @@ def CheckDBUpdate():
         foo.RA_guideAcc = paddles.RA_GuideAcc
         foo.DEC_guideAcc = paddles.DEC_GuideAcc
         foo.LastError = LastError
-        sqlint.UpdateSQLCurrent(current, foo, db)
+        if sqlint.SQLActive:
+            sqlint.UpdateSQLCurrent(current, foo, db)
+        else:
+            posfile.UpdatePosFile(current, foo)
         DBLastTime = time.time()
 
 

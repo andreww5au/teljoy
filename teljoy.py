@@ -35,18 +35,26 @@ from globals import *
 import usbcon
 import digio
 
+IGNORE_CONTROLLER_ERROR = True
+
 if __name__ == '__main__':
     logger.info('* Resetting controller hardware with hardware_reset()')
     try:
         instance = usbcon.controller.Controller(None)
+        instance.hardware_reset()
+        time.sleep(0.5)
+        del instance
+        time.sleep(0.5)
     except usb1.USBError:
-        logger.critical("Can't open USB device for telescope controller. Make sure that the controller " +
-                        "is plugged in, and that there isn't another copy of teljoy running.")
-        sys.exit(-1)
-    instance.hardware_reset()
-    time.sleep(0.5)
-    del instance
-    time.sleep(0.5)
+        logger.exception("Can't open USB device for telescope controller. Make sure that the controller " +
+                         "is plugged in, and that there isn't another copy of teljoy running.")
+        if not IGNORE_CONTROLLER_ERROR:
+            sys.exit(-1)
+    except usbcon.controller.ControllerException:
+        logger.exception("Error creating telescope controller driver")
+        if not IGNORE_CONTROLLER_ERROR:
+            sys.exit(-1)
+
 
 import motion
 import detevent
@@ -91,9 +99,15 @@ def RegisterCleanup(func):
     """
     global SIGNAL_HANDLERS, CLEANUP_FUNCTION
     CLEANUP_FUNCTION = func
-    for sig in [3, 15]:
+    if sys.platform.upper().startswith('WIN'):
+        siglist = [signal.SIGABRT, signal.SIGBREAK, signal.SIGFPE, signal.SIGILL, signal.SIGINT, signal.SIGTERM]
+    else:
+        siglist = list(range(3, 15))
+    for sig in siglist:
+        print(sig)
         SIGNAL_HANDLERS[sig] = signal.signal(sig, SignalHandler)  # Register a signal handler
-    SIGNAL_HANDLERS[1] = signal.signal(1, signal.SIG_IGN)
+    if not sys.platform.upper().startswith('WIN'):
+        SIGNAL_HANDLERS[1] = signal.signal(1, signal.SIG_IGN)
     atexit.register(CLEANUP_FUNCTION)  # Register the passed CLEANUP_FUNCTION to be called on
     #  normal programme exit, with no arguments.
 

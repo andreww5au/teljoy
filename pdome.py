@@ -30,6 +30,7 @@
 
 import math
 import serial
+import threading
 
 from globals import *
 
@@ -61,6 +62,7 @@ class Dome(object):
         #   if false, the dome will only be moved if AutoDome is True, and detevent.Jump is called.
         self.DomeLastTime = 0  # Last time the dome was moved. Used for DomeTracking to prevent frequent small moves
         self.queue = []
+        self.lock = threading.RLock()
         try:
             self.ser = serial.Serial('/dev/ttyS%d' % DOMEPORT, baudrate=1200, stopbits=serial.STOPBITS_TWO, timeout=0.2,
                                      rtscts=False, xonxoff=False, dsrdtr=False)
@@ -108,23 +110,27 @@ class Dome(object):
            This method will see if a prompt has been sent by the controller. If so, it returns True.
            If not, it sends a CR character to the controller and returns 'False'.
         """
-        chars = []
-        c = 'X'
-        while c != '':
-            c = self.ser.read(1)
-            chars.append(c)
-        gots = ''.join(chars)
+        if self.ser is None:
+            logger.error('Dome controller not connected.')
+            return None
+        with self.lock:
+            chars = []
+            c = 'X'
+            while c != '':
+                c = self.ser.read(1)
+                chars.append(c)
+            gots = ''.join(chars)
 
-        if gots:
-            self._parse_response(gots)
+            if gots:
+                self._parse_response(gots)
 
-        if '?' not in gots:
-            self.ser.write(chr(13))
-            time.sleep(0.2)
-            return False
-        else:
-            time.sleep(0.3)
-            return True
+            if '?' not in gots:
+                self.ser.write(chr(13))
+                time.sleep(0.2)
+                return False
+            else:
+                time.sleep(0.3)
+                return True
 
     def _parse_response(self, gots):
         """Look at the string returned from the dome controller, and if it's got a 'I' command response (either
@@ -149,6 +155,9 @@ class Dome(object):
         """
         if not self.AutoDome:
             return
+        if self.ser is None:
+            return
+
         if self.queue and not self.Command:  # If we aren't already processing a command, and there's one in the queue, do it now.
             self.Command = self.queue.pop(0)
 
@@ -182,27 +191,28 @@ class Dome(object):
             else:
                 self.DomeInUse = True  # There is a new command, but it hasn't been sent yet.
                 if self._waitprompt():
-                    if self.Command == 'O':
-                        self.ShutterOpen = True
-                        self.CommandSent = True
-                        self.ser.write('O' + chr(13))
-                    elif self.Command == 'C':
-                        self.ShutterOpen = False
-                        self.CommandSent = True
-                        self.ser.write('C' + chr(13))
-                    elif self.Command == 'I':
-                        self.IsShutterOpen = None  # unknown until we receive the result
-                        self.CommandSent = True
-                        self.ser.write('I' + chr(13))
-                    else:
-                        try:
-                            az = int(self.Command)
-                            if (az < 0) or (az > 360):
-                                logger.error('Invalid command in dome command queue: %s' % self.Command)
-                            self.ser.write(self.Command + chr(13))
+                    with self.lock:
+                        if self.Command == 'O':
+                            self.ShutterOpen = True
                             self.CommandSent = True
-                        except ValueError:
-                            logger.error('Invalid command in dome command queue: %s' % self.Command)
+                            self.ser.write('O' + chr(13))
+                        elif self.Command == 'C':
+                            self.ShutterOpen = False
+                            self.CommandSent = True
+                            self.ser.write('C' + chr(13))
+                        elif self.Command == 'I':
+                            self.IsShutterOpen = None  # unknown until we receive the result
+                            self.CommandSent = True
+                            self.ser.write('I' + chr(13))
+                        else:
+                            try:
+                                az = int(self.Command)
+                                if (az < 0) or (az > 360):
+                                    logger.error('Invalid command in dome command queue: %s' % self.Command)
+                                self.ser.write(self.Command + chr(13))
+                                self.CommandSent = True
+                            except ValueError:
+                                logger.error('Invalid command in dome command queue: %s' % self.Command)
 
     def move(self, az=None, force=False):
         """Add a 'move' command to the dome command queue, to be executed as soon as the dome is free.
@@ -212,6 +222,9 @@ class Dome(object):
            The 'az' parameter defines the dome azimuth to move to - 0-360, where 0=North and
            90 is due East.
         """
+        if self.ser is None:
+            logger.error('Dome controller not connected.')
+            return
         if not self.AutoDome:
             logger.error('pdome.Dome.move: Dome not in auto mode.')
             return
@@ -231,6 +244,9 @@ class Dome(object):
         """If the safety interlock is not active, or the 'force' argument is true,
            add an 'open shutter' command to the dome command queue.
         """
+        if self.ser is None:
+            logger.error('Dome controller not connected.')
+            return
         if not self.AutoDome:
             logger.error('pdome.Dome.move: Dome not in auto mode.')
             return
@@ -244,6 +260,9 @@ class Dome(object):
         """If the safety interlock is not active, or the 'force' argument is true,
            add an 'close shutter' command to the dome command queue.
         """
+        if self.ser is None:
+            logger.error('Dome controller not connected.')
+            return None
         if not self.AutoDome:
             logger.error('pdome.Dome.move: Dome not in auto mode.')
             return
@@ -271,10 +290,15 @@ class Dome(object):
         """
         if (type(Obj.DomePos) == float) or (type(Obj.DomePos) == int):
             return float(Obj.DomePos)  # Hard-wired dome azimuth in position record.
+
+        if Obj.Alt < 0.0:   # Below horizon, our maths fails, so just return the telescope azimuth
+            return Obj.Alt
+
         if prefs.EastOfPier:
             p = -ABSP
         else:
             p = ABSP
+
         ObjRA = Obj.Ra / 54000  # in hours
         AziRad = DegToRad(Obj.Azi)
         AltRad = DegToRad(Obj.Alt)
@@ -282,8 +306,7 @@ class Dome(object):
 
         y0 = -p * math.sin(ha) * math.sin(DegToRad(prefs.ObsLat))  # N-S component of scope centre displacement from dome centre
         x0 = p * math.cos(ha)  # E-W component of scope centre displacement from dome centre
-        z0 = ETA - p * math.sin(ha) * math.cos(
-            DegToRad(prefs.ObsLat))  # up-down component of scope centre displacement from dome centre
+        z0 = ETA - p * math.sin(ha) * math.cos(DegToRad(prefs.ObsLat))  # up-down component of scope centre displacement from dome centre
         a = -math.cos(AltRad) * math.sin(AziRad)
         b = -math.cos(AltRad) * math.cos(AziRad)
         c = math.sin(AltRad)

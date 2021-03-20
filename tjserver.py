@@ -34,13 +34,14 @@ else:
     KEYFILE = '~observer/teljoy.pyrokey'
 import utils
 
-try:
-    hmac = open(os.path.expanduser(KEYFILE), 'r').read().strip()
-except IOError:
-    logger.error('Pyro4 key file not found: %s' % KEYFILE)
-    hmac = ''
-
-Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
+# TODO - get this working again, probably a Pyro4 API change since this was written
+# try:
+#     hmac = open(os.path.expanduser(KEYFILE), 'r').read().strip()
+# except IOError:
+#     logger.error('Pyro4 key file not found: %s' % KEYFILE)
+#     hmac = ''
+#
+# Pyro4.config.HMAC_KEY = hmac or Pyro4.config.HMAC_KEY
 
 PYROPORT = 9696
 plat = None

@@ -6,14 +6,18 @@ import sys
 import traceback
 import time
 
-sys.path.append('/home/mjuo/')
+# For NZ:
+# sys.path.append('/home/mjuo/')
+# For Perth:
+sys.path.append('/home/pi')
+
 from teljoy.globals import *
 from teljoy.extras import tjclient
 
-DFILTER = 'I'   # Default filter for new objects created
-DEXPTIME = 60   # Default exposure time for new objects created
+DFILTER = 'I'  # Default filter for new objects created
+DEXPTIME = 60  # Default exposure time for new objects created
 
-HTMLheader="""
+HTMLheader = """
 <META HTTP-EQUIV="Refresh" CONTENT="5;URL=bncstat">
 <html>
 <head>
@@ -22,160 +26,161 @@ HTMLheader="""
 <body BGCOLOR=000000 TEXT=FFFFFF LINK=cc99ff VLINK=cc99ff>
 """
 
-HTMLtrailer="""
+HTMLtrailer = """
 <p>
 </body>
 </html>
 """
 
+
 def AddObjURL(status):
-  "Return a URL pointing to the 'Add Object' CGI"
-  if status.current.Ra and status.current.Dec and (not status.current.posviolate):
-    return 'Click <A href="secure/nobjedit?new=1&'+ \
-           'ObjID=%s&' %  status.current.ObjID + \
-           'ObjRA='+sexstring(status.current.Ra/15/3600)+'&'+ \
-           'ObjDec='+sexstring(status.current.Dec/3600)+'&'+ \
-           'ObjEpoch='+str(status.current.Epoch)+'&'+ \
-           'filtname=%s&' % DFILTER + \
-           'exptime='+str(DEXPTIME)+'&'+ \
-           'xg=0&'+ \
-           'yg=0">'+ \
-           'HERE</A> to add the current object to the database. &nbsp; &nbsp;'
-  else:
-    return 'Current position can not be stored in the database. &nbsp; &nbsp;'
+    "Return a URL pointing to the 'Add Object' CGI"
+    if status.current.Ra and status.current.Dec and (not status.current.posviolate):
+        return 'Click <A href="secure/nobjedit?new=1&' + \
+               'ObjID=%s&' % status.current.ObjID + \
+               'ObjRA=' + sexstring(status.current.Ra / 15 / 3600) + '&' + \
+               'ObjDec=' + sexstring(status.current.Dec / 3600) + '&' + \
+               'ObjEpoch=' + str(status.current.Epoch) + '&' + \
+               'filtname=%s&' % DFILTER + \
+               'exptime=' + str(DEXPTIME) + '&' + \
+               'xg=0&' + \
+               'yg=0">' + \
+               'HERE</A> to add the current object to the database. &nbsp; &nbsp;'
+    else:
+        return 'Current position can not be stored in the database. &nbsp; &nbsp;'
 
 
 def trow(s):
-  return "<tr> %s</tr>\n" % s
+    return "<tr> %s</tr>\n" % s
+
 
 def head(s):
-  return "<th> %s</th>" % s
+    return "<th> %s</th>" % s
+
 
 def data(s):
-  if s:
-    return "<td>%s</td>" % s
-  else:
-    return "<td>&nbsp;</td>"
+    if s:
+        return "<td>%s</td>" % s
+    else:
+        return "<td>&nbsp;</td>"
 
 
 def since(tm):
-  """Return a string containing the time in seconds since the epoch supplied.
-  """
-  return `int(time.time()-tm)`+' sec'
-
+    """Return a string containing the time in seconds since the epoch supplied.
+    """
+    return `int(time.time() - tm)` + ' sec'
 
 
 def TJParams(status):
-  "Write a table with the current telescope/object parameters"
-  tmp="<B>Teljoy Status</B>\n <table border=1>\n"
-  tmp += trow(data("") + head("Value"))
-  if status.current.Ra and status.current.Dec and (not status.current.posviolate):
-    tmp += trow(head("Object ID") + data(status.current.ObjID))
-    tmp += trow(head("RA") + data(sexstring(status.current.Ra/15/3600)))
-    tmp += trow(head("Dec") + data(sexstring(status.current.Dec/3600)))
-    tmp += trow(head("Epoch") + data(str(status.current.Epoch)))
-    if status.current.TraRA or status.current.TraDEC:
-      tmp += trow(head('<font color="red">' + "Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)) + '</font>')
+    "Write a table with the current telescope/object parameters"
+    tmp = "<B>Teljoy Status</B>\n <table border=1>\n"
+    tmp += trow(data("") + head("Value"))
+    if status.current.Ra and status.current.Dec and (not status.current.posviolate):
+        tmp += trow(head("Object ID") + data(status.current.ObjID))
+        tmp += trow(head("RA") + data(sexstring(status.current.Ra / 15 / 3600)))
+        tmp += trow(head("Dec") + data(sexstring(status.current.Dec / 3600)))
+        tmp += trow(head("Epoch") + data(str(status.current.Epoch)))
+        if status.current.TraRA or status.current.TraDEC:
+            tmp += trow(head('<font color="red">' + "Nonsid Track") + data(
+                "RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)) + '</font>')
+        else:
+            tmp += trow(head("Nonsid Track") + data(
+                "RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
+    elif status.current.RaC and status.current.DecC:
+        tmp += trow(head("Object ID") + data(''))
+        tmp += trow(head("RA") + data(sexstring(status.current.RaC / 15 / 3600)))
+        tmp += trow(head("Dec") + data(sexstring(status.current.DecC / 3600)))
+        tmp += trow(head("Epoch") + data("of date"))
+        if status.current.TraRA or status.current.TraDEC:
+            tmp += trow(head('<font color="red">' + "Nonsid Track") + data(
+                "RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)) + '</font>')
+        else:
+            tmp += trow(head("Nonsid Track") + data(
+                "RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
     else:
-      tmp += trow(head("Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
-  elif status.current.RaC and status.current.DecC:
-    tmp += trow(head("Object ID") + data(''))
-    tmp += trow(head("RA") + data(sexstring(status.current.RaC/15/3600)))
-    tmp += trow(head("Dec") + data(sexstring(status.current.DecC/3600)))
-    tmp += trow(head("Epoch") + data("of date"))
-    if status.current.TraRA or status.current.TraDEC:
-      tmp += trow(head('<font color="red">' + "Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)) + '</font>')
-    else:
-      tmp += trow(head("Nonsid Track") + data("RA: %8.5g,   DEC: %7.4g arcsec/second" % (status.current.TraRA, status.current.TraDEC)))
-  else:
-    tmp += trow(head("Object ID") + data(''))
-    tmp += trow(head("RA") + data('--'))
-    tmp += trow(head("Dec") + data('--'))
-    tmp += trow(head("Epoch") + data('--'))
-    tmp += trow(head("Nonsid Track") + data("--"))
+        tmp += trow(head("Object ID") + data(''))
+        tmp += trow(head("RA") + data('--'))
+        tmp += trow(head("Dec") + data('--'))
+        tmp += trow(head("Epoch") + data('--'))
+        tmp += trow(head("Nonsid Track") + data("--"))
 
-  if status.current.Alt:
-    HA = status.current.RaC/15/3600 - status.current.Time.LST
-    if HA > 12.0:
-      HA -= 24.0
-    if HA < -12.0:
-      HA += 24.0
-    airmass = '%6.4g' % (1/math.cos((90-status.current.Alt)/180*math.pi), )
-    tmp += trow(head("Alt") + data(sexstring(status.current.Alt)))
-    tmp += trow(head("Azi") + data(sexstring(status.current.Azi)))
-    tmp += trow(head("LST") + data(sexstring(status.current.Time.LST)))
-    tmp += trow(head("Hour Angle") + data(sexstring(HA)))
-    tmp += trow(head("Airmass") + data(airmass))
-    tmp += trow(head("Dome Azi") + data('%d' % (status.dome.DomeAzi,)))
-  else:
-    tmp += trow(head("Alt") + data('--'))
-    tmp += trow(head("Azi") + data('--'))
-    tmp += trow(head("LST") + data('--'))
-    tmp += trow(head("Hour Angle") + data('--'))
-    tmp += trow(head("Airmass") + data('--'))
-    tmp += trow(head("Dome Azi") + data('--'))
-  flags = []
-  if status.current.posviolate:
-    flags.append('PosViolate')
-  if status.motors.Moving:
-    if status.motors.Jumping:
-      flags.append('Moving(Jump)')
-    elif status.motors.Paddling:
-      flags.append('Moving(Paddles)')
+    if status.current.Alt:
+        HA = status.current.RaC / 15 / 3600 - status.current.Time.LST
+        if HA > 12.0:
+            HA -= 24.0
+        if HA < -12.0:
+            HA += 24.0
+        airmass = '%6.4g' % (1 / math.cos((90 - status.current.Alt) / 180 * math.pi),)
+        tmp += trow(head("Alt") + data(sexstring(status.current.Alt)))
+        tmp += trow(head("Azi") + data(sexstring(status.current.Azi)))
+        tmp += trow(head("LST") + data(sexstring(status.current.Time.LST)))
+        tmp += trow(head("Hour Angle") + data(sexstring(HA)))
+        tmp += trow(head("Airmass") + data(airmass))
+        tmp += trow(head("Dome Azi") + data('%d' % (status.dome.DomeAzi,)))
     else:
-      flags.append('Moving(?)')
-  if status.prefs.EastOfPier:
-    flags.append('EastOfPier')
-  if status.dome.DomeInUse:
-    flags.append('DomeInUse')
-  if status.dome.DomeTracking:
-    flags.append('DomeTracking')
-  if status.motors.Frozen:
-    flags.append('Frozen')
-  tmp += trow(head("Flags") + data(', '.join(flags)))
-  if status.limits.HWLimit:
-    limits = []
-    if status.limits.PowerOff:
-      limits.append("PowerOff")
+        tmp += trow(head("Alt") + data('--'))
+        tmp += trow(head("Azi") + data('--'))
+        tmp += trow(head("LST") + data('--'))
+        tmp += trow(head("Hour Angle") + data('--'))
+        tmp += trow(head("Airmass") + data('--'))
+        tmp += trow(head("Dome Azi") + data('--'))
+    flags = []
+    if status.current.posviolate:
+        flags.append('PosViolate')
+    if status.motors.Moving:
+        if status.motors.Jumping:
+            flags.append('Moving(Jump)')
+        elif status.motors.Paddling:
+            flags.append('Moving(Paddles)')
+        else:
+            flags.append('Moving(?)')
+    if status.prefs.EastOfPier:
+        flags.append('EastOfPier')
+    if status.dome.DomeInUse:
+        flags.append('DomeInUse')
+    if status.dome.DomeTracking:
+        flags.append('DomeTracking')
+    if status.motors.Frozen:
+        flags.append('Frozen')
+    tmp += trow(head("Flags") + data(', '.join(flags)))
+    if status.limits.HWLimit:
+        limits = []
+        if status.limits.PowerOff:
+            limits.append("PowerOff")
+        else:
+            if status.limits.EastLim:
+                limits.append('EAST')
+            if status.limits.WestLim:
+                limits.append('WEST')
+            if status.limits.HorizLim:
+                limits.append('HORIZON')
+            if status.limits.MeshLim:
+                limits.append('MESH')
+        tmp += trow(head("Limits") + data("HW Limit ACTIVE: [%s]" % ', '.join(limits)))
     else:
-      if status.limits.EastLim:
-        limits.append('EAST')
-      if status.limits.WestLim:
-        limits.append('WEST')
-      if status.limits.HorizLim:
-        limits.append('HORIZON')
-      if status.limits.MeshLim:
-        limits.append('MESH')
-    tmp += trow(head("Limits") + data("HW Limit ACTIVE: [%s]" % ', '.join(limits)))
-  else:
-    tmp += trow(head("Limits") + data('None'))
-  tmp += trow(head("UT Date") + data(str(status.current.Time.UT)[:10]))
-  tmp += trow(head("UT Time") + data(str(status.current.Time.UT)[11:-7]))
-  tmp += "</table> \n"
-  return tmp
-
+        tmp += trow(head("Limits") + data('None'))
+    tmp += trow(head("UT Date") + data(str(status.current.Time.UT)[:10]))
+    tmp += trow(head("UT Time") + data(str(status.current.Time.UT)[11:-7]))
+    tmp += "</table> \n"
+    return tmp
 
 
 def Exits():
-  return '&nbsp; &nbsp; Go to <A href="al/aobjlist">Objects Database</A>'
-
+    return '&nbsp; &nbsp; Go to <A href="al/aobjlist">Objects Database</A>'
 
 
 if __name__ == '__main__':
-  print "Content-Type: text/html\n\n"
-  print HTMLheader
+    print("Content-Type: text/html\n\n")
+    print(HTMLheader)
 
-  msg = tjclient.Init()
-  status = tjclient.status
-  if not status.connected:
-    print "Can't connect - is Teljoy running?"
-#    print "Error message from Teljoy client: %s" % msg
+    msg = tjclient.Init()
+    status = tjclient.status
+    if not status.connected:
+        print("Can't connect - is Teljoy running?")
+    #    print "Error message from Teljoy client: %s" % msg
 
-  print data(TJParams(status))                    #Teljoy parameters
-  print "<br>"
-  print AddObjURL(status)
-  print Exits()
-  print HTMLtrailer
-
-
-
+    print(data(TJParams(status)))  # Teljoy parameters
+    print("<br>")
+    print(AddObjURL(status))
+    print(Exits())
+    print(HTMLtrailer)

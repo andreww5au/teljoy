@@ -4,18 +4,17 @@ import cgi
 import sys
 import traceback
 
-print 'Content-Type: text/html\n\n'
+print('Content-Type: text/html\n\n')
 
 try:
-  import nobjedit
+    import nobjedit
 
-  form = cgi.FieldStorage()
+    form = cgi.FieldStorage()
 
-  print nobjedit.page(form)
-except: 
-  print "There has been an error. Please cut and paste this error information"
-  print "in an email to andrew@longtable.org.<p>\n<p>\n"
-  e = traceback.format_exception(sys.exc_type,sys.exc_value, sys.exc_traceback)
-  for l in e:
-    print (cgi.escape(l) + '<p>').replace('\n', '<br>')
-
+    print(nobjedit.page(form))
+except:
+    print("There has been an error. Please cut and paste this error information")
+    print("in an email to andrew@longtable.org.<p>\n<p>\n")
+    e = traceback.format_exc()
+    for line in e:
+        print(cgi.escape(line) + '<p>').replace('\n', '<br>')

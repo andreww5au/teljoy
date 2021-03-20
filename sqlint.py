@@ -120,8 +120,10 @@ try:
     import MySQLdb as dblib
 except ImportError:
     dblib = None
+    SQLERROR = Exception
 
 import os
+import pickle
 
 from globals import *
 import correct
@@ -150,7 +152,10 @@ def getdb(user=None, password=None, host=None, database=None):
     """Return a database connection object given user, password, host and database
        arguments.
     """
-    return dblib.connect(user=user, passwd=password, host=host)
+    if dblib is not None:
+        return dblib.connect(user=user, passwd=password, host=host, database=database)
+    else:
+        return None
 
 
 class Info(object):
@@ -175,13 +180,13 @@ class Info(object):
         self.RA_GuideAcc = 0.0
         self.DEC_GuideAcc = 0.0
         self.LastError = ''
-
-    def __getstate__(self):
-        """Can't pickle the __setattr__ function when saving state
-        """
-        d = self.__dict__.copy()
-        del d['__setattr__']
-        return d
+    #
+    # def __getstate__(self):
+    #     """Can't pickle the __setattr__ function when saving state
+    #     """
+    #     d = self.__dict__.copy()
+    #     del d['__setattr__']
+    #     return d
 
 
 class TJboxrec(object):
@@ -216,359 +221,6 @@ class TJboxrec(object):
                                                                                          self.Shutter,
                                                                                          self.Freeze,
                                                                                          self.LastMod)
-
-
-class Galaxy(correct.CalcPosition):
-    """Position subclass used to store data read from the RC3 or ESO-Upsalla
-       galaxy catalogue tables. Extra attributes for galaxy data.
-
-       Useful for looking up targets from the galaxy catalogues in the database
-       from the command line, probably not much else.
-    """
-
-    def __init__(self, ra=None, dec=None, epoch=2000.0, objid=''):
-        self.Name = ''  # Full name of galaxy (arbitrary string)
-        self.RA2000s = ''  # J2000 coordinates as sexagesimal string
-        self.DEC2000s = ''
-        self.RA1950s = ''  # B1950 coordinates as sexagesimal string
-        self.DEC1950s = ''
-        self.PGC = 0  # Galaxy ID number in RC3 catalogue
-        self.Hubble_T = 0.0  # Galaxy Hubble Type code (0 for elliptical, etc)
-        self.R25 = 0.0  # Galaxy radius, in arcminutes
-        self.Bmag = 0.0  # B magnitude
-        self.V3K = 0.0  # Galaxy redshift, corrected to the local microwave background reference frame
-        self.numfound = 0  # Number of targets found that match the ID given. If >1, you may have the wrong object
-        correct.CalcPosition.__init__(self, ra=ra, dec=dec, epoch=epoch, objid=objid)
-
-    def __str__(self):
-        tmp = correct.CalcPosition.__str__(self) + "\n"
-        tmp += "[Galaxy Params: PGC=%d, Hubble_Type=%4.1f, R25=%5.1f, Bmag=%4.1f, V3K=%5.0f, NumFound=%d]" % (
-            self.PGC, self.Hubble_T, self.R25, self.Bmag, self.V3K, self.numfound)
-        return tmp
-
-    def __repr__(self):
-        tmp = correct.CalcPosition.__repr__(self) + "\n"
-        tmp += "[Galaxy Params: PGC=%d, Hubble_Type=%4.1f, \n                R25=%5.1f, Bmag=%4.1f, V3K=%5.0f, NumFound=%d]" % (
-            self.PGC, self.Hubble_T, self.R25, self.Bmag, self.V3K, self.numfound)
-        return tmp
-
-
-def GetGalaxy(gid, ObjDec=None, db=None):
-    """Given an ID string and an optional rough declination to narrow down the right galaxy,
-       return a Galaxy object.
-
-       This function is deprecated, and should only be used for old object ID's for the
-       automated supernova search, which were based on the RA (B1950) coordinate string for
-       the ESO-Upsalla catalog (1990-1997ish), or the RA (J2000) coordinate string from the
-       RC3 catalogue (1997ish-present). It has limited support for other forms of galaxy
-       identifier, but isn't as useful as GetRC3.
-
-       An optional approximate Dec can be provided as an extra argument, which allows the
-       correct galaxy to be returned from the (larger, more accurate) RC3 catalogue, where
-       many galaxies can have the same RA coordinate string.
-
-       For general cases (not supernova search target lookups) use GetRC3.
-
-       Probably not useful any more.
-    """
-    logger.debug("sqlint.GetGalaxy: Getting galaxy '%s':" % gid)
-    if not SQLActive:
-        logger.error("sqlint.GetGalaxy: No SQL connection active")
-        return None
-    else:
-        if db is None:
-            db = gdb
-        curs = db.cursor()
-    gid = gid.upper().strip()
-    ids = gid[1:]
-    gal = Galaxy()
-    if gid.startswith('N'):
-        ids = ''
-        for c in gid:
-            if c.isdigit():
-                ids += c
-        qstr2 = 'Name regexp "NGC +' + ids + '$"'
-    elif gid.startswith('P'):
-        ids = ''
-        for c in gid:
-            if c.isdigit():
-                ids += c
-        qstr2 = 'PGC="' + ids + '"'
-    elif gid.startswith('I'):
-        ids = ''
-        for c in gid:
-            if c.isdigit():
-                ids += c
-        qstr2 = 'Name like "IC %' + ids + '"'
-    elif gid.startswith('R') and (len(gid) == 7):
-        qstr2 = "RA1950 between lpad('" + ids + "'-1.0,8,'0') and lpad('" + ids + "'+1.0,8,'0')"
-        if ObjDec:
-            qstr2 = qstr2 + (" and ( DEC1950 between concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'-60,6,'0')) and concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'+60,6,'0')) )")
-    elif gid.startswith('J') and (len(gid) == 7):
-        qstr2 = "RA2000 between lpad('" + ids + "'-1.0,8,'0') and lpad('" + ids + "'+1.0,8,'0')"
-        if ObjDec:
-            qstr2 = qstr2 + (" and ( DEC2000 between concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'-60,6,'0')) and concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'+60,6,'0')) )")
-    elif gid.startswith('E') and (len(gid) == 7):
-        qstr2 = "( RA1950 between lpad('" + ids + "'-2.5,8,'0') and lpad('" + ids + "'+2.5,8,'0') )"
-        if ObjDec:
-            qstr2 = qstr2 + (" and ( DEC1950 between concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'-60,6,'0')) and concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'+60,6,'0')) )")
-    elif gid.startswith('T') and (len(gid) == 7):
-        qstr2 = "( RA1950 between lpad('" + ids + "'-2.5,8,'0') and lpad('" + ids + "'+2.5,8,'0') )"
-        if ObjDec:
-            qstr2 = qstr2 + (" and ( DEC1950 between concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'-10000,6,'0')) and concat('-',lpad('" +
-                             sexstring(abs(ObjDec), '', fixed=True) +
-                             "'+10000,6,'0')) )")
-    else:
-        qstr2 = "Name='" + gid + "' or PGC='" + gid + "'"
-
-    qstr = 'select RA2000,DEC2000,RA1950,DEC1950,Name,PGC,Hubble_T,R25,BT,Bmag,V3K from sn.rc3 where '
-    logger.debug("sqlint.GetGalaxy: Query='%s'" % (qstr + qstr2))
-
-    try:
-        curs.execute(qstr + qstr2)
-    except dblib.Error as error:
-        logger.error("sqlint.GetGalaxy: sn.rc3 query error: '%s'" % error)
-        return None
-
-    rows = curs.fetchall()
-    gal.numfound = curs.rowcount
-    if rows:
-        row = rows[0]
-        gal.RA2000s = row[0]
-        RA2000 = stringsex(gal.RA2000s, compressed=True)
-        gal.DEC2000s = row[1]
-        DEC2000 = stringsex(gal.DEC2000s, compressed=True)
-        gal.RA1950s = row[2]
-        RA1950 = stringsex(gal.RA1950s, compressed=True)
-        gal.DEC1950s = row[3]
-        DEC1950 = stringsex(gal.DEC1950s, compressed=True)
-        if (RA2000 is not None) and (DEC2000 is not None):
-            gal.Ra = RA2000 * 15.0 * 3600.0
-            gal.Dec = DEC2000 * 3600.0
-            gal.Epoch = 2000.0
-        elif (RA1950 is not None) and (DEC1950 is not None):
-            gal.Ra = RA1950 * 15.0 * 3600.0
-            gal.Dec = DEC1950 * 3600.0
-            gal.Epoch = 1950.0
-        else:
-            gal.Ra = 0.0
-            gal.Dec = 0.0
-
-        gal.ObjID = gid
-        gal.Name = row[4]
-        gal.PGC = int(row[5])
-        gal.Hubble_T = float(row[6])
-        gal.R25 = float(row[7])
-        BT = float(row[8])
-        Bmag = float(row[9])
-        if BT > 0:
-            gal.Bmag = BT
-        else:
-            gal.Bmag = Bmag
-        gal.V3K = float(row[10])
-        gal.update()
-        return gal
-    else:
-        ids = fixup(gid)
-        if ids != '':  # it was in fixups, and 'ids' is the PGC}
-            return GetGalaxy(ids, ObjDec, db=db)
-        else:  # It wasn't in the fixup list, check in esogals}
-            qstr = ("select RA1950,DEC1950d,Name,PGC," +
-                    "Hubble_T,BMag,RadVel from sn.esogals where " +
-                    "RA1950='" + gid[1:7] + "'")
-        try:
-            curs.execute(qstr)
-        except dblib.Error as error:
-            logger.error("sqlint.GetGalaxy: sn.esogals query error: '%s'" % error)
-            return None
-
-        rows = curs.fetchall()
-        gal.numfound = curs.rowcount
-        if rows:
-            row = rows[0]
-            gal.ObjID = gid
-            gal.RA1950s = row[0]
-            RA1950 = stringsex(gal.RA1950s, compressed=True)
-            DEC1950 = float(row[1])
-            gal.DEC1950s = sexstring(DEC1950)
-            gal.Ra = RA1950 * 15.0 * 3600.0
-            gal.Dec = DEC1950 * 3600.0
-            gal.Epoch = 1950.0
-            gal.Name = row[2]
-            gal.PGC = int(row[3])
-            gal.Hubble_T = float(row[4])
-            gal.Bmag = float(row[5])
-            gal.V3K = float(row[6])
-            gal.R25 = 0
-            if gal.numfound == 1:
-                logger.debug('sqlint.GetGalaxy: PGC=%d' % gal.PGC)
-            elif gal.numfound > 1:
-                logger.warn('sqlint.GetGalaxy: Warning - Duplicate match for %s' % ids)
-            gal.update()
-            return gal
-        else:
-            return None
-
-
-def GetRC3(gid, num=0, db=None):
-    """Given an object ID string and an optional object index, search the RC3 catalog
-       for names that match. If there's more than one match, return match number 'num'
-       (defaults to the first match).
-
-       Note that this function doesn't handle supernova search Object ID's, which were based
-       on the RA coordinate strings (eg 'E123456' or 'R123456' for ESO-Upsalla or RC3 galaxies,
-       respectively). Use GetGalaxy if you need to handle these old ID's.
-
-       Probably useful if you want to jump to galaxies by name (from the command line or
-       external command via teljoy.tjbox), but not very often.
-    """
-    if not SQLActive:
-        logger.error("sqlint.GetGalaxy: No SQL connection active")
-        return None
-    else:
-        if db is None:
-            db = gdb
-        curs = db.cursor()
-    logger.debug("sqlint.GetRC3: Searching for galaxy '" + gid + "' in RC3 catalog.")
-    gids = gid.upper().strip()
-    gal = Galaxy()
-    i = 0
-    num1 = ''
-    num2 = ''
-    num3 = ''
-    while (i < len(gids)) and not gids[i].isdigit():
-        i += 1
-    while (i < len(gids)) and gids[i].isdigit():
-        num1 += gids[i]
-        i += 1
-    while (i < len(gids)) and not gids[i].isdigit():
-        i += 1
-    while (i < len(gids)) and gids[i].isdigit():
-        num2 += gids[i]
-        i += 1
-    while (i < len(gids)) and not gids[i].isdigit():
-        i += 1
-    while (i < len(gids)) and gids[i].isdigit():
-        num3 += gids[i]
-        i += 1
-
-    if gids.startswith('N'):
-        qstr2 = 'Name regexp "NGC +0*' + num1.lstrip('0') + '$" '
-    elif gids.startswith('P'):
-        qstr2 = 'PGC="' + num1 + '"'
-    elif gids.startswith('IR'):
-        qstr2 = 'desig regexp "IRAS' + num1 + '-' + num2 + '$" '
-    elif gids.startswith('I'):
-        qstr2 = 'Name regexp "IC +0*' + num1.lstrip('0') + '$" '
-    elif gids.startswith('A'):
-        qstr2 = 'Name regexp "A *' + gids[1:] + '" '
-    elif gids.startswith('U'):
-        qstr2 = 'altname regexp "UGC +0*' + num1.lstrip('0') + '$" '
-    elif gids.startswith('E'):
-        qstr2 = 'altname regexp "ESO +0*' + num1.lstrip('0') + '- *0*' + num2.lstrip('0') + '$" '
-    elif gids.startswith('M'):
-        qstr2 = 'altname regexp "MCG +-?0*' + num1.lstrip('0') + '- *0*' + num2.lstrip('0') + '- *0*' + num3.lstrip(
-            '0') + '$" '
-        # The above line can find duplicates becasue it doesn't distinguish
-        #  between entries with a leading minus sign and no leading minus sign
-    else:
-        qstr2 = 'Name regexp "' + gids + '$" or desig regexp "' + gids + '$" '
-
-    qstr = ('select RA2000,DEC2000,RA1950,DEC1950,Name,PGC,Hubble_T,R25,BT,' +
-            'Bmag,V3K from sn.rc3 where ' + qstr2)
-    try:
-        curs.execute(qstr)
-    except dblib.Error as error:
-        logger.error("sqlint.GetRC3: sn.rc3 query error: '%s'" % error)
-        return None
-
-    rows = curs.fetchall()
-    gal.numfound = curs.rowcount
-    if rows:
-        if num < len(rows):
-            row = rows[num]
-        else:
-            row = rows[0]
-        gal.RA2000s = row[0]
-        RA2000 = stringsex(gal.RA2000s, compressed=True)
-        gal.DEC2000s = row[1]
-        DEC2000 = stringsex(gal.DEC2000s, compressed=True)
-        gal.RA1950s = row[2]
-        RA1950 = stringsex(gal.RA1950s, compressed=True)
-        gal.DEC1950s = row[3]
-        DEC1950 = stringsex(gal.DEC1950s, compressed=True)
-        if (RA2000 is not None) and (DEC2000 is not None):
-            gal.Ra = RA2000 * 15.0 * 3600.0
-            gal.Dec = DEC2000 * 3600.0
-            gal.Epoch = 2000.0
-        elif (RA1950 is not None) and (DEC1950 is not None):
-            gal.Ra = RA1950 * 15.0 * 3600.0
-            gal.Dec = DEC1950 * 3600.0
-            gal.Epoch = 1950.0
-        else:
-            gal.Ra = 0.0
-            gal.Dec = 0.0
-
-        gal.ObjID = gid
-        gal.Name = row[4]
-        gal.PGC = int(row[5])
-        gal.Hubble_T = float(row[6])
-        gal.R25 = float(row[7])
-        BT = float(row[8])
-        Bmag = float(row[9])
-        if BT > 0:
-            gal.Bmag = BT
-        else:
-            gal.Bmag = Bmag
-        gal.V3K = float(row[10])
-        gal.update()
-        return gal
-    else:
-        return None
-
-
-def fixup(gid, db=None):
-    """Fixes cases where recorded object ID's are broken, for ugly
-       historical reasons. Takes an object ID and returns the PGC number
-       (unique ID in the RC3 catalogue) if the object is in the sn.fixup
-       table. Used in GetGalaxy.
-
-       Probably not useful any more.
-    """
-    if not SQLActive:
-        logger.error("sqlint.fixup: No SQL connection active")
-        return ''
-    else:
-        if db is None:
-            db = gdb
-        curs = db.cursor()
-    qstr = "select PGC from sn.fixup where ObjID='" + gid + "'"
-    curs.execute(qstr)
-    try:
-        curs.execute(qstr)
-    except dblib.Error as error:
-        logger.error("sqlint.fixup: sn.fixup query error: '%s'" % error)
-        return ''
-    rows = curs.fetchall()
-    if rows:
-        fixup = rows[0][0]
-        return fixup
-    else:
-        return ''
 
 
 def process(field, s):
@@ -619,7 +271,7 @@ def ReadSQLCurrent(Here, db=None):
                      'RA_GuideAcc,DEC_GuideAcc,LastError,' +
                      'unix_timestamp(now())-unix_timestamp(LastMod) ' +
                      'from teljoy.%s' % DTABLE)
-    except dblib.Error as error:
+    except SQLERROR as error:
         logger.error("sqlint.ReadSQLCurrent: teljoy.%s query error: '%s'" % (DTABLE, error))
         return None, 0, 0
 
@@ -682,12 +334,12 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
        from the last saved RA, DEC, and LST.
     """
     if not SQLActive:
-        logger.error("sqlint.UpdateSQLCurrent: No SQL connection active")
-        return
-    else:
-        if db is None:
-            db = gdb
-        curs = db.cursor()
+        return None
+
+    if db is None:
+        db = gdb
+    curs = db.cursor()
+
     if not CurrentInfo.posviolate:  # if telescope position is valid}
         qstr1 = "update teljoy.%s set name='%s', ObjRA='%g', ObjDec='%g', ObjEpoch='%g', " % (
             DTABLE,
@@ -727,13 +379,17 @@ def UpdateSQLCurrent(Here, CurrentInfo, db=None):
         CurrentInfo.DEC_GuideAcc,
         db.escape_string(CurrentInfo.LastError))
     querystr = qstr1 + qstr2 + qstr3 + qstr4
-    try:
-        curs.execute(querystr)
-        db.commit()
-    except dblib.Error as error:
-        db.rollback()
-        logger.error("sqlint.UpdateSQLCurrent: teljoy.%s query error: '%s'" % (DTABLE, error))
-        logger.error("Query=<%s>" % (querystr,))
+    if SQLActive:
+        try:
+            curs.execute(querystr)
+            db.commit()
+        except SQLERROR as error:
+            db.rollback()
+            logger.error("sqlint.UpdateSQLCurrent: teljoy.%s query error: '%s'" % (DTABLE, error))
+            logger.error("Query=<%s>" % (querystr,))
+    else:
+        f = open('teljoy.postmp', 'w')
+        pickle.dump((), f)
     return None
 
 
@@ -754,7 +410,7 @@ def ExistsTJbox(db=None):
     querystr = "select ObjID from teljoy.tjbox"
     try:
         curs.execute(querystr)
-    except dblib.Error as error:
+    except SQLERROR as error:
         logger.error("sqlint.ExistsTJbox: teljoy.tjbox query error: '%s'" % error)
         return None
     if curs.rowcount:
@@ -780,7 +436,7 @@ def ClearTJbox(db=None):
     querystr = "delete from teljoy.tjbox"
     try:
         curs.execute(querystr)
-    except dblib.Error as error:
+    except SQLERROR as error:
         logger.error("sqlint.ClearTJbox: teljoy.tjbox query error: '%s'" % error)
         return None
 
@@ -835,7 +491,7 @@ def ReadTJbox(db=None):
                 "from teljoy.tjbox")
     try:
         curs.execute(querystr)
-    except dblib.Error as error:
+    except SQLERROR as error:
         logger.error("sqlint.ReadTJbox: teljoy.tjbox query error: '%s'" % error)
         return None, None
 
@@ -946,7 +602,7 @@ def GetObject(name, db=None):
                 "UPPER(ObjID)='%s'" % name.upper())
     try:
         curs.execute(querystr)
-    except dblib.Error as error:
+    except SQLERROR as error:
         logger.error("sqlint.GetObject: teljoy.objects query error: '%s'" % error)
         return None
 
@@ -980,7 +636,7 @@ def InitSQL():
     """
     try:
         db = getdb(user=USER, password=PASSWORD, host=HOST)
-    except dblib.Error as error:
+    except SQLERROR as error:
         logger.error("sqlint.InitSQL: connect to SQL server failed: '%s'" % error)
         return None
     logger.debug("sqlint.InitSQL: Connected to SQL Server.")

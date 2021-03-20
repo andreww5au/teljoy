@@ -18,7 +18,7 @@ from usb1 import libusb1
 from twisted.internet import defer
 from twisted.python import failure
 
-module_version = (0, 8, 0)
+module_version = (0, 7, 1)
 
 
 # These are workarounds for omissions or bugs in python-libusb1; the author
@@ -363,7 +363,7 @@ class ControllerConfiguration(object):
         if self.mc_b_shutdown_acceleration < 1:
             raise ControllerConfigurationException("The mc_b_shutdown_acceleration property must be greater than zero.")
 
-        if self.mc_frame_period < self._controller.clock_frequency / 100:
+        if self.mc_frame_period < self._controller.clock_frequency // 100:
             raise ControllerConfigurationException("The mc_frame_period property must be set to give a frame of at least 10 milliseconds.")
 
         if self.mc_pulse_width < 1:
@@ -440,8 +440,8 @@ class ControllerConfiguration(object):
                            self.mc_b_acceleration_limit,
                            self.mc_a_velocity_limit,
                            self.mc_b_velocity_limit,
-                           self.mc_frame_period,
-                           self.mc_pulse_width,
+                           int(self.mc_frame_period),
+                           int(self.mc_pulse_width),
                            self._encode_input(self.mc_a_positive_limit_input),
                            self._encode_input(self.mc_a_negative_limit_input),
                            self._encode_input(self.mc_b_positive_limit_input),
@@ -1093,7 +1093,7 @@ class Controller(object):
         assert -32768 <= a_steps <= 32767
         assert -32768 <= b_steps <= 32767
 
-        control_data = struct.pack("<Lhh", frame_number, a_steps, b_steps)
+        control_data = struct.pack("<Lhh", int(frame_number), int(a_steps), int(b_steps))
 
         d = self._control_write(TC_ENQUEUE, control_data)
         d.addCallback(self._handle_enqueue_completed)
