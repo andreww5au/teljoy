@@ -96,8 +96,8 @@ class EphemPos(correct.CalcPosition):
 
            If TraRA or TraDEC is less than 0.0001 arcsec/sec, return exactly zero instead
         """
-        b = copy.copy(self.body)
-        o = copy.copy(self.observer)
+        b = self.body.copy()
+        o = self.observer.copy()
         o.pressure = 0.0  # Don't include refraction in proper motion, we account for that elsewhere
         o.date -= 1.0 / 48  # Half an hour before the current date/time
         b.compute(o)

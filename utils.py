@@ -50,12 +50,6 @@ def Lookup(objid=''):
     """
     obj = sqlint.GetObject(name=objid)
 
-    if SITE == 'PERTH':  # Old Perth Observatory supernova search galaxy catalogues
-        if obj is None:
-            obj = sqlint.GetRC3(gid=objid)
-        if obj is None:
-            obj = sqlint.GetRC3(gid=objid.upper())
-
     if obj is None:
         obj = pyephem.getObject(name=objid)
     if obj is None:
@@ -70,7 +64,7 @@ def GetSesame(name=''):
        This function is intended to be called manually, by the user at the command line.
     """
     try:
-        data = urllib.request.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib.parse.quote(name)).read()
+        data = urllib.request.urlopen('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/A?%s' % urllib.parse.quote(name)).read().decode('utf8')
     except IOError:
         logger.error('IO error contacting Sesame web service')
         return None
