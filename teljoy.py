@@ -102,7 +102,7 @@ def RegisterCleanup(func):
     if sys.platform.upper().startswith('WIN'):
         siglist = [signal.SIGABRT, signal.SIGBREAK, signal.SIGFPE, signal.SIGILL, signal.SIGINT, signal.SIGTERM]
     else:
-        siglist = list(range(3, 15))
+        siglist = [3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14]
     for sig in siglist:
         print(sig)
         SIGNAL_HANDLERS[sig] = signal.signal(sig, SignalHandler)  # Register a signal handler
