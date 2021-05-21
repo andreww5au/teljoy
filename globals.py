@@ -377,7 +377,7 @@ class SafetyInterlock(object):
                 self.Active.clear()
                 for name, action in self._stopfunctions.items():
                     try:
-                        logger.info("Calling safety stop function: %s" % name)
+                        logger.info("Calling safety stop function: %s:%s" % (name, comment))
                         function, args, kwargs = action
                         function(*args, **kwargs)
                     except:
