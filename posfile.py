@@ -52,5 +52,8 @@ def UpdatePosFile(Here, CurrentInfo):
     f = open('teljoy.postmp', 'wb')
     pickle.dump((HA, Here, CurrentInfo), f)
     f.close()
-    os.remove('teljoy.pos')
+    try:
+        os.remove('teljoy.pos')
+    except:
+        pass
     os.rename('teljoy.postmp', 'teljoy.pos')
